@@ -14,5 +14,7 @@ int main(int argc, char **argv)
 	UnitTest& unit_test = *UnitTest::GetInstance();
 	TestEventListeners& listeners = unit_test.listeners();
 	listeners.Append(new TestPrinter());
-	return RUN_ALL_TESTS();
+	auto ret = RUN_ALL_TESTS();
+	system("pause");
+	return ret;
 }

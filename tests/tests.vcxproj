@@ -73,6 +73,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\keyboardlayout;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -83,6 +84,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\keyboardlayout;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -95,6 +97,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\keyboardlayout;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -109,6 +112,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\keyboardlayout;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -121,6 +125,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gmock-gtest-all.cc" />
+    <ClCompile Include="KeyboardTests.cpp" />
+    <ClCompile Include="OptimizerTests.cpp" />
     <ClCompile Include="TestMain.cpp" />
     <ClCompile Include="TestPrinter.cpp" />
   </ItemGroup>
@@ -128,6 +134,11 @@
     <ClInclude Include="gmock\gmock.h" />
     <ClInclude Include="gtest\gtest.h" />
     <ClInclude Include="TestPrinter.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\keyboardlayout\keyboardlayout.vcxproj">
+      <Project>{b9d37a2d-35fc-469c-ad97-4b1eaaedbc52}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

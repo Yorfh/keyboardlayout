@@ -120,6 +120,11 @@
   <ItemGroup>
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Keyboard.hpp" />
+    <ClInclude Include="Objective.hpp" />
+    <ClInclude Include="Optimizer.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
