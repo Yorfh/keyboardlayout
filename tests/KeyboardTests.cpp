@@ -6,8 +6,8 @@ using namespace testing;
 
 TEST(KeyboardTests, Randomize)
 {
-	auto k = Keyboard();
-	using KeyArray = decltype(Keyboard::m_keys);
+	auto k = Keyboard<3>();
+	using KeyArray = decltype(Keyboard<3>::m_keys);
 	std::mt19937 randomGenerator;
 
 	auto testKeyboard = [&k, &randomGenerator](KeyArray& a)

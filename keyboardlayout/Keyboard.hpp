@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm>
 
+template<size_t Size> 
 class Keyboard
 {
 public:
@@ -14,10 +15,20 @@ public:
 		}
 	}
 
+	Keyboard(std::array<int, Size>&& keys)
+		: m_keys(std::move(keys))
+	{
+	}
+
+	Keyboard(const std::array<int, Size>& keys)
+		: m_keys(keys)
+	{
+	}
+
 	void randomize(std::mt19937& randomGenerator)
 	{
 		std::shuffle(m_keys.begin(), m_keys.end(), randomGenerator);
 	}
 
-	std::array<int, 3> m_keys;
+	std::array<int, Size> m_keys;
 };
