@@ -91,7 +91,7 @@ public:
 				float v = begin->evaluate(child);
 				if (v > std::get<1>(best))
 				{
-					best = std::make_pair(k, v);
+					best = std::make_pair(child, v);
 				}
 			}
 		}
