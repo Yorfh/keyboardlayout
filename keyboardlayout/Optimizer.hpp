@@ -46,7 +46,7 @@ public:
 		const auto maxT = 1.0f;
 		const auto minT = 0.1f;
 		const auto populationSize = 50;
-		const auto mutationProbability = 0.0f;
+		const auto mutationProbability = 0.5f;
 		const auto temperatureStep = 0.01f;
 		auto parentSelector = std::uniform_int_distribution<>(0, populationSize - 1);
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
@@ -114,6 +114,11 @@ protected:
 
 	void mutate(Keyboard<KeyboardSize>& keyboard)
 	{
+
+		auto dist = std::uniform_int_distribution<size_t>(0, keyboard.m_keys.size()-1);
+		auto k1 = dist(m_randomGenerator);
+		auto k2 = dist(m_randomGenerator);
+		std::swap(k1, k2);
 	}
 
 	void localSearch(Keyboard<KeyboardSize>& keyboard)
