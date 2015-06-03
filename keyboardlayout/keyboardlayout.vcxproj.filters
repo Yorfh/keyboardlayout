@@ -27,5 +27,13 @@
     <ClInclude Include="Objective.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NonDominatingSet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ndominated.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
