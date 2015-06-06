@@ -17,18 +17,4 @@
   <ItemGroup>
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Optimizer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Keyboard.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Objective.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NonDominatedSet.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
 </Project>

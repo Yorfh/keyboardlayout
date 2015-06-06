@@ -1,6 +1,6 @@
 #pragma once
 
-class NonDominatingSet
+class NonDominatedSet
 {
 public:
 	using SolutionsVector = std::vector<std::vector<float>>;
@@ -9,7 +9,7 @@ public:
 	using value_type = SolutionsVector::value_type;
 
 	template<typename T>
-	NonDominatingSet(T b, T e)
+	NonDominatedSet(T b, T e)
 	{
 		size_t num_elements = e - b;
 		if (num_elements == 0)
@@ -39,7 +39,7 @@ public:
 			});
 			if (num_dimensions == 2)
 			{
-				nonDominating2D();
+				nonDominated2D();
 			}
 			else
 			{
@@ -56,7 +56,7 @@ public:
 	const_iterator begin() const { return m_solutions.begin(); }
 	const_iterator end() const { return m_solutions.end(); }
 private:
-	void nonDominating2D()
+	void nonDominated2D()
 	{
 		float maximum = m_solutions[0][1];
 

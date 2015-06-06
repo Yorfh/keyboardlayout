@@ -1,11 +1,11 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "NonDominatingSet.hpp"
+#include "NonDominatedSet.hpp"
 #include <array>
 using namespace testing;
 
 template<typename T>
-void testEqual(T& res, NonDominatingSet& s)
+void testEqual(T& res, NonDominatedSet& s)
 {
 	auto ii = std::begin(res);
 	for (auto&& i : s)
@@ -23,30 +23,30 @@ void testEqual(T& res, NonDominatingSet& s)
 TEST(NonDominatingSetTests, SimpleOneDimensionalOneValue)
 {
 	std::array<std::array<float, 1>, 1> input{ { {1.0} } };
-	NonDominatingSet s(std::begin(input), std::end(input));
+	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(1, s.size()); 
 	testEqual(input, s);
 }
 
-TEST(NonDominatingSet, OneDimensionalTwoValues)
+TEST(NonDominatingSetTests, OneDimensionalTwoValues)
 {
 	std::array<std::array<float, 1>, 2> input{ { {1.0}, {2.0} } };
-	NonDominatingSet s(std::begin(input), std::end(input));
+	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(1, s.size()); 
 	std::array<std::array<float, 1>, 1> res{ { {2.0} } };
 	testEqual(res, s);
 }
 
-TEST(NonDominatingSet, OneDimensionalTwoDifferentOrder)
+TEST(NonDominatingSetTests, OneDimensionalTwoDifferentOrder)
 {
 	std::array<std::array<float, 1>, 2> input{ { {2.0}, {1.0} } };
-	NonDominatingSet s(std::begin(input), std::end(input));
+	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(1, s.size()); 
 	std::array<std::array<float, 1>, 1> res{ { {2.0} } };
 	testEqual(res, s);
 }
 
-TEST(NonDominatingSet, TwoDimensional)
+TEST(NonDominatingSetTests, TwoDimensional)
 {
 	using A = std::array<float, 2>;
 	A a = { 4.0f, 1.0f };
@@ -58,13 +58,13 @@ TEST(NonDominatingSet, TwoDimensional)
 	A g = { 1.0f, 2.0f };
 	A h = { 2.0f, 3.0f };
 	std::array<std::array<float, 2>, 8> input{ a, b, c, d, e, f, g, h };
-	NonDominatingSet s(std::begin(input), std::end(input));
+	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(3, s.size()); 
 	std::array<std::array<float, 2>, 3> res{ a, e, h };
 	testEqual(res, s);
 }
 
-TEST(NonDominatingSet, TwoDimensional2)
+TEST(NonDominatingSetTests, TwoDimensional2)
 {
 	using A = std::array<float, 2>;
 	A a = { 4.0f, 1.0f };
@@ -77,7 +77,7 @@ TEST(NonDominatingSet, TwoDimensional2)
 	A h = { 2.0f, 3.0f };
 	//This doesn't seem right
 	std::array<std::array<float, 2>, 8> input{ a, b, c, d, e, f, g, h };
-	NonDominatingSet s(std::begin(input), std::end(input));
+	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(3, s.size()); 
 	std::array<std::array<float, 2>, 3> res{ a, b, h };
 	testEqual(res, s);

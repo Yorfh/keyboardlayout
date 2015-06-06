@@ -18,16 +18,33 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Optimizer.hpp">
+    <ClCompile Include="gmock-gtest-all.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestPrinter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OptimizerTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NonDominatedSetTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gmock\gmock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Keyboard.hpp">
+    <ClInclude Include="gtest\gtest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Objective.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NonDominatedSet.hpp">
+    <ClInclude Include="TestPrinter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
