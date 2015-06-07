@@ -58,6 +58,11 @@ TEST(NonDominatingSetTests, TwoDimensional)
 	A g = { 1.0f, 2.0f };
 	A h = { 2.0f, 3.0f };
 	std::array<std::array<float, 2>, 8> input{ a, b, c, d, e, f, g, h };
+	// 4
+	// 3   h 
+	// 2 g f e
+	// 1 d c b a
+	//   1 2 3 4
 	NonDominatedSet s(std::begin(input), std::end(input));
 	ASSERT_EQ(3, s.size()); 
 	std::array<std::array<float, 2>, 3> res{ a, e, h };
@@ -75,10 +80,14 @@ TEST(NonDominatingSetTests, TwoDimensional2)
 	A f = { 2.0f, 2.0f };
 	A g = { 1.0f, 2.0f };
 	A h = { 2.0f, 3.0f };
-	//This doesn't seem right
+	// 4
+	// 3   h e
+	// 2 g f b
+	// 1 d c   a
+	//   1 2 3 4
 	std::array<std::array<float, 2>, 8> input{ a, b, c, d, e, f, g, h };
 	NonDominatedSet s(std::begin(input), std::end(input));
-	ASSERT_EQ(3, s.size()); 
-	std::array<std::array<float, 2>, 3> res{ a, b, h };
+	ASSERT_EQ(2, s.size()); 
+	std::array<std::array<float, 2>, 3> res{ a, e };
 	testEqual(res, s);
 }
