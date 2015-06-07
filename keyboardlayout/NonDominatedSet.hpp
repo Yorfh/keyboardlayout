@@ -21,27 +21,34 @@ public:
 		m_solutions.reserve(e - b);
 		for (auto i = b;i != e;++i)
 		{
-			insert(Solution(std::begin(*i), std::end(*i)));
+			insert(std::begin(*i), std::end(*i));
 		}
 	}
 
 	size_t size() { return m_solutions.size(); }
 
-	bool insert(Solution&& solution)
+	template<typename T>
+	bool insert(T&& solution)
+	{
+		return insert(std::begin(solution), std::end(solution));
+	}
+
+	template<typename T>
+	bool insert(T solutionBegin, T solutionEnd)
 	{
 		bool dominated = false;
 		auto i = std::remove_if(m_solutions.begin(), m_solutions.end(), 
-		[&solution, &dominated](Solution& rhs)
+		[&solutionBegin, &solutionEnd, &dominated](Solution& rhs)
 		{
 			if (dominated)
 			{
 				return false;
 			}
-			else if (isDominated(rhs, solution))
+			else if (isDominated(rhs, solutionBegin, solutionEnd))
 			{
 				return true;
 			}
-			else if (isDominated(solution, rhs))
+			else if (isDominated(solutionBegin, solutionEnd, rhs))
 			{
 				dominated = true;
 			}
@@ -50,27 +57,46 @@ public:
 		m_solutions.erase(i, m_solutions.end());
 		if (!dominated)
 		{
-			m_solutions.emplace_back(std::move(solution));
+			m_solutions.emplace_back(solutionBegin, solutionEnd);
 		}
 		return !dominated;
 	}
 
-	static bool isDominated(const Solution& lhs, const Solution& rhs)
+	template<typename Itr, typename Cont>
+	static bool isDominated(Itr begin, Itr end, Cont&& container)
 	{
-		auto numDimensions = lhs.size();
-		auto counter = 0;
-		for (auto i = 0; i < numDimensions; i++)
+		return isDominated(begin, end, std::begin(container), std::end(container));
+	}
+
+	template<typename Cont, typename Itr>
+	static bool isDominated(Cont&& container, Itr begin, Itr end)
+	{
+		return isDominated(std::begin(container), std::end(container), begin, end);
+	}
+
+	template<typename Cont1, typename Cont2>
+	static bool isDominated(Cont1&& cont1, Cont2&& cont2)
+	{
+		return isDominated(std::begin(cont1), std::end(cont1), std::begin(cont2), std::end(cont2));
+	}
+
+	template<typename T1, typename T2>
+	static bool isDominated(T1 begin1, T1 end1, T2 begin2, T2 end2)
+	{
+		bool found = false;
+		auto j = begin2;
+		for (auto i = begin1; i != end1; ++i, ++j)
 		{
-			if (lhs[i] > rhs[i])
+			if (*i > *j)
 			{
 				return false;
 			}
-			else if (lhs[i] == rhs[i])
+			else if (*i < *j)
 			{
-				counter++;
+				found = true;
 			}
 		}
-		return counter!=numDimensions;
+		return found;
 	}
 
 	iterator begin() { return m_solutions.begin(); }
