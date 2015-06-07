@@ -1,27 +1,36 @@
 #pragma once
+#include "Keyboard.hpp"
+#include <algorithm>
 
+template<size_t KeyboardSize>
 class NonDominatedSet
 {
 public:
-	using Solution = std::vector<float>;
+	using KeyboardType = Keyboard<KeyboardSize>;
+	using Solution = std::pair<KeyboardType, std::vector<float>>;
 	using SolutionsVector = std::vector<Solution>;
-	using iterator = SolutionsVector::iterator;
-	using const_iterator = SolutionsVector::const_iterator;
-	using value_type = SolutionsVector::value_type;
+	using iterator = typename SolutionsVector::iterator;
+	using const_iterator = typename SolutionsVector::const_iterator;
+	using value_type = typename SolutionsVector::value_type;
+
+	NonDominatedSet()
+	{
+
+	}
 
 	template<typename T>
-	NonDominatedSet(T b, T e)
+	NonDominatedSet( T b, T e)
 	{
 		size_t num_elements = e - b;
 		if (num_elements == 0)
 		{
 			return;
 		}
-		size_t num_dimensions = b->size();
+		size_t num_dimensions = b->second.size();
 		m_solutions.reserve(e - b);
 		for (auto i = b;i != e;++i)
 		{
-			insert(std::begin(*i), std::end(*i));
+			insert(i->first, std::begin(i->second), std::end(i->second));
 		}
 	}
 
@@ -30,11 +39,11 @@ public:
 	template<typename T>
 	bool insert(T&& solution)
 	{
-		return insert(std::begin(solution), std::end(solution));
+		return insert(solution.first, std::begin(solution.second), std::end(solution.second));
 	}
 
 	template<typename T>
-	bool insert(T solutionBegin, T solutionEnd)
+	bool insert(const KeyboardType& keyboard, T solutionBegin, T solutionEnd)
 	{
 		bool dominated = false;
 		auto i = std::remove_if(m_solutions.begin(), m_solutions.end(), 
@@ -57,7 +66,8 @@ public:
 		m_solutions.erase(i, m_solutions.end());
 		if (!dominated)
 		{
-			m_solutions.emplace_back(solutionBegin, solutionEnd);
+			std::vector<float> temp(solutionBegin, solutionEnd);
+			m_solutions.emplace_back(std::make_pair(keyboard, std::move(temp)));
 		}
 		return !dominated;
 	}
@@ -65,19 +75,19 @@ public:
 	template<typename Itr, typename Cont>
 	static bool isDominated(Itr begin, Itr end, Cont&& container)
 	{
-		return isDominated(begin, end, std::begin(container), std::end(container));
+		return isDominated(begin, end, std::begin(container.second), std::end(container.second));
 	}
 
 	template<typename Cont, typename Itr>
 	static bool isDominated(Cont&& container, Itr begin, Itr end)
 	{
-		return isDominated(std::begin(container), std::end(container), begin, end);
+		return isDominated(std::begin(container.second), std::end(container.second), begin, end);
 	}
 
 	template<typename Cont1, typename Cont2>
 	static bool isDominated(Cont1&& cont1, Cont2&& cont2)
 	{
-		return isDominated(std::begin(cont1), std::end(cont1), std::begin(cont2), std::end(cont2));
+		return isDominated(std::begin(cont1.second), std::end(cont1.second), std::begin(cont2.second), std::end(cont2.second));
 	}
 
 	template<typename T1, typename T2>
@@ -97,6 +107,22 @@ public:
 			}
 		}
 		return found;
+	}
+
+	void removeDuplicates()
+	{
+		std::sort(m_solutions.begin(), m_solutions.end(),
+		[](const Solution& lhs, const Solution& rhs)
+		{
+			return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
+		});
+
+		auto e=std::unique(m_solutions.begin(), m_solutions.end(),
+		[](const Solution& lhs, const Solution& rhs)
+		{
+			return std::equal(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
+		});
+		m_solutions.erase(e, m_solutions.end());
 	}
 
 	iterator begin() { return m_solutions.begin(); }

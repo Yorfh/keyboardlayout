@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include "Keyboard.hpp"
+#include "NonDominatedSet.hpp"
 #include <random>
 #include <vector>
 
@@ -38,7 +39,7 @@ class Optimizer
 {
 public:
 	template<typename Itr>
-	Keyboard<KeyboardSize> optimize(Itr begin, Itr end, size_t numGenerations)
+	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numGenerations)
 	{
 		// The algorithm is based on 
 		// "A Simulated Annealing based Genetic Local Search Algorithm for Multi-objective Multicast Routing Problems"
@@ -51,19 +52,21 @@ public:
 		auto parentSelector = std::uniform_int_distribution<>(0, populationSize - 1);
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		std::array<float, populationSize> weights;
-		// Not part of the actual algorithm
-		auto k = Keyboard<KeyboardSize>();
-		auto best = std::make_tuple(k, begin->evaluate(k));
 
 		for (auto&& i : weights)
 		{
 			i = 0.0f;
 		}
 		std::array<Keyboard<KeyboardSize>, populationSize> population;
-		for (auto&& k : population)
+		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
+		std::array<Solution, populationSize> populationSolutions;
+		for (auto i = 0; i < populationSize; i++)
 		{
-			k.randomize(m_randomGenerator);
+			population[i].randomize(m_randomGenerator);
+			populationSolutions[i] = Solution(population[i], std::vector<float>{ begin->evaluate(population[i])});
+			
 		}
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(populationSolutions.begin(), populationSolutions.end());
 		for (size_t i = 0;i < numGenerations; i++)
 		{
 			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)
@@ -85,23 +88,18 @@ public:
 				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
 				{
 					population[parentToReplace] = child;
-				}
-
-				//Not part of the actual algorithm
-				float v = begin->evaluate(child);
-				if (v > std::get<1>(best))
-				{
-					best = std::make_pair(child, v);
+					populationSolutions[parentToReplace].first = child;
+					populationSolutions[parentToReplace].second[0] = begin->evaluate(child);
 				}
 			}
 		}
-		return std::get<0>(best);
+		m_NonDominatedSet.removeDuplicates();
+		return m_NonDominatedSet;
 	}
 protected:
 
 	Keyboard<KeyboardSize> produceChild(const Keyboard<KeyboardSize>& parent1, const Keyboard<KeyboardSize>& parent2)
 	{
-		//This did not work....
 		auto dist = std::uniform_int_distribution<size_t>(0, parent1.m_keys.size()-1);
 		auto p1 = dist(m_randomGenerator);
 		auto p2 = dist(m_randomGenerator);
@@ -132,4 +130,5 @@ protected:
 	}
 
 	std::mt19937 m_randomGenerator;
+	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
 };
