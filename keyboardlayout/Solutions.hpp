@@ -116,10 +116,52 @@ namespace solutions_detail
 			return m_solution;
 		}
 
+		Value(const Value& rhs)
+			: m_keyboard(rhs.m_keyboard),
+			m_solution(rhs.m_solution)
+		{
+		}
+
 		Value(const Reference& rhs)
 			: m_keyboard(rhs.m_keyboard),
 			m_solution(rhs.m_solution)
 		{
+		}
+
+		Value(Value&& rhs)
+			: m_keyboard(std::move(rhs.m_keyboard)),
+			m_solution(std::move(rhs.m_solution))
+		{
+		}
+
+		Value(Reference&& rhs)
+			: m_keyboard(std::move(rhs.m_keyboard)),
+			m_solution(std::move(rhs.m_solution))
+		{
+		}
+
+		Value& operator=(const Value& rhs)
+		{
+			m_keyboard = rhs.m_keyboard;
+			m_solution = rhs.m_solution;
+		}
+
+		Value& operator=(const Reference& rhs)
+		{
+			m_keyboard = rhs.m_keyboard;
+			m_solution = rhs.m_solution;
+		}
+
+		Value& operator=(Value&& rhs)
+		{
+			m_keyboard = std::move(rhs.m_keyboard);
+			m_solution = std::move(rhs.m_solution);
+		}
+		
+		Value& operator=(Reference&& rhs)
+		{
+			m_keyboard = std::move(rhs.m_keyboard);
+			m_solution = std::move(rhs.m_solution);
 		}
 	protected:
 		Value(KeyboardType& keyboard, SolutionType& solution)
@@ -164,6 +206,13 @@ namespace solutions_detail
 		{
 			m_keyboard = rhs.m_keyboard;
 			m_solution = rhs.m_solution;
+			return *this;
+		}
+
+		Reference& operator=(Value&& rhs)
+		{
+			m_keyboard = std::move(rhs.m_keyboard);
+			m_solution = std::move(rhs.m_solution);
 			return *this;
 		}
 	protected:
