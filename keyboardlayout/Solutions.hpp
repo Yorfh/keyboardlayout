@@ -31,6 +31,13 @@ public:
 		{
 			return m_solution;
 		}
+
+		Value& operator=(const Value& rhs)
+		{
+			m_keyboard = rhs.m_keyboard;
+			m_solution = rhs.m_solution;
+			return *this;
+		}
 	private:
 		Value(KeyboardType& keyboard, SolutionType& solution)
 			: m_keyboard(keyboard),
@@ -55,14 +62,14 @@ public:
 
 		iterator(const iterator& rhs)
 			: m_pParent(rhs.m_pParent),
-			m_index(-1)
+			m_index(rhs.m_index)
 		{
 
 		}
 
 		iterator(iterator&& rhs)
 			: m_pParent(rhs.m_pParent),
-			m_index(-1)
+			m_index(rhs.m_index)
 		{
 
 		}
