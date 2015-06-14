@@ -2,57 +2,16 @@
 #include "boost/iterator/iterator_facade.hpp"
 
 template<typename KeyboardVector, typename SolutionVector>
-class Solutions
+class Solutions;
+
+namespace solutions_detail
 {
-public:
-	Solutions(KeyboardVector& keyboards, SolutionVector& solutions)
-		:
-		m_keyboards(keyboards),
-		m_solutions(solutions)
-	{
-
-	}
-
-	using KeyboardType = typename KeyboardVector::value_type;
-	using SolutionType = typename SolutionVector::value_type;
-
-	class Value
-	{
-		using KeyboardType = typename Solutions::KeyboardType;
-		using SolutionType = typename Solutions::SolutionType;
-		friend class Solutions::iterator;
-	public:
-		KeyboardType& keyboard()
-		{
-			return m_keyboard;
-		}
-
-		SolutionType& solution()
-		{
-			return m_solution;
-		}
-
-		Value& operator=(const Value& rhs)
-		{
-			m_keyboard = rhs.m_keyboard;
-			m_solution = rhs.m_solution;
-			return *this;
-		}
-	private:
-		Value(KeyboardType& keyboard, SolutionType& solution)
-			: m_keyboard(keyboard),
-			m_solution(solution)
-		{
-
-		}
-		KeyboardType& m_keyboard;
-		SolutionType& m_solution;
-	};
-
-	class iterator : public boost::iterator_facade<iterator, Value, std::random_access_iterator_tag, Value>
+	template<typename Reference, typename Value> 
+	class iterator : public boost::iterator_facade<iterator<Reference, Value>, Value, std::random_access_iterator_tag, Reference>
 	{
 		friend class boost::iterator_core_access;
-		friend class Solutions;
+		using Parent = Solutions<typename Reference::keyboard_vector_t, typename Reference::solution_vector_t>;
+		friend class Parent;
 	public:
 		iterator()
 			: m_pParent(nullptr),
@@ -91,12 +50,12 @@ public:
 				m_index = rhs.m_index;
 			}
 		}
+
 	private:
-		iterator(Solutions* pParent, size_t index)
+		iterator(Parent* pParent, size_t index)
 			: m_pParent(pParent),
 			m_index(index)
 		{
-
 		}
 
 		void increment()
@@ -126,14 +85,126 @@ public:
 			return false;
 		}
 
-		Value dereference() const
+		Reference dereference() const
 		{
-			return Value(m_pParent->m_keyboards[m_index], m_pParent->m_solutions[m_index]);
+			return Reference(m_pParent->m_keyboards[m_index], m_pParent->m_solutions[m_index]);
 		}
 
-		Solutions* m_pParent;
+		Parent* m_pParent;
 		size_t m_index;
 	};
+
+	template<typename KeyboardType, typename SolutionType>
+	class Reference;
+
+	template<typename KeyboardVector, typename SolutionVector>
+	class Value
+	{
+		friend class solutions_detail::iterator<Reference<KeyboardVector, SolutionVector>, Value<KeyboardVector, SolutionVector>>;
+	public:
+		using KeyboardType = typename KeyboardVector::value_type;
+		using SolutionType = typename SolutionVector::value_type;
+		using Reference = Reference<KeyboardVector, SolutionVector>;
+		friend class Reference;
+		KeyboardType& keyboard()
+		{
+			return m_keyboard;
+		}
+
+		SolutionType& solution()
+		{
+			return m_solution;
+		}
+
+		Value(const Reference& rhs)
+			: m_keyboard(rhs.m_keyboard),
+			m_solution(rhs.m_solution)
+		{
+		}
+	protected:
+		Value(KeyboardType& keyboard, SolutionType& solution)
+			: m_keyboard(keyboard),
+			m_solution(solution)
+		{
+
+		}
+		KeyboardType m_keyboard;
+		SolutionType m_solution;
+	};
+
+	template<typename KeyboardVector, typename SolutionVector>
+	class Reference
+	{
+		friend class solutions_detail::iterator<Reference<KeyboardVector, SolutionVector>, Value<KeyboardVector, SolutionVector>>;
+	public:
+		using KeyboardType = typename KeyboardVector::value_type;
+		using SolutionType = typename SolutionVector::value_type;
+		using keyboard_vector_t = KeyboardVector;
+		using solution_vector_t = SolutionVector;
+		using Value = Value<KeyboardVector, SolutionVector>;
+		friend class Value;
+		KeyboardType& keyboard()
+		{
+			return m_keyboard;
+		}
+
+		SolutionType& solution()
+		{
+			return m_solution;
+		}
+
+		Reference& operator=(const Reference& rhs)
+		{
+			m_keyboard = rhs.m_keyboard;
+			m_solution = rhs.m_solution;
+			return *this;
+		}
+
+		Reference& operator=(const Value& rhs)
+		{
+			m_keyboard = rhs.m_keyboard;
+			m_solution = rhs.m_solution;
+			return *this;
+		}
+	protected:
+		Reference(KeyboardType& keyboard, SolutionType& solution)
+			: m_keyboard(keyboard),
+			m_solution(solution)
+		{
+
+		}
+		KeyboardType& m_keyboard;
+		SolutionType& m_solution;
+	};
+
+	template<typename KeyboardVector, typename SolutionVector>
+	void swap(typename Reference<KeyboardVector, SolutionVector> lhs, Reference<KeyboardVector, SolutionVector> rhs)
+	{
+		Value<KeyboardVector, SolutionVector> temp = std::move(lhs);
+		lhs = std::move(rhs);
+		rhs = std::move(temp);
+	}
+}
+
+
+template<typename KeyboardVector, typename SolutionVector>
+class Solutions
+{
+public:
+	Solutions(KeyboardVector& keyboards, SolutionVector& solutions)
+		:
+		m_keyboards(keyboards),
+		m_solutions(solutions)
+	{
+
+	}
+
+	using KeyboardType = typename KeyboardVector::value_type;
+	using SolutionType = typename SolutionVector::value_type;
+	using Value = solutions_detail::Value<KeyboardVector, SolutionVector>;
+	using Reference = solutions_detail::Reference<KeyboardVector, SolutionVector>;
+	using iterator = solutions_detail::iterator<Reference, Value>;
+	friend class iterator;
 
 	iterator begin()
 	{
@@ -148,3 +219,4 @@ private:
 	KeyboardVector& m_keyboards;
 	SolutionVector& m_solutions;
 };
+
