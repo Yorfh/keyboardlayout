@@ -97,3 +97,50 @@ TEST(NonDominatingSetTests, TwoDimensional2)
 	std::array<A, 2> res{ a, e };
 	testEqual(res, s);
 }
+
+TEST(NonDominatedSetTests, IteratorTraversal)
+{
+	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
+	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
+	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
+	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
+	EXPECT_EQ(Keyboard<1>({ 1 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 3.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(e, b);
+}
+
+TEST(NonDominatedSetTests, IteratorSwap)
+{
+	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
+	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
+	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
+	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
+	std::swap(*b, *(b + 1));
+	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(Keyboard<1>({ 1 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 3.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(e, b);
+}
+
+TEST(NonDominatedSetTests, IteratorAssignment)
+{
+	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
+	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
+	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
+	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
+	*b =*(b + 1);
+	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
+	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
+	++b;
+	EXPECT_EQ(e, b);
+}
