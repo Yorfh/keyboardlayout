@@ -136,6 +136,7 @@
     <ClInclude Include="NonDominatedSet.hpp" />
     <ClInclude Include="Objective.hpp" />
     <ClInclude Include="Optimizer.hpp" />
+    <ClInclude Include="Solutions.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

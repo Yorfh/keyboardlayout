@@ -113,6 +113,7 @@ TEST(NonDominatedSetTests, IteratorTraversal)
 	EXPECT_EQ(e, b);
 }
 
+/*
 TEST(NonDominatedSetTests, IteratorSwap)
 {
 	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
@@ -128,6 +129,7 @@ TEST(NonDominatedSetTests, IteratorSwap)
 	++b;
 	EXPECT_EQ(e, b);
 }
+*/
 
 TEST(NonDominatedSetTests, IteratorAssignment)
 {
