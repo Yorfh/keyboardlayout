@@ -1,17 +1,46 @@
 #pragma once
 #include "Keyboard.hpp"
 #include <algorithm>
+#include "boost/range.hpp"
+#include "boost/tuple/tuple.hpp"
+#include "boost/range/algorithm/remove_if.hpp"
+#include "boost/iterator/zip_iterator.hpp"
+#include "boost/range/algorithm/unique.hpp"
+#include "boost/fusion/tuple/tuple.hpp"
 
 template<size_t KeyboardSize>
 class NonDominatedSet
 {
 public:
+
+
 	using KeyboardType = Keyboard<KeyboardSize>;
-	using Solution = std::pair<KeyboardType, std::vector<float>>;
+	using Solution = std::vector<float>;
 	using SolutionsVector = std::vector<Solution>;
-	using iterator = typename SolutionsVector::iterator;
-	using const_iterator = typename SolutionsVector::const_iterator;
+	using KeyboardVector = std::vector<KeyboardType>;
+
+	// We need to fake that we are a random_access_iterator
+	template<typename KeyboardIterator, typename SolutionsIterator>
+	class IteratorHelper
+		: public boost::iterator_adaptor<
+		IteratorHelper<KeyboardIterator, SolutionsIterator>
+		, boost::zip_iterator<boost::tuple<KeyboardIterator, SolutionsIterator>>
+		, boost::use_default
+		, std::random_access_iterator_tag
+		>
+	{
+	public:
+		using base_iterator = boost::zip_iterator<boost::tuple<KeyboardIterator, SolutionsIterator>>;
+		IteratorHelper() {}
+		explicit IteratorHelper(const base_iterator& b) : iterator_adaptor_(b) {}
+	private:
+	};
+
+	using iterator = IteratorHelper<typename KeyboardVector::iterator, typename SolutionsVector::iterator>;
+	using const_iterator = IteratorHelper<typename KeyboardVector::const_iterator, typename SolutionsVector::const_iterator>;
 	using value_type = typename SolutionsVector::value_type;
+
+	using KeyboardSolution = boost::tuple<KeyboardType&, Solution&>;
 
 	NonDominatedSet()
 	{
@@ -19,89 +48,74 @@ public:
 	}
 
 	template<typename T>
-	NonDominatedSet( T b, T e)
+	NonDominatedSet(const T& elements)
 	{
-		size_t num_elements = e - b;
+		size_t num_elements = boost::size(elements);
 		if (num_elements == 0)
 		{
 			return;
 		}
-		size_t num_dimensions = b->second.size();
-		m_solutions.reserve(e - b);
-		for (auto i = b;i != e;++i)
+		size_t num_dimensions = boost::size(boost::get<1>(*std::begin(elements)));
+		m_solutions.reserve(num_elements);
+		for (auto&& e : elements)
 		{
-			insert(i->first, std::begin(i->second), std::end(i->second));
+			insert(e);
 		}
 	}
 
 	size_t size() { return m_solutions.size(); }
 
 	template<typename T>
-	bool insert(T&& solution)
+	bool insert(T&& keyboard_solution_pair)
 	{
-		return insert(solution.first, std::begin(solution.second), std::end(solution.second));
-	}
-
-	template<typename T>
-	bool insert(const KeyboardType& keyboard, T solutionBegin, T solutionEnd)
-	{
+		static_assert(std::is_convertible<T, KeyboardSolution>::value, "You need to pass a KeyboardSolution");
 		bool dominated = false;
-		auto i = std::remove_if(m_solutions.begin(), m_solutions.end(), 
-		[&solutionBegin, &solutionEnd, &dominated](Solution& rhs)
+		auto i = std::remove_if(begin(), end(), 
+		[&keyboard_solution_pair, &dominated](typename iterator::value_type& rhs)
 		{
 			if (dominated)
 			{
 				return false;
 			}
-			else if (isDominated(rhs, solutionBegin, solutionEnd))
+			else if (isDominated(rhs, keyboard_solution_pair))
 			{
 				return true;
 			}
-			else if (isDominated(solutionBegin, solutionEnd, rhs))
+			else if (isDominated(keyboard_solution_pair, rhs))
 			{
 				dominated = true;
 			}
 			return false;
 		});
-		m_solutions.erase(i, m_solutions.end());
+
+		auto index = i - begin();
+		m_solutions.erase(m_solutions.begin() + index, m_solutions.end());
+		m_keyboards.erase(m_keyboards.begin() + index, m_keyboards.end());
 		if (!dominated)
 		{
-			std::vector<float> temp(solutionBegin, solutionEnd);
-			m_solutions.emplace_back(std::make_pair(keyboard, std::move(temp)));
+			m_keyboards.emplace_back(keyboard_solution_pair.get<0>());
+			m_solutions.emplace_back(keyboard_solution_pair.get<1>().begin(),
+				keyboard_solution_pair.get<1>().end());
 		}
 		return !dominated;
 	}
 
-	template<typename Itr, typename Cont>
-	static bool isDominated(Itr begin, Itr end, Cont&& container)
-	{
-		return isDominated(begin, end, std::begin(container.second), std::end(container.second));
-	}
-
-	template<typename Cont, typename Itr>
-	static bool isDominated(Cont&& container, Itr begin, Itr end)
-	{
-		return isDominated(std::begin(container.second), std::end(container.second), begin, end);
-	}
-
-	template<typename Cont1, typename Cont2>
-	static bool isDominated(Cont1&& cont1, Cont2&& cont2)
-	{
-		return isDominated(std::begin(cont1.second), std::end(cont1.second), std::begin(cont2.second), std::end(cont2.second));
-	}
-
 	template<typename T1, typename T2>
-	static bool isDominated(T1 begin1, T1 end1, T2 begin2, T2 end2)
+	static bool isDominated(T1&& lhs, T2&& rhs)
 	{
+		auto b = boost::make_zip_iterator(boost::make_tuple(lhs.get<1>().begin(), rhs.get<1>().begin()));
+		auto e = boost::make_zip_iterator(boost::make_tuple(lhs.get<1>().end(), rhs.get<1>().end()));
+		auto r = boost::make_iterator_range(b, e);
+
 		bool found = false;
-		auto j = begin2;
-		for (auto i = begin1; i != end1; ++i, ++j)
+		for (auto&& e: r)
 		{
-			if (*i > *j)
+			
+			if (e.get<0>() > e.get<1>())
 			{
 				return false;
 			}
-			else if (*i < *j)
+			else if (e.get<0>() < e.get<1>())
 			{
 				found = true;
 			}
@@ -111,24 +125,43 @@ public:
 
 	void removeDuplicates()
 	{
-		std::sort(m_solutions.begin(), m_solutions.end(),
-		[](const Solution& lhs, const Solution& rhs)
+		using V = typename iterator::value_type;
+		std::sort(begin(), end(),
+		[](const V& lhs, const V& rhs)
 		{
-			return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
+			return std::lexicographical_compare(lhs.get<1>().begin(), lhs.get<1>().end(), rhs.get<1>().begin(), rhs.get<1>().end());
 		});
 
-		auto e=std::unique(m_solutions.begin(), m_solutions.end(),
-		[](const Solution& lhs, const Solution& rhs)
+		auto e=std::unique(begin(), end(),
+		[](const V& lhs, const V& rhs)
 		{
-			return std::equal(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
+			return std::equal(std::begin(lhs.get<1>()), std::end(lhs.get<1>()), std::begin(rhs.get<1>()), std::end(rhs.get<1>()));
 		});
-		m_solutions.erase(e, m_solutions.end());
+		auto index = e - begin();
+		m_solutions.erase(m_solutions.begin() + index, m_solutions.end());
+		m_keyboards.erase(m_keyboards.begin() + index, m_keyboards.end());
 	}
 
-	iterator begin() { return m_solutions.begin(); }
-	iterator end() { return m_solutions.end(); }
-	const_iterator begin() const { return m_solutions.begin(); }
-	const_iterator end() const { return m_solutions.end(); }
+	iterator begin()
+	{
+		return iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.begin(), m_solutions.begin())));
+	}
+	iterator end()
+	{
+		return iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.end(), m_solutions.end())));
+	}
+
+	const_iterator begin() const
+	{
+		return const_iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.begin(), m_solutions.begin())));
+	}
+
+	const_iterator end() const
+	{
+		return const_iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.end(), m_solutions.end())));
+	}
+
 private:
 	SolutionsVector m_solutions;
+	KeyboardVector m_keyboards;
 };

@@ -4,6 +4,8 @@
 #include "NonDominatedSet.hpp"
 #include <random>
 #include <vector>
+#include "boost/tuple/tuple.hpp"
+#include "boost/iterator/zip_iterator.hpp"
 
 template<size_t KeyboardSize>
 class Objective;
@@ -63,10 +65,12 @@ public:
 		for (auto i = 0; i < populationSize; i++)
 		{
 			population[i].randomize(m_randomGenerator);
-			populationSolutions[i] = Solution(population[i], std::vector<float>{ begin->evaluate(population[i])});
+			populationSolutions[i] = std::vector<float>{ begin->evaluate(population[i])};
 			
 		}
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(populationSolutions.begin(), populationSolutions.end());
+		auto b = boost::make_zip_iterator(boost::make_tuple(population.begin(), populationSolutions.begin()));
+		auto e = boost::make_zip_iterator(boost::make_tuple(population.end(), populationSolutions.end()));
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(boost::make_iterator_range(b, e));
 		for (size_t i = 0;i < numGenerations; i++)
 		{
 			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)
@@ -88,8 +92,7 @@ public:
 				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
 				{
 					population[parentToReplace] = child;
-					populationSolutions[parentToReplace].first = child;
-					populationSolutions[parentToReplace].second[0] = begin->evaluate(child);
+					populationSolutions[parentToReplace] = { begin->evaluate(child) };
 				}
 			}
 		}
