@@ -15,6 +15,5 @@ int main(int argc, char **argv)
 	TestEventListeners& listeners = unit_test.listeners();
 	listeners.Append(new TestPrinter());
 	auto ret = RUN_ALL_TESTS();
-	system("pause");
 	return ret;
 }

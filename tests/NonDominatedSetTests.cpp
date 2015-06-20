@@ -16,8 +16,8 @@ void testEqual(T& res, NonDominatedSet<1>& s)
 	auto r = boost::make_iterator_range(b, e);
 	for (auto&& e : r)
 	{
-		auto b2 = boost::make_zip_iterator(boost::make_tuple(std::begin(e.get<0>().get<1>()), std::begin(e.get<1>().get<1>())));
-		auto e2 = boost::make_zip_iterator(boost::make_tuple(std::end(e.get<0>().get<1>()), std::end(e.get<1>().get<1>())));
+		auto b2 = boost::make_zip_iterator(boost::make_tuple(std::begin(e.get<0>()), std::begin(e.get<1>().solution())));
+		auto e2 = boost::make_zip_iterator(boost::make_tuple(std::end(e.get<0>()), std::end(e.get<1>().solution())));
 		auto solutions = boost::make_iterator_range(b2, e2);
 		for (auto&& s : solutions)
 		{
@@ -28,25 +28,28 @@ void testEqual(T& res, NonDominatedSet<1>& s)
 
 TEST(NonDominatingSetTests, SimpleOneDimensionalOneValue)
 {
-	std::array<boost::tuple<Keyboard<1>, std::array<float, 1>>, 1> input{ { {Keyboard<1>(), {1.0}} } };
-	NonDominatedSet<1> s(input);
+	std::array<Keyboard<1>, 1> keyboards;
+	std::array<std::array<float, 1>, 1> solutions{ 1.0 };
+	NonDominatedSet<1> s(makeSolutions(keyboards, solutions));
 	ASSERT_EQ(1, s.size()); 
-	testEqual(input, s);
+	testEqual(solutions, s);
 }
 
 TEST(NonDominatingSetTests, OneDimensionalTwoValues)
 {
-	std::array<boost::tuple<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>(), {1.0}}, {Keyboard<1>(), {2.0}} } };
-	NonDominatedSet<1> s(input);
+	std::array<Keyboard<1>, 2> keyboards;
+	std::array<std::array<float, 1>, 2> solutions{ {1.0, 2.0} };
+	NonDominatedSet<1> s(makeSolutions(keyboards, solutions));
 	ASSERT_EQ(1, s.size()); 
-	std::array<boost::tuple<Keyboard<1>, std::array<float, 1>>, 1> res{ { {Keyboard<1>(), {2.0} } } };
+	std::array<std::array<float, 1>, 1> res{ 2.0 };
 	testEqual(res, s);
 }
-
+/*
 TEST(NonDominatingSetTests, OneDimensionalTwoDifferentOrder)
 {
-	std::array<boost::tuple<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>(), {2.0} }, {Keyboard<1>(), {1.0} } } };
-	NonDominatedSet<1> s(input);
+	std::array<Keyboard<1>, 2> keyboards;
+	std::array<std::array<float, 1>, 2> solutions{ {2.0, 1.0} };
+	NonDominatedSet<1> s(makeSolutions(keyboards, solutions));
 	ASSERT_EQ(1, s.size()); 
 	std::array<boost::tuple<Keyboard<1>, std::array<float, 1>>, 1> res{ { {Keyboard<1>(), {2.0} } } };
 	testEqual(res, s);
@@ -97,52 +100,4 @@ TEST(NonDominatingSetTests, TwoDimensional2)
 	std::array<A, 2> res{ a, e };
 	testEqual(res, s);
 }
-
-TEST(NonDominatedSetTests, IteratorTraversal)
-{
-	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
-	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
-	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
-	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
-	EXPECT_EQ(Keyboard<1>({ 1 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 3.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(e, b);
-}
-
-/*
-TEST(NonDominatedSetTests, IteratorSwap)
-{
-	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
-	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
-	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
-	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
-	std::swap(*b, *(b + 1));
-	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(Keyboard<1>({ 1 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 3.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(e, b);
-}
 */
-
-TEST(NonDominatedSetTests, IteratorAssignment)
-{
-	std::vector<Keyboard<1>> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
-	std::vector<std::vector<float>> solutions{ {3.0}, {5.0} };
-	auto b = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.begin(), solutions.begin())));
-	auto e = NonDominatedSet<1>::iterator(boost::make_zip_iterator(boost::make_tuple(keyboards.end(), solutions.end())));
-	*b =*(b + 1);
-	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(Keyboard<1>({ 2 }).m_keys, b->get<0>().m_keys);
-	EXPECT_EQ(std::vector<float>{ 5.0 }, b->get<1>());
-	++b;
-	EXPECT_EQ(e, b);
-}

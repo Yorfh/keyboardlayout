@@ -68,9 +68,7 @@ public:
 			populationSolutions[i] = std::vector<float>{ begin->evaluate(population[i])};
 			
 		}
-		auto b = boost::make_zip_iterator(boost::make_tuple(population.begin(), populationSolutions.begin()));
-		auto e = boost::make_zip_iterator(boost::make_tuple(population.end(), populationSolutions.end()));
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(boost::make_iterator_range(b, e));
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(makeSolutions(population, populationSolutions));
 		for (size_t i = 0;i < numGenerations; i++)
 		{
 			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)

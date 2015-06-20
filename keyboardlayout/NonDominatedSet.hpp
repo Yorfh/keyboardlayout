@@ -1,5 +1,6 @@
 #pragma once
 #include "Keyboard.hpp"
+#include "Solutions.hpp"
 #include <algorithm>
 #include "boost/range.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -18,44 +19,29 @@ public:
 	using Solution = std::vector<float>;
 	using SolutionsVector = std::vector<Solution>;
 	using KeyboardVector = std::vector<KeyboardType>;
+	template<typename KeyboardType, typename SolutionType>
+	using Reference = solutions_detail::Reference<KeyboardType, SolutionType>;
+	using S = Solutions<KeyboardVector, SolutionsVector>;
 
-	// We need to fake that we are a random_access_iterator
-	template<typename KeyboardIterator, typename SolutionsIterator>
-	class IteratorHelper
-		: public boost::iterator_adaptor<
-		IteratorHelper<KeyboardIterator, SolutionsIterator>
-		, boost::zip_iterator<boost::tuple<KeyboardIterator, SolutionsIterator>>
-		, boost::use_default
-		, std::random_access_iterator_tag
-		>
-	{
-	public:
-		using base_iterator = boost::zip_iterator<boost::tuple<KeyboardIterator, SolutionsIterator>>;
-		IteratorHelper() {}
-		explicit IteratorHelper(const base_iterator& b) : iterator_adaptor_(b) {}
-	private:
-	};
-
-	using iterator = IteratorHelper<typename KeyboardVector::iterator, typename SolutionsVector::iterator>;
-	using const_iterator = IteratorHelper<typename KeyboardVector::const_iterator, typename SolutionsVector::const_iterator>;
-	using value_type = typename SolutionsVector::value_type;
-
-	using KeyboardSolution = boost::tuple<KeyboardType&, Solution&>;
+	using iterator = typename S::iterator;
+	using const_iterator = typename S::const_iterator;
 
 	NonDominatedSet()
+		: m_solution(m_keyboards, m_solutions)
 	{
 
 	}
 
-	template<typename T>
-	NonDominatedSet(const T& elements)
+	template<typename KeyboardVector, typename SolutionsVector>
+	NonDominatedSet(const Solutions<KeyboardVector, SolutionsVector>& elements)
+		: m_solution(m_keyboards, m_solutions)
 	{
 		size_t num_elements = boost::size(elements);
 		if (num_elements == 0)
 		{
 			return;
 		}
-		size_t num_dimensions = boost::size(boost::get<1>(*std::begin(elements)));
+		size_t num_dimensions = boost::size(std::begin(elements)->solution());
 		m_solutions.reserve(num_elements);
 		for (auto&& e : elements)
 		{
@@ -63,25 +49,26 @@ public:
 		}
 	}
 
+	NonDominatedSet& operator=(const NonDominatedSet& rhs) = default;
+
 	size_t size() { return m_solutions.size(); }
 
-	template<typename T>
-	bool insert(T&& keyboard_solution_pair)
+	template<typename KeyboardType, typename SolutionType>
+	bool insert(const solutions_detail::Reference<KeyboardType, SolutionType> value)
 	{
-		static_assert(std::is_convertible<T, KeyboardSolution>::value, "You need to pass a KeyboardSolution");
 		bool dominated = false;
 		auto i = std::remove_if(begin(), end(), 
-		[&keyboard_solution_pair, &dominated](typename iterator::value_type& rhs)
+		[&value, &dominated](typename iterator::reference rhs)
 		{
 			if (dominated)
 			{
 				return false;
 			}
-			else if (isDominated(rhs, keyboard_solution_pair))
+			else if (isDominated(rhs, value))
 			{
 				return true;
 			}
-			else if (isDominated(keyboard_solution_pair, rhs))
+			else if (isDominated(value, rhs))
 			{
 				dominated = true;
 			}
@@ -93,18 +80,17 @@ public:
 		m_keyboards.erase(m_keyboards.begin() + index, m_keyboards.end());
 		if (!dominated)
 		{
-			m_keyboards.emplace_back(keyboard_solution_pair.get<0>());
-			m_solutions.emplace_back(keyboard_solution_pair.get<1>().begin(),
-				keyboard_solution_pair.get<1>().end());
+			m_keyboards.emplace_back(value.keyboard());
+			m_solutions.emplace_back(value.solution().begin(), value.solution().end());
 		}
 		return !dominated;
 	}
 
-	template<typename T1, typename T2>
-	static bool isDominated(T1&& lhs, T2&& rhs)
+	template<typename T1, typename T2, typename T3, typename T4>
+	static bool isDominated(const Reference<T1, T2> lhs, const Reference<T3, T4> rhs)
 	{
-		auto b = boost::make_zip_iterator(boost::make_tuple(lhs.get<1>().begin(), rhs.get<1>().begin()));
-		auto e = boost::make_zip_iterator(boost::make_tuple(lhs.get<1>().end(), rhs.get<1>().end()));
+		auto b = boost::make_zip_iterator(boost::make_tuple(lhs.solution().begin(), rhs.solution().begin()));
+		auto e = boost::make_zip_iterator(boost::make_tuple(lhs.solution().end(), rhs.solution().end()));
 		auto r = boost::make_iterator_range(b, e);
 
 		bool found = false;
@@ -125,17 +111,17 @@ public:
 
 	void removeDuplicates()
 	{
-		using V = typename iterator::value_type;
+		using V = typename iterator::reference;
 		std::sort(begin(), end(),
-		[](const V& lhs, const V& rhs)
+		[](V lhs, V rhs)
 		{
-			return std::lexicographical_compare(lhs.get<1>().begin(), lhs.get<1>().end(), rhs.get<1>().begin(), rhs.get<1>().end());
+			return std::lexicographical_compare(lhs.solution().begin(), lhs.solution().end(), rhs.solution().begin(), rhs.solution().end());
 		});
 
 		auto e=std::unique(begin(), end(),
-		[](const V& lhs, const V& rhs)
+		[](V lhs, V rhs)
 		{
-			return std::equal(std::begin(lhs.get<1>()), std::end(lhs.get<1>()), std::begin(rhs.get<1>()), std::end(rhs.get<1>()));
+			return std::equal(std::begin(lhs.solution()), std::end(lhs.solution()), std::begin(rhs.solution()), std::end(rhs.solution()));
 		});
 		auto index = e - begin();
 		m_solutions.erase(m_solutions.begin() + index, m_solutions.end());
@@ -144,24 +130,25 @@ public:
 
 	iterator begin()
 	{
-		return iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.begin(), m_solutions.begin())));
+		return m_solution.begin();
 	}
 	iterator end()
 	{
-		return iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.end(), m_solutions.end())));
+		return m_solution.end();
 	}
 
 	const_iterator begin() const
 	{
-		return const_iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.begin(), m_solutions.begin())));
+		return m_solution.begin();
 	}
 
 	const_iterator end() const
 	{
-		return const_iterator(boost::make_zip_iterator(boost::make_tuple(m_keyboards.end(), m_solutions.end())));
+		return m_solution.end();
 	}
 
 private:
 	SolutionsVector m_solutions;
 	KeyboardVector m_keyboards;
+	S m_solution;
 };
