@@ -93,7 +93,6 @@ public:
 				}
 			}
 		}
-		m_NonDominatedSet.removeDuplicates();
 		return m_NonDominatedSet;
 	}
 protected:

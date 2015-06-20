@@ -9,9 +9,6 @@ public:
 	using KeyboardType = Keyboard<KeyboardSize>;
 	using Solution = std::pair<KeyboardType, std::vector<float>>;
 	using SolutionsVector = std::vector<Solution>;
-	using iterator = typename SolutionsVector::iterator;
-	using const_iterator = typename SolutionsVector::const_iterator;
-	using value_type = typename SolutionsVector::value_type;
 
 	NonDominatedSet()
 	{
@@ -28,6 +25,9 @@ public:
 		}
 		size_t num_dimensions = b->second.size();
 		m_solutions.reserve(e - b);
+		m_keyboards.reserve(e - b);
+		m_indices.reserve(e - b);
+		m_firstFree = m_indices.end();
 		for (auto i = b;i != e;++i)
 		{
 			insert(i->first, std::begin(i->second), std::end(i->second));
@@ -45,49 +45,57 @@ public:
 	template<typename T>
 	bool insert(const KeyboardType& keyboard, T solutionBegin, T solutionEnd)
 	{
-		bool dominated = false;
-		auto i = std::remove_if(m_solutions.begin(), m_solutions.end(), 
-		[&solutionBegin, &solutionEnd, &dominated](Solution& rhs)
+		if (std::find_if(m_indices.begin(), m_firstFree, 
+		[this, &keyboard](size_t index)
 		{
+			return m_keyboards[index] == keyboard;
+		}) != m_firstFree)
+		{
+			return false;
+		}
+		bool dominated = false;
+		auto i = std::stable_partition(m_indices.begin(), m_firstFree, 
+		[&solutionBegin, &solutionEnd, &dominated, this](size_t index)
+		{
+			auto mBegin = m_solutions[index].begin();
+			auto mEnd = m_solutions[index].end();
 			if (dominated)
-			{
-				return false;
-			}
-			else if (isDominated(rhs, solutionBegin, solutionEnd))
 			{
 				return true;
 			}
-			else if (isDominated(solutionBegin, solutionEnd, rhs))
+			else if (isDominated(mBegin, mEnd, solutionBegin, solutionEnd))
+			{
+				return false;
+			}
+			else if (isDominated(solutionBegin, solutionEnd, mBegin, mEnd))
 			{
 				dominated = true;
 			}
-			return false;
+			return true;
 		});
-		m_solutions.erase(i, m_solutions.end());
+		m_firstFree = i;
 		if (!dominated)
 		{
-			std::vector<float> temp(solutionBegin, solutionEnd);
-			m_solutions.emplace_back(std::make_pair(keyboard, std::move(temp)));
+			if (m_firstFree != m_indices.end())
+			{
+				unsigned int indexToInsert = *m_firstFree;
+				auto firstFreeOffset = m_firstFree - m_indices.begin();
+				auto i = std::lower_bound(m_indices.begin(), m_firstFree, *m_firstFree);
+				m_indices.insert(i, indexToInsert);
+				m_firstFree = m_indices.begin() + firstFreeOffset + 1;
+
+				m_keyboards[indexToInsert] = keyboard;
+				m_solutions[indexToInsert].assign(solutionBegin, solutionEnd);
+			}
+			else
+			{
+				m_keyboards.emplace_back(keyboard);
+				m_solutions.emplace_back(solutionBegin, solutionEnd);
+				m_indices.push_back(static_cast<unsigned int>(m_indices.size()));
+				m_firstFree = m_indices.end();
+			}
 		}
 		return !dominated;
-	}
-
-	template<typename Itr, typename Cont>
-	static bool isDominated(Itr begin, Itr end, Cont&& container)
-	{
-		return isDominated(begin, end, std::begin(container.second), std::end(container.second));
-	}
-
-	template<typename Cont, typename Itr>
-	static bool isDominated(Cont&& container, Itr begin, Itr end)
-	{
-		return isDominated(std::begin(container.second), std::end(container.second), begin, end);
-	}
-
-	template<typename Cont1, typename Cont2>
-	static bool isDominated(Cont1&& cont1, Cont2&& cont2)
-	{
-		return isDominated(std::begin(cont1.second), std::end(cont1.second), std::begin(cont2.second), std::end(cont2.second));
 	}
 
 	template<typename T1, typename T2>
@@ -109,26 +117,22 @@ public:
 		return found;
 	}
 
-	void removeDuplicates()
+	SolutionsVector getResult()
 	{
-		std::sort(m_solutions.begin(), m_solutions.end(),
-		[](const Solution& lhs, const Solution& rhs)
+		SolutionsVector res;
+		res.reserve(m_firstFree - m_indices.begin());
+		for (auto i = m_indices.begin(); i != m_firstFree;++i)
 		{
-			return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
-		});
 
-		auto e=std::unique(m_solutions.begin(), m_solutions.end(),
-		[](const Solution& lhs, const Solution& rhs)
-		{
-			return std::equal(lhs.second.begin(), lhs.second.end(), rhs.second.begin(), rhs.second.end());
-		});
-		m_solutions.erase(e, m_solutions.end());
+			res.emplace_back( Solution{ m_keyboards[*i], m_solutions[*i]});
+		}
+		return res;
 	}
 
-	iterator begin() { return m_solutions.begin(); }
-	iterator end() { return m_solutions.end(); }
-	const_iterator begin() const { return m_solutions.begin(); }
-	const_iterator end() const { return m_solutions.end(); }
 private:
-	SolutionsVector m_solutions;
+	std::vector<KeyboardType> m_keyboards;
+	std::vector<std::vector<float>> m_solutions;
+	using IndexVector = std::vector<unsigned int>;
+	IndexVector m_indices;
+	IndexVector::iterator m_firstFree;
 };

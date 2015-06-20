@@ -30,5 +30,10 @@ public:
 		std::shuffle(m_keys.begin(), m_keys.end(), randomGenerator);
 	}
 
+	bool operator==(const Keyboard& rhs) const
+	{
+		return std::equal(m_keys.begin(), m_keys.end(), rhs.m_keys.begin());
+	}
+
 	std::array<int, Size> m_keys;
 };
