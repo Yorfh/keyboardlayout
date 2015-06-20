@@ -32,7 +32,7 @@ public:
 
 	bool operator==(const Keyboard& rhs) const
 	{
-		return std::equal(m_keys.begin(), m_keys.end(), rhs.m_keys.begin());
+		return memcmp(m_keys.data(), rhs.m_keys.data(), Size) == 0;
 	}
 
 	std::array<int, Size> m_keys;
