@@ -3,11 +3,6 @@
 
 using namespace testing;
 
-TEST(TestSystemIsWorking, TestSystemIsWorking)
-{
-	EXPECT_TRUE(true);
-}
-
 int main(int argc, char **argv)
 {
 	InitGoogleTest(&argc, argv);

@@ -12,7 +12,7 @@ public:
 
 	NonDominatedSet()
 	{
-
+		m_firstFree = m_indices.end();
 	}
 
 	template<typename T>
@@ -34,7 +34,43 @@ public:
 		}
 	}
 
-	size_t size() { return m_solutions.size(); }
+	NonDominatedSet(const NonDominatedSet& rhs)
+		:
+		m_keyboards(rhs.m_keyboards),
+		m_solutions(rhs.m_solutions),
+		m_indices(rhs.m_indices)
+	{
+		m_firstFree = m_firstFree + (rhs.m_firstFree - rhs.m_indices.begin());
+	}
+
+	NonDominatedSet(NonDominatedSet&& rhs)
+		:
+		m_keyboards(std::move(rhs.m_keyboards)),
+		m_solutions(std::move(rhs.m_solutions)),
+		m_indices(std::move(rhs.m_indices)),
+		m_firstFree(std::move(rhs.m_firstFree))
+	{
+	}
+
+	NonDominatedSet& operator=(const NonDominatedSet& rhs)
+	{
+		m_keyboards = rhs.m_keyboards;
+		m_solutions = rhs.m_solutions;
+		m_indices = rhs.m_indices;
+		m_firstFree = m_firstFree + (rhs.m_firstFree - rhs.m_indices.begin());
+		return *this;
+	}
+
+	NonDominatedSet& operator=(NonDominatedSet&& rhs)
+	{
+		m_keyboards = std::move(rhs.m_keyboards);
+		m_solutions = std::move(rhs.m_solutions);
+		m_indices = std::move(rhs.m_indices);
+		m_firstFree = std::move(rhs.m_firstFree);
+		return *this;
+	}
+
+	size_t size() const { return m_solutions.size(); }
 
 	template<typename T>
 	bool insert(T&& solution)
@@ -117,7 +153,7 @@ public:
 		return found;
 	}
 
-	SolutionsVector getResult()
+	SolutionsVector getResult() const
 	{
 		SolutionsVector res;
 		res.reserve(m_firstFree - m_indices.begin());

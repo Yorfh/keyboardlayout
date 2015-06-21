@@ -15,12 +15,12 @@ public:
 		}
 	}
 
-	Keyboard(std::array<int, Size>&& keys)
+	Keyboard(std::array<unsigned char, Size>&& keys)
 		: m_keys(std::move(keys))
 	{
 	}
 
-	Keyboard(const std::array<int, Size>& keys)
+	Keyboard(const std::array<unsigned char, Size>& keys)
 		: m_keys(keys)
 	{
 	}
@@ -35,5 +35,5 @@ public:
 		return memcmp(m_keys.data(), rhs.m_keys.data(), Size) == 0;
 	}
 
-	std::array<int, Size> m_keys;
+	std::array<unsigned char, Size> m_keys;
 };

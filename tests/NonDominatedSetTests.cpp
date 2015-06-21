@@ -21,7 +21,7 @@ void testEqual(const T& expected, const NonDominatedSet<1>::SolutionsVector& act
 	}
 }
 
-TEST(NonDominatingSetTests, SimpleOneDimensionalOneValue)
+TEST(NonDominatedSetTests, SimpleOneDimensionalOneValue)
 {
 	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 1> input{ { {Keyboard<1>({1}), {1.0}} } };
 	NonDominatedSet<1> s(std::begin(input), std::end(input));
@@ -29,7 +29,7 @@ TEST(NonDominatingSetTests, SimpleOneDimensionalOneValue)
 	testEqual(input, s.getResult());
 }
 
-TEST(NonDominatingSetTests, OneDimensionalTwoValues)
+TEST(NonDominatedSetTests, OneDimensionalTwoValues)
 {
 	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>({1}), {1.0}}, {Keyboard<1>({2}), {2.0}} } };
 	NonDominatedSet<1> s(std::begin(input), std::end(input));
@@ -38,7 +38,7 @@ TEST(NonDominatingSetTests, OneDimensionalTwoValues)
 	testEqual(res, s.getResult());
 }
 
-TEST(NonDominatingSetTests, OneDimensionalTwoDifferentOrder)
+TEST(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
 {
 	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>({1}), {2.0} }, {Keyboard<1>({2}), {1.0} } } };
 	NonDominatedSet<1> s(std::begin(input), std::end(input));
@@ -47,7 +47,85 @@ TEST(NonDominatingSetTests, OneDimensionalTwoDifferentOrder)
 	testEqual(res, s.getResult());
 }
 
-TEST(NonDominatingSetTests, TwoDimensional)
+TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{ a, b, c };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{  a, c, b };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{ b, a, c };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{ b, c, a };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{ c, a, b };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
+	A a = { Keyboard<1>({1}), { 1.0f } };
+	A b = { Keyboard<1>({2}), { 2.0f } };
+	A c = { Keyboard<1>({3}), { 3.0f } };
+	std::array<A, 3> input{ c, b, a };
+	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	ASSERT_EQ(1, s.size()); 
+	std::array<A, 1> res{ c };
+	testEqual(res, s.getResult());
+}
+
+TEST(NonDominatedSetTests, TwoDimensional)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
 	A a = { Keyboard<1>({1}), { 4.0f, 1.0f } };
@@ -70,7 +148,7 @@ TEST(NonDominatingSetTests, TwoDimensional)
 	testEqual(res, s.getResult());
 }
 
-TEST(NonDominatingSetTests, TwoDimensional2)
+TEST(NonDominatedSetTests, TwoDimensional2)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
 	A a = { Keyboard<1>({1}), { 4.0f, 1.0f } };

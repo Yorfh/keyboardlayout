@@ -33,11 +33,11 @@ TEST(OptimizerTests, IncreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	auto o = Optimizer<3>(); 
+	Optimizer<3> o; 
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
-	//EXPECT_THAT(keyboard.m_keys, ElementsAre(0, 1, 2));
+	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
 
 TEST(OptimizerTests, DecreasingOrder)
@@ -48,11 +48,11 @@ TEST(OptimizerTests, DecreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	auto o = Optimizer<3>(); 
+	Optimizer<3> o; 
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
-	//EXPECT_THAT(keyboard.m_keys, ElementsAre(2, 1, 0));
+	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
 
 TEST(CrossOverTests, PartiallyMatchedCrossover1)
