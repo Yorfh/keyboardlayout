@@ -15,22 +15,23 @@ public:
 		m_firstFree = m_indices.end();
 	}
 
-	template<typename T>
-	NonDominatedSet( T b, T e)
+	template<typename KeyboardArray, typename SolutionsArray>
+	NonDominatedSet(const KeyboardArray& keyboards, const SolutionsArray& solutions)
 	{
-		size_t num_elements = e - b;
+		size_t num_elements = keyboards.size();
 		if (num_elements == 0)
 		{
 			return;
 		}
-		size_t num_dimensions = b->second.size();
-		m_solutions.reserve(e - b);
-		m_keyboards.reserve(e - b);
-		m_indices.reserve(e - b);
+		size_t num_dimensions = solutions.size();
+		m_solutions.reserve(num_elements);
+		m_keyboards.reserve(num_elements);
+		m_indices.reserve(num_elements);
 		m_firstFree = m_indices.end();
-		for (auto i = b;i != e;++i)
+		auto s = solutions.begin();
+		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
 		{
-			insert(i->first, std::begin(i->second), std::end(i->second));
+			insert(*k, std::begin(*s), std::end(*s));
 		}
 	}
 

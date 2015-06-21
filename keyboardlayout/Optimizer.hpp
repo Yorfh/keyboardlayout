@@ -66,7 +66,7 @@ public:
 			populationSolutions[i] = Solution(population[i], std::vector<float>{ begin->evaluate(population[i])});
 			
 		}
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(populationSolutions.begin(), populationSolutions.end());
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
 		for (size_t i = 0;i < numGenerations; i++)
 		{
 			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)
