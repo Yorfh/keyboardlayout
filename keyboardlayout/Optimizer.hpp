@@ -59,11 +59,11 @@ public:
 		}
 		std::array<Keyboard<KeyboardSize>, populationSize> population;
 		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
-		std::array<Solution, populationSize> populationSolutions;
+		std::array<std::vector<float>, populationSize> populationSolutions;
 		for (auto i = 0; i < populationSize; i++)
 		{
 			population[i].randomize(m_randomGenerator);
-			populationSolutions[i] = Solution(population[i], std::vector<float>{ begin->evaluate(population[i])});
+			populationSolutions[i].assign({ begin->evaluate(population[i]) });
 			
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
@@ -88,8 +88,7 @@ public:
 				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
 				{
 					population[parentToReplace] = child;
-					populationSolutions[parentToReplace].first = child;
-					populationSolutions[parentToReplace].second[0] = begin->evaluate(child);
+					populationSolutions[parentToReplace].assign({ begin->evaluate(child) });
 				}
 			}
 		}

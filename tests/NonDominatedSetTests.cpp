@@ -4,47 +4,57 @@
 #include <array>
 using namespace testing;
 
-template<typename T>
-void testEqual(const T& expected, const NonDominatedSet<1>::SolutionsVector& actual)
+template<typename KeyboardArray, typename SolutionArray>
+void testEqual(const KeyboardArray& expectedKeyboards, const SolutionArray& expectedSolutions, 
+	const NonDominatedSet<1>::SolutionsVector& actual)
 {
-	ASSERT_EQ(expected.size(), actual.size());
-	auto ii = std::begin(expected);
+	ASSERT_EQ(expectedKeyboards.size(), actual.size());
+	ASSERT_EQ(expectedSolutions.size(), actual.size());
+	auto ek = std::begin(expectedKeyboards);
+	auto es = std::begin(expectedSolutions);
 	for (auto&& i : actual)
 	{
-		auto jj = std::begin(ii->second);
+		EXPECT_EQ(*ek, i.first);
+		
+		auto si = std::begin(*es);
 		for (auto&& j : i.second)
 		{
-			EXPECT_EQ(*jj, j);
-			++jj;
+			EXPECT_EQ(*si, j);
+			++si;
 		}
-		++ii;
+		++ek;
+		++es;
 	}
 }
+template<size_t Size>
+using KeyboardArray = std::array<Keyboard<1>, Size>;
+template<size_t Size, size_t NumDimensions = 1>
+using SolutionArray = std::array<std::array<float, NumDimensions>, Size>;
 
 TEST(NonDominatedSetTests, SimpleOneDimensionalOneValue)
 {
-	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 1> input{ { {Keyboard<1>({1}), {1.0}} } };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<1> keyboards{ Keyboard<1>({1}) };
+	SolutionArray<1> solutions{ {1.0} };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	testEqual(input, s.getResult());
+	testEqual(keyboards, solutions, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalTwoValues)
 {
-	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>({1}), {1.0}}, {Keyboard<1>({2}), {2.0}} } };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<2> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
+	SolutionArray<2> solutions{ 1.0, 2.0 };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 1> res{ { {Keyboard<1>({2}), {2.0} } } };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
 }
-
 TEST(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
 {
-	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 2> input{ { {Keyboard<1>({1}), {2.0} }, {Keyboard<1>({2}), {1.0} } } };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<2> keyboards{ Keyboard<1>({2}), Keyboard<1>({1}) };
+	SolutionArray<2> solutions{ 2.0, 1.0 };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<std::pair<Keyboard<1>, std::array<float, 1>>, 1> res{ { {Keyboard<1>({2}), {2.0} } } };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
@@ -53,24 +63,23 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{ a, b, c };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
-
 TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{  a, c, b };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
@@ -79,11 +88,11 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{ b, a, c };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
@@ -92,11 +101,11 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{ b, c, a };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
-	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
@@ -105,11 +114,12 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{ c, a, b };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
@@ -118,11 +128,12 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	std::array<A, 3> input{ c, b, a };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
+	SolutionArray<3> solutions{ a.second, b.second, c.second };
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
-	testEqual(res, s.getResult());
+	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 }
 
 TEST(NonDominatedSetTests, TwoDimensional)
@@ -136,16 +147,18 @@ TEST(NonDominatedSetTests, TwoDimensional)
 	A f = { Keyboard<1>({6}), { 2.0f, 2.0f } };
 	A g = { Keyboard<1>({7}), { 1.0f, 2.0f } };
 	A h = { Keyboard<1>({8}), { 2.0f, 3.0f } };
-	std::array<A, 8> input{ a, b, c, d, e, f, g, h };
+	KeyboardArray<8> keyboards{ a.first, b.first, c.first, d.first, e.first, f.first, g.first, h.first };
+	SolutionArray<8, 2> solutions{ a.second, b.second, c.second, d.second, e.second, f.second, g.second, h.second };
 	// 4
 	// 3   h 
 	// 2 g f e
 	// 1 d c b a
 	//   1 2 3 4
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(3, s.size()); 
-	std::array<A, 3> res{ a, e, h };
-	testEqual(res, s.getResult());
+	KeyboardArray<3> keyboardRes{ a.first, e.first, h.first };
+	SolutionArray<3, 2> solutionRes{ a.second, e.second, h.second };
+	testEqual(keyboardRes, solutionRes, s.getResult());
 }
 
 TEST(NonDominatedSetTests, TwoDimensional2)
@@ -159,14 +172,17 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	A f = { Keyboard<1>({6}), { 2.0f, 2.0f } };
 	A g = { Keyboard<1>({7}), { 1.0f, 2.0f } };
 	A h = { Keyboard<1>({8}), { 2.0f, 3.0f } };
+	KeyboardArray<8> keyboards{ a.first, b.first, c.first, d.first, e.first, f.first, g.first, h.first };
+	SolutionArray<8, 2> solutions{ a.second, b.second, c.second, d.second, e.second, f.second, g.second, h.second };
 	// 4
 	// 3   h e
 	// 2 g f b
 	// 1 d c   a
 	//   1 2 3 4
-	std::array<A, 8> input{ a, b, c, d, e, f, g, h };
-	NonDominatedSet<1> s(std::begin(input), std::end(input));
+	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(2, s.size()); 
 	std::array<A, 2> res{ a, e };
-	testEqual(res, s.getResult());
+	KeyboardArray<2> keyboardRes{ a.first, e.first };
+	SolutionArray<2, 2> solutionRes{ a.second, e.second };
+	testEqual(keyboardRes, solutionRes, s.getResult());
 }
