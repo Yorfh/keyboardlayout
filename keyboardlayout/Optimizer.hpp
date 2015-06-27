@@ -4,6 +4,7 @@
 #include "NonDominatedSet.hpp"
 #include <random>
 #include <vector>
+#include <utility>
 
 template<size_t KeyboardSize>
 class Objective;
@@ -63,8 +64,14 @@ public:
 		for (auto i = 0; i < populationSize; i++)
 		{
 			population[i].randomize(m_randomGenerator);
-			populationSolutions[i].assign({ begin->evaluate(population[i]) });
-			
+			populationSolutions[i].resize(end - begin);
+			Keyboard<KeyboardSize> keyboard = population[i];
+			std::transform(begin, end, populationSolutions[i].begin(), 
+			[&keyboard](typename std::iterator_traits<Itr>::reference objective)
+			{
+				return objective.evaluate(keyboard);
+
+			});
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
 		for (size_t i = 0;i < numGenerations; i++)
@@ -88,7 +95,12 @@ public:
 				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
 				{
 					population[parentToReplace] = child;
-					populationSolutions[parentToReplace].assign({ begin->evaluate(child) });
+					std::transform(begin, end, populationSolutions[parentToReplace].begin(), 
+					[child](typename std::iterator_traits<Itr>::reference objective)
+					{
+						return objective.evaluate(child);
+
+					});
 				}
 			}
 		}
