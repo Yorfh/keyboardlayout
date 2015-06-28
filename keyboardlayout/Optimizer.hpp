@@ -65,10 +65,10 @@ public:
 		const auto minT = 0.1f;
 		const auto mutationProbability = 0.5f;
 		const auto temperatureStep = 0.01f;
-		auto parentSelector = std::uniform_int_distribution<>(0, PopulationSize - 1);
 		auto parentReplaceSelector = std::bernoulli_distribution();
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		std::array<float, PopulationSize> weights;
+		FitnessCalculator fitnessCalculator;
 
 		for (auto&& i : weights)
 		{
@@ -77,6 +77,7 @@ public:
 		std::array<Keyboard<KeyboardSize>, PopulationSize> population;
 		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
 		std::array<std::vector<float>, PopulationSize> populationSolutions;
+		std::vector<float> fitnesses;
 		std::vector<float> solution;
 		solution.resize(end - begin);
 
@@ -88,16 +89,15 @@ public:
 			evaluate(populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
+		fitnesses.clear();
+		fitnessCalculator.calculateFitness(m_NonDominatedSet, populationSolutions, std::back_inserter(fitnesses));
 		for (size_t i = 0;i < numGenerations; i++)
 		{
 			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)
 			{
-				auto parent1 = parentSelector(m_randomGenerator);
-				auto parent2 = parentSelector(m_randomGenerator);
-				while (parent2 == parent1)
-				{
-					parent2 = parentSelector(m_randomGenerator);
-				}
+				auto parents = selectParents(fitnesses);
+				auto parent1 = parents.first;
+				auto parent2 = parents.second;
 				auto child = produceChild(population[parent1], population[parent2]);
 				if (probability(m_randomGenerator) < mutationProbability)
 				{
@@ -128,7 +128,38 @@ public:
 		}
 		return m_NonDominatedSet;
 	}
+
 protected:
+	size_t selectParent(std::vector<float>& fitnesses)
+	{
+		auto parentSelector = std::uniform_int_distribution<>(0, PopulationSize - 1);
+		auto parent1 = parentSelector(m_randomGenerator);
+		auto parent2 = parentSelector(m_randomGenerator);
+		while (parent2 == parent1)
+		{
+			parent2 = parentSelector(m_randomGenerator);
+		}
+		if (fitnesses[parent1] > fitnesses[parent2])
+		{
+			return parent1;
+		}
+		else
+		{
+			return parent2;
+		}
+	}
+
+	std::pair<size_t, size_t> selectParents(std::vector<float> fitnesses)
+	{
+		auto parent1 = selectParent(fitnesses);
+		auto parent2 = selectParent(fitnesses);
+		while (parent1 != parent2)
+		{
+			parent2 = selectParent(fitnesses);
+		}
+		return std::make_pair(parent1, parent2);
+	}
+
 
 	Keyboard<KeyboardSize> produceChild(const Keyboard<KeyboardSize>& parent1, const Keyboard<KeyboardSize>& parent2)
 	{
