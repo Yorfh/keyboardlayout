@@ -6,6 +6,7 @@
 template<size_t KeyboardSize>
 class NonDominatedSet
 {
+	friend class FitnessCalculator;
 public:
 	using KeyboardType = Keyboard<KeyboardSize>;
 	using Solution = std::pair<KeyboardType, std::vector<float>>;
@@ -72,7 +73,7 @@ public:
 		return *this;
 	}
 
-	size_t size() const { return m_solutions.size(); }
+	size_t size() const { return m_firstFree - m_indices.begin(); }
 
 
 	template<typename SolutionType>
