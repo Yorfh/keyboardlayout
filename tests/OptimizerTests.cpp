@@ -33,7 +33,7 @@ TEST(OptimizerTests, IncreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 50> o; 
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -48,7 +48,37 @@ TEST(OptimizerTests, DecreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 50> o; 
+	auto objectives = { TestObjective<3>(evaluate) };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	ASSERT_EQ(1, solutions.size());
+	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
+}
+
+TEST(OptimizerTests, IncreasingOrderSmallPopulation)
+{
+	auto evaluate = [](const Keyboard<3>& keyboard)
+	{
+		return keyboard.m_keys[0] * 10.0f +
+			keyboard.m_keys[1] * 100.0f +
+			keyboard.m_keys[2] * 1000.0f;
+	};
+	Optimizer<3, 3> o; 
+	auto objectives = { TestObjective<3>(evaluate) };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	ASSERT_EQ(1, solutions.size());
+	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
+}
+
+TEST(OptimizerTests, DecreasingOrderSmallPopulation)
+{
+	auto evaluate = [](const Keyboard<3>& keyboard)
+	{
+		return keyboard.m_keys[0] * 1000.0f +
+			keyboard.m_keys[1] * 100.0f +
+			keyboard.m_keys[2] * 10.0f;
+	};
+	Optimizer<3, 3> o; 
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());

@@ -35,10 +35,26 @@ namespace detail
 	}
 }
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, size_t PopulationSize>
 class Optimizer
 {
 public:
+	Optimizer()
+	{
+		std::random_device rd;
+		m_randomGenerator.seed(rd());
+	}
+
+	template<typename Solution, typename Itr>
+	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
+	{
+		std::transform(begin, end, solution.begin(),
+		[&keyboard](typename std::iterator_traits<Itr>::reference objective)
+		{
+			return objective.evaluate(keyboard);
+		});
+	}
+
 	template<typename Itr>
 	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numGenerations)
 	{
@@ -47,31 +63,29 @@ public:
 
 		const auto maxT = 1.0f;
 		const auto minT = 0.1f;
-		const auto populationSize = 50;
 		const auto mutationProbability = 0.5f;
 		const auto temperatureStep = 0.01f;
-		auto parentSelector = std::uniform_int_distribution<>(0, populationSize - 1);
+		auto parentSelector = std::uniform_int_distribution<>(0, PopulationSize - 1);
+		auto parentReplaceSelector = std::bernoulli_distribution();
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		std::array<float, populationSize> weights;
+		std::array<float, PopulationSize> weights;
 
 		for (auto&& i : weights)
 		{
 			i = 0.0f;
 		}
-		std::array<Keyboard<KeyboardSize>, populationSize> population;
+		std::array<Keyboard<KeyboardSize>, PopulationSize> population;
 		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
-		std::array<std::vector<float>, populationSize> populationSolutions;
-		for (auto i = 0; i < populationSize; i++)
+		std::array<std::vector<float>, PopulationSize> populationSolutions;
+		std::vector<float> solution;
+		solution.resize(end - begin);
+
+		for (auto i = 0; i < PopulationSize; i++)
 		{
 			population[i].randomize(m_randomGenerator);
 			populationSolutions[i].resize(end - begin);
 			Keyboard<KeyboardSize> keyboard = population[i];
-			std::transform(begin, end, populationSolutions[i].begin(), 
-			[&keyboard](typename std::iterator_traits<Itr>::reference objective)
-			{
-				return objective.evaluate(keyboard);
-
-			});
+			evaluate(populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
 		for (size_t i = 0;i < numGenerations; i++)
@@ -83,7 +97,6 @@ public:
 				while (parent2 == parent1)
 				{
 					parent2 = parentSelector(m_randomGenerator);
-					parent2 = parentSelector(m_randomGenerator);
 				}
 				auto child = produceChild(population[parent1], population[parent2]);
 				if (probability(m_randomGenerator) < mutationProbability)
@@ -91,16 +104,25 @@ public:
 					mutate(child);
 				}
 				localSearch(child);
-				auto parentToReplace = parentSelector(m_randomGenerator);
+				evaluate(solution, child, begin, end);
+
+				auto& parent1Solution = populationSolutions[parent1];
+				auto& parent2Solution = populationSolutions[parent2];
+
+				
+				if (!NonDominatedSet<KeyboardSize>::isDominated(solution.begin(), solution.end(), parent1Solution.begin(), parent1Solution.begin()))	
+				{
+					if (!NonDominatedSet<KeyboardSize>::isDominated(solution.begin(), solution.end(), parent2Solution.begin(), parent2Solution.begin()))
+					{
+						m_NonDominatedSet.insert(child, solution.begin(), solution.end());
+					}
+				}
+
+				auto parentToReplace = parentReplaceSelector(m_randomGenerator) ? parent1 : parent2;
 				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
 				{
 					population[parentToReplace] = child;
-					std::transform(begin, end, populationSolutions[parentToReplace].begin(), 
-					[child](typename std::iterator_traits<Itr>::reference objective)
-					{
-						return objective.evaluate(child);
-
-					});
+					populationSolutions[parentToReplace].swap(solution);
 				}
 			}
 		}
