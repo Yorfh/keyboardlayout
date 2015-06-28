@@ -30,5 +30,11 @@
     <ClInclude Include="NonDominatedSet.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MakeArray.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

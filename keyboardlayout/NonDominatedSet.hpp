@@ -1,5 +1,6 @@
 #pragma once
 #include "Keyboard.hpp"
+#include "Helpers.hpp"
 #include <algorithm>
 
 template<size_t KeyboardSize>
@@ -31,7 +32,7 @@ public:
 		auto s = solutions.begin();
 		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
 		{
-			insert(*k, std::begin(*s), std::end(*s));
+			insert(*k, *s);
 		}
 	}
 
@@ -73,14 +74,9 @@ public:
 
 	size_t size() const { return m_solutions.size(); }
 
-	template<typename T>
-	bool insert(T&& solution)
-	{
-		return insert(solution.first, std::begin(solution.second), std::end(solution.second));
-	}
 
-	template<typename T>
-	bool insert(const KeyboardType& keyboard, T solutionBegin, T solutionEnd)
+	template<typename SolutionType>
+	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
 	{
 		if (std::find_if(m_indices.begin(), m_firstFree, 
 		[this, &keyboard](size_t index)
@@ -92,19 +88,17 @@ public:
 		}
 		bool dominated = false;
 		auto i = std::stable_partition(m_indices.begin(), m_firstFree, 
-		[&solutionBegin, &solutionEnd, &dominated, this](size_t index)
+		[&solution, &dominated, this](size_t index)
 		{
-			auto mBegin = m_solutions[index].begin();
-			auto mEnd = m_solutions[index].end();
 			if (dominated)
 			{
 				return true;
 			}
-			else if (isDominated(mBegin, mEnd, solutionBegin, solutionEnd))
+			else if (isDominated(m_solutions[index], solution))
 			{
 				return false;
 			}
-			else if (isDominated(solutionBegin, solutionEnd, mBegin, mEnd))
+			else if (isDominated(solution, m_solutions[index]))
 			{
 				dominated = true;
 			}
@@ -122,12 +116,12 @@ public:
 				m_firstFree = m_indices.begin() + firstFreeOffset + 1;
 
 				m_keyboards[indexToInsert] = keyboard;
-				m_solutions[indexToInsert].assign(solutionBegin, solutionEnd);
+				m_solutions[indexToInsert].assign(std::begin(solution), std::end(solution));
 			}
 			else
 			{
 				m_keyboards.emplace_back(keyboard);
-				m_solutions.emplace_back(solutionBegin, solutionEnd);
+				m_solutions.emplace_back(std::begin(solution), std::end(solution));
 				m_indices.push_back(static_cast<unsigned int>(m_indices.size()));
 				m_firstFree = m_indices.end();
 			}
@@ -135,24 +129,6 @@ public:
 		return !dominated;
 	}
 
-	template<typename T1, typename T2>
-	static bool isDominated(T1 begin1, T1 end1, T2 begin2, T2 end2)
-	{
-		bool found = false;
-		auto j = begin2;
-		for (auto i = begin1; i != end1; ++i, ++j)
-		{
-			if (*i > *j)
-			{
-				return false;
-			}
-			else if (*i < *j)
-			{
-				found = true;
-			}
-		}
-		return found;
-	}
 
 	SolutionsVector getResult() const
 	{

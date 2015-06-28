@@ -110,11 +110,11 @@ public:
 				auto& parent2Solution = populationSolutions[parent2];
 
 				
-				if (!NonDominatedSet<KeyboardSize>::isDominated(solution.begin(), solution.end(), parent1Solution.begin(), parent1Solution.begin()))	
+				if (!isDominated(solution, parent1Solution))	
 				{
-					if (!NonDominatedSet<KeyboardSize>::isDominated(solution.begin(), solution.end(), parent2Solution.begin(), parent2Solution.begin()))
+					if (!isDominated(solution, parent2Solution))
 					{
-						m_NonDominatedSet.insert(child, solution.begin(), solution.end());
+						m_NonDominatedSet.insert(child, solution);
 					}
 				}
 

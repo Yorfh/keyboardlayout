@@ -121,7 +121,9 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Helpers.hpp" />
     <ClInclude Include="Keyboard.hpp" />
+    <ClInclude Include="MakeArray.hpp" />
     <ClInclude Include="NonDominatedSet.hpp" />
     <ClInclude Include="Objective.hpp" />
     <ClInclude Include="Optimizer.hpp" />
