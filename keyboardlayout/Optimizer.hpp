@@ -62,6 +62,11 @@ public:
 		m_tStep = tStep;
 	}
 
+	void numIterations(size_t num)
+	{
+		m_numIterations = num;
+	}
+
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
@@ -83,7 +88,7 @@ public:
 		const auto maxT = m_maxT;
 		const auto tStep = m_tStep;
 
-		m_weights.resize(m_populationSize, 1.0f);
+		selectWeightVectors(end - begin);
 		std::vector<float> solution;
 		solution.resize(end - begin);
 		m_population.resize(m_populationSize);
@@ -98,13 +103,21 @@ public:
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
-		for (auto currentT = maxT; currentT > minT; currentT -= tStep)
+
+		for (size_t iteration = 0; iteration < m_numIterations; iteration++)
 		{
-			for (size_t i = 0; i < m_populationSize; ++i)
+			for (auto currentT = maxT; currentT > minT; currentT -= tStep)
 			{
-				Keyboard<KeyboardSize> newKeyboard;
-				simulatedAnnealing(i, begin, end, currentT, newKeyboard, solution);
-				updatePopulation(i, newKeyboard, solution);
+				for (size_t i = 0; i < m_populationSize; ++i)
+				{
+					Keyboard<KeyboardSize> newKeyboard;
+					simulatedAnnealing(i, begin, end, currentT, newKeyboard, solution);
+					updatePopulation(i, newKeyboard, solution);
+				}
+			}
+			for (auto i = 0; i < m_populationSize; i++)
+			{
+				adaptWeightVectors();
 			}
 		}
 		return m_NonDominatedSet;
@@ -135,8 +148,38 @@ protected:
 
 	void updatePopulation(size_t index, const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
 	{
-		m_population[index] = keyboard;
-		m_populationSolutions[index] = solution;
+		float solutionValue = weightedSum(solution, m_weights[index]);
+		float populationValue = weightedSum(m_populationSolutions[index], m_weights[index]);
+		if (solutionValue > populationValue)
+		{
+			m_population[index] = keyboard;
+			m_populationSolutions[index] = solution;
+		}
+	}
+
+	float weightedSum(const std::vector<float>& solution, const std::vector<float>& weights)
+	{
+		auto weight = std::begin(weights);
+		float sum = 0.0f;
+		for (auto&& s : solution)
+		{
+			sum += s * (*weight);
+			++weight;
+		}
+		return sum;
+	}
+
+	void selectWeightVectors(size_t numObjectives)
+	{
+		m_weights.reserve(m_populationSize);
+		for (size_t i = 0; i < m_populationSize;i++)
+		{
+			m_weights.emplace_back(numObjectives);
+		}
+	}
+
+	void adaptWeightVectors()
+	{
 	}
 
 	size_t selectParent(std::vector<float>& fitnesses)
@@ -191,12 +234,7 @@ protected:
 		return ret;
 	}
 
-	void localSearch(Keyboard<KeyboardSize>& keyboard)
-	{
-
-	}
-
-	float annealingProbability(Keyboard<KeyboardSize>& first, Keyboard<KeyboardSize>& second, float weight, float t)
+	float annealingProbability(Keyboard<KeyboardSize>& first, Keyboard<KeyboardSize>& second, std::vector<float>& weights, float t)
 	{
 		return 0.5;
 	}
@@ -205,10 +243,11 @@ protected:
 	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
-	std::vector<float> m_weights;
+	std::vector<std::vector<float>> m_weights;
 	std::vector<float> m_tempSolution;
 	size_t m_populationSize = 0;
 	size_t m_localSearchDepth = 0;
+	size_t m_numIterations = 0;
 	float m_maxT = 1.0f;
 	float m_minT = 0.1f;
 	float m_tStep = 0.01f;

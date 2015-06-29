@@ -36,6 +36,7 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 	Optimizer<3> o; 
 	o.populationSize(50);
 	o.localSearchDept(0);
+	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -53,6 +54,7 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 	Optimizer<3> o; 
 	o.populationSize(50);
 	o.localSearchDept(0);
+	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -70,6 +72,7 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	Optimizer<3> o; 
 	o.populationSize(3);
 	o.localSearchDept(20);
+	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -87,6 +90,7 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	Optimizer<3> o; 
 	o.populationSize(3);
 	o.localSearchDept(20);
+	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
