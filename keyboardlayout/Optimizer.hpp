@@ -76,57 +76,69 @@ public:
 	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numGenerations)
 	{
 		// The algorithm is based on 
-		// "Evolutionary multi - objective simulated annealing with adaptive and competitive search direction"
+		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"
 		// "A Simulated Annealing based Genetic Local Search Algorithm for Multi-objective Multicast Routing Problems"
 
 		const auto minT = m_minT;
 		const auto maxT = m_maxT;
 		const auto tStep = m_tStep;
-		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		std::vector<float> weights(m_populationSize);
 
-		for (auto&& i : weights)
-		{
-			i = 0.0f;
-		}
-		std::vector<Keyboard<KeyboardSize>> population(m_populationSize);
-		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
-		std::vector<std::vector<float>> populationSolutions(m_populationSize);
+		m_weights.resize(m_populationSize, 1.0f);
 		std::vector<float> solution;
 		solution.resize(end - begin);
+		m_population.resize(m_populationSize);
+		m_populationSolutions.resize(m_populationSize);
+		m_tempSolution.resize(end - begin);
 
 		for (auto i = 0; i < m_populationSize; i++)
 		{
-			population[i].randomize(m_randomGenerator);
-			populationSolutions[i].resize(end - begin);
-			Keyboard<KeyboardSize> keyboard = population[i];
-			evaluate(populationSolutions[i], keyboard, begin, end);
+			m_population[i].randomize(m_randomGenerator);
+			m_populationSolutions[i].resize(end - begin);
+			Keyboard<KeyboardSize> keyboard = m_population[i];
+			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
 		for (auto currentT = maxT; currentT > minT; currentT -= tStep)
 		{
 			for (size_t i = 0; i < m_populationSize; ++i)
 			{
-				for (size_t c = 0; c < m_localSearchDepth; ++c)
-				{
-					auto neighbour = mutate(population[i]);
-					evaluate(solution, neighbour, begin, end);
-					if (!isDominated(solution, populationSolutions[i]))
-					{
-						m_NonDominatedSet.insert(neighbour, solution);
-					}
-					if (probability(m_randomGenerator) < annealingProbability(population[i], neighbour, weights[i], currentT))
-					{
-						population[i] = neighbour;
-						populationSolutions[i].swap(solution);
-					}
-				}
+				Keyboard<KeyboardSize> newKeyboard;
+				simulatedAnnealing(i, begin, end, currentT, newKeyboard, solution);
+				updatePopulation(i, newKeyboard, solution);
 			}
 		}
 		return m_NonDominatedSet;
 	}
 
 protected:
+	template<typename Itr>
+	void simulatedAnnealing(size_t index, Itr begin, Itr end, float currentT, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution)
+	{
+		auto probability = std::uniform_real_distribution<float>(0, 1.0);
+		outKeyboard = m_population[index];
+		outSolution = m_populationSolutions[index];
+		for (size_t c = 0; c < m_localSearchDepth; ++c)
+		{
+			auto neighbour = mutate(outKeyboard);
+			evaluate(m_tempSolution, neighbour, begin, end);
+			if (!isDominated(m_tempSolution, outSolution))
+			{
+				m_NonDominatedSet.insert(neighbour, m_tempSolution);
+			}
+			if (probability(m_randomGenerator) < annealingProbability(m_population[index], neighbour, m_weights[index], currentT))
+			{
+				outKeyboard = neighbour;
+				outSolution.swap(m_tempSolution);
+			}
+		}
+	}
+
+	void updatePopulation(size_t index, const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
+	{
+		m_population[index] = keyboard;
+		m_populationSolutions[index] = solution;
+	}
+
 	size_t selectParent(std::vector<float>& fitnesses)
 	{
 		auto parentSelector = std::uniform_int_distribution<>(0, PopulationSize - 1);
@@ -191,6 +203,10 @@ protected:
 
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
+	std::vector<Keyboard<KeyboardSize>> m_population;
+	std::vector<std::vector<float>> m_populationSolutions;
+	std::vector<float> m_weights;
+	std::vector<float> m_tempSolution;
 	size_t m_populationSize = 0;
 	size_t m_localSearchDepth = 0;
 	float m_maxT = 1.0f;
