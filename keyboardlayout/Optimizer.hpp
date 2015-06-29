@@ -59,16 +59,15 @@ public:
 	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numGenerations)
 	{
 		// The algorithm is based on 
+		// "Evolutionary multi - objective simulated annealing with adaptive and competitive search direction"
 		// "A Simulated Annealing based Genetic Local Search Algorithm for Multi-objective Multicast Routing Problems"
 
 		const auto maxT = 1.0f;
 		const auto minT = 0.1f;
-		const auto mutationProbability = 0.5f;
-		const auto temperatureStep = 0.01f;
-		auto parentReplaceSelector = std::bernoulli_distribution();
+		const auto tStep = 0.01f;
+		const auto numLocalMoves = 20;
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		std::array<float, PopulationSize> weights;
-		FitnessCalculator fitnessCalculator;
 
 		for (auto&& i : weights)
 		{
@@ -77,7 +76,6 @@ public:
 		std::array<Keyboard<KeyboardSize>, PopulationSize> population;
 		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
 		std::array<std::vector<float>, PopulationSize> populationSolutions;
-		std::vector<float> fitnesses;
 		std::vector<float> solution;
 		solution.resize(end - begin);
 
@@ -89,40 +87,23 @@ public:
 			evaluate(populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
-		fitnesses.clear();
-		fitnessCalculator.calculateFitness(m_NonDominatedSet, populationSolutions, std::back_inserter(fitnesses));
-		for (size_t i = 0;i < numGenerations; i++)
+		for (auto currentT = maxT; currentT > minT; currentT -= tStep)
 		{
-			for (auto currentT = maxT; currentT > minT; currentT-=temperatureStep)
+			for (size_t i = 0; i < PopulationSize; ++i)
 			{
-				auto parents = selectParents(fitnesses);
-				auto parent1 = parents.first;
-				auto parent2 = parents.second;
-				auto child = produceChild(population[parent1], population[parent2]);
-				if (probability(m_randomGenerator) < mutationProbability)
+				for (size_t c = 0; c < numLocalMoves; ++c)
 				{
-					mutate(child);
-				}
-				localSearch(child);
-				evaluate(solution, child, begin, end);
-
-				auto& parent1Solution = populationSolutions[parent1];
-				auto& parent2Solution = populationSolutions[parent2];
-
-				
-				if (!isDominated(solution, parent1Solution))	
-				{
-					if (!isDominated(solution, parent2Solution))
+					auto neighbour = mutate(population[i]);
+					evaluate(solution, neighbour, begin, end);
+					if (!isDominated(solution, populationSolutions[i]))
 					{
-						m_NonDominatedSet.insert(child, solution);
+						m_NonDominatedSet.insert(neighbour, solution);
 					}
-				}
-
-				auto parentToReplace = parentReplaceSelector(m_randomGenerator) ? parent1 : parent2;
-				if (probability(m_randomGenerator) < annealingProbability(population[parentToReplace], child, weights[parent1], currentT))
-				{
-					population[parentToReplace] = child;
-					populationSolutions[parentToReplace].swap(solution);
+					if (probability(m_randomGenerator) < annealingProbability(population[i], neighbour, weights[i], currentT))
+					{
+						population[i] = neighbour;
+						populationSolutions[i].swap(solution);
+					}
 				}
 			}
 		}
@@ -173,13 +154,14 @@ protected:
 		return detail::partiallyMatchedCrossover(parent1, parent2, p1, p2);
 	}
 
-	void mutate(Keyboard<KeyboardSize>& keyboard)
+	Keyboard<KeyboardSize> mutate(const Keyboard<KeyboardSize>& keyboard)
 	{
-
+		Keyboard<KeyboardSize> ret = keyboard;
 		auto dist = std::uniform_int_distribution<size_t>(0, keyboard.m_keys.size()-1);
 		auto k1 = dist(m_randomGenerator);
 		auto k2 = dist(m_randomGenerator);
-		std::swap(k1, k2);
+		std::swap(ret.m_keys[k1], ret.m_keys[k2]);
+		return ret;
 	}
 
 	void localSearch(Keyboard<KeyboardSize>& keyboard)
@@ -189,7 +171,7 @@ protected:
 
 	float annealingProbability(Keyboard<KeyboardSize>& first, Keyboard<KeyboardSize>& second, float weight, float t)
 	{
-		return 0.0;
+		return 0.5;
 	}
 
 	std::mt19937 m_randomGenerator;
