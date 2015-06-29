@@ -25,7 +25,7 @@ public:
 };
 
 
-TEST(OptimizerTests, IncreasingOrder)
+TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 {
 	auto evaluate = [](const Keyboard<3>& keyboard)
 	{
@@ -33,14 +33,16 @@ TEST(OptimizerTests, IncreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	Optimizer<3, 50> o; 
+	Optimizer<3> o; 
+	o.populationSize(50);
+	o.localSearchDept(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
 
-TEST(OptimizerTests, DecreasingOrder)
+TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 {
 	auto evaluate = [](const Keyboard<3>& keyboard)
 	{
@@ -48,7 +50,9 @@ TEST(OptimizerTests, DecreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3, 50> o; 
+	Optimizer<3> o; 
+	o.populationSize(50);
+	o.localSearchDept(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -63,7 +67,9 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	Optimizer<3, 3> o; 
+	Optimizer<3> o; 
+	o.populationSize(3);
+	o.localSearchDept(20);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());
@@ -78,7 +84,9 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3, 3> o; 
+	Optimizer<3> o; 
+	o.populationSize(3);
+	o.localSearchDept(20);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
 	ASSERT_EQ(1, solutions.size());

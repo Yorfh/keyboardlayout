@@ -35,7 +35,7 @@ namespace detail
 	}
 }
 
-template<size_t KeyboardSize, size_t PopulationSize>
+template<size_t KeyboardSize>
 class Optimizer
 {
 public:
@@ -43,6 +43,23 @@ public:
 	{
 		std::random_device rd;
 		m_randomGenerator.seed(rd());
+	}
+
+	void populationSize(size_t size)
+	{
+		m_populationSize = size;
+	}
+
+	void localSearchDept(size_t size)
+	{
+		m_localSearchDepth = size;
+	}
+
+	void temperature(float minT, float maxT, float tStep)
+	{
+		m_minT = minT;
+		m_maxT = maxT;
+		m_tStep = tStep;
 	}
 
 	template<typename Solution, typename Itr>
@@ -62,24 +79,23 @@ public:
 		// "Evolutionary multi - objective simulated annealing with adaptive and competitive search direction"
 		// "A Simulated Annealing based Genetic Local Search Algorithm for Multi-objective Multicast Routing Problems"
 
-		const auto maxT = 1.0f;
-		const auto minT = 0.1f;
-		const auto tStep = 0.01f;
-		const auto numLocalMoves = 20;
+		const auto minT = m_minT;
+		const auto maxT = m_maxT;
+		const auto tStep = m_tStep;
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		std::array<float, PopulationSize> weights;
+		std::vector<float> weights(m_populationSize);
 
 		for (auto&& i : weights)
 		{
 			i = 0.0f;
 		}
-		std::array<Keyboard<KeyboardSize>, PopulationSize> population;
+		std::vector<Keyboard<KeyboardSize>> population(m_populationSize);
 		using Solution = typename NonDominatedSet<KeyboardSize>::Solution;
-		std::array<std::vector<float>, PopulationSize> populationSolutions;
+		std::vector<std::vector<float>> populationSolutions(m_populationSize);
 		std::vector<float> solution;
 		solution.resize(end - begin);
 
-		for (auto i = 0; i < PopulationSize; i++)
+		for (auto i = 0; i < m_populationSize; i++)
 		{
 			population[i].randomize(m_randomGenerator);
 			populationSolutions[i].resize(end - begin);
@@ -89,9 +105,9 @@ public:
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(population, populationSolutions);
 		for (auto currentT = maxT; currentT > minT; currentT -= tStep)
 		{
-			for (size_t i = 0; i < PopulationSize; ++i)
+			for (size_t i = 0; i < m_populationSize; ++i)
 			{
-				for (size_t c = 0; c < numLocalMoves; ++c)
+				for (size_t c = 0; c < m_localSearchDepth; ++c)
 				{
 					auto neighbour = mutate(population[i]);
 					evaluate(solution, neighbour, begin, end);
@@ -141,7 +157,6 @@ protected:
 		return std::make_pair(parent1, parent2);
 	}
 
-
 	Keyboard<KeyboardSize> produceChild(const Keyboard<KeyboardSize>& parent1, const Keyboard<KeyboardSize>& parent2)
 	{
 		auto dist = std::uniform_int_distribution<size_t>(0, parent1.m_keys.size()-1);
@@ -176,4 +191,9 @@ protected:
 
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
+	size_t m_populationSize = 0;
+	size_t m_localSearchDepth = 0;
+	float m_maxT = 1.0f;
+	float m_minT = 0.1f;
+	float m_tStep = 0.01f;
 };
