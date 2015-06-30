@@ -78,7 +78,7 @@ public:
 	}
 
 	template<typename Itr>
-	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numGenerations)
+	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end)
 	{
 		// The algorithm is based on 
 		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"

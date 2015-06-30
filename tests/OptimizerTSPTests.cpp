@@ -111,7 +111,7 @@ TEST(OptimizerTSPTests, Burma14)
 	o.localSearchDept(20);
 	o.numIterations(10);
 	auto objectives = { TestObjective<14>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	ASSERT_EQ(1, solutions.size());
 	auto result = solutions.getResult()[0].first;
 	int resultValue = static_cast<int>(std::round(evaluate(result)));

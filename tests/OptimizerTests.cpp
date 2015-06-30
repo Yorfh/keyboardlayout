@@ -39,7 +39,7 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 	o.localSearchDept(0);
 	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
@@ -57,7 +57,7 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 	o.localSearchDept(0);
 	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
@@ -75,7 +75,7 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
@@ -93,7 +93,7 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
@@ -118,7 +118,7 @@ TEST(OptimizerTests, TwoObjectives)
 	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate1), TestObjective<3>(evaluate2) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	auto results = solutions.getResult();
 	ASSERT_EQ(4, solutions.size());
 	std::sort(results.begin(), results.end(), 
