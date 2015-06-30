@@ -3,6 +3,7 @@
 #include "gmock/gmock.h"
 #include <array>
 #include "Objective.hpp"
+#include "MakeArray.hpp"
 
 using namespace testing;
 
