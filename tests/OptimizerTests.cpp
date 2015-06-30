@@ -97,6 +97,56 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
 
+TEST(OptimizerTests, TwoObjectives)
+{
+	auto evaluate1 = [](const Keyboard<3>& keyboard)
+	{
+		return keyboard.m_keys[0] * 10.0f +
+			keyboard.m_keys[1] * 100.0f +
+			keyboard.m_keys[2] * 1000.0f;
+	};
+	
+	auto evaluate2 = [](const Keyboard<3>& keyboard)
+	{
+		return keyboard.m_keys[0] * 1000.0f +
+			keyboard.m_keys[1] * 100.0f +
+			keyboard.m_keys[2] * 10.0f;
+	};
+	Optimizer<3> o;
+	o.populationSize(3);
+	o.localSearchDept(20);
+	o.numIterations(1);
+	auto objectives = { TestObjective<3>(evaluate1), TestObjective<3>(evaluate2) };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20);
+	auto results = solutions.getResult();
+	ASSERT_EQ(4, solutions.size());
+	std::sort(results.begin(), results.end(), 
+	[](auto& lhs, auto& rhs)
+	{
+		auto& lhsKeys = lhs.first.m_keys;
+		auto& rhsKeys = rhs.first.m_keys;
+		if (lhsKeys[0] == rhsKeys[0])
+		{
+			if (lhsKeys[1] == rhsKeys[1])
+			{
+				return lhsKeys[2] < rhsKeys[2];
+			}
+			else
+			{
+				return lhsKeys[1] < rhsKeys[1];
+			}
+		}
+		else
+		{
+			return lhsKeys[0] < rhsKeys[0];
+		}
+	});
+	EXPECT_THAT(results[0].first.m_keys, ElementsAre(0, 1, 2));
+	EXPECT_THAT(results[1].first.m_keys, ElementsAre(1, 0, 2));
+	EXPECT_THAT(results[2].first.m_keys, ElementsAre(2, 0, 1));
+	EXPECT_THAT(results[3].first.m_keys, ElementsAre(2, 1, 0));
+}
+
 TEST(CrossOverTests, PartiallyMatchedCrossover1)
 {
 	Keyboard<7> parent1({ 5, 1, 2, 3, 0, 6, 4 });

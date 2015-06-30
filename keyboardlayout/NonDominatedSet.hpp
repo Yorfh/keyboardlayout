@@ -112,7 +112,8 @@ public:
 			{
 				unsigned int indexToInsert = *m_firstFree;
 				auto firstFreeOffset = m_firstFree - m_indices.begin();
-				auto i = std::lower_bound(m_indices.begin(), m_firstFree, *m_firstFree);
+				m_firstFree = m_indices.erase(m_firstFree);
+				auto i = std::lower_bound(m_indices.begin(), m_firstFree, indexToInsert);
 				m_indices.insert(i, indexToInsert);
 				m_firstFree = m_indices.begin() + firstFreeOffset + 1;
 
