@@ -55,11 +55,11 @@ public:
 		m_localSearchDepth = size;
 	}
 
-	void temperature(float minT, float maxT, float tStep)
+	void temperature(float maxT, float minT, size_t numSteps)
 	{
 		m_minT = minT;
 		m_maxT = maxT;
-		m_tStep = tStep;
+		m_numTSteps = numSteps;
 	}
 
 	void numIterations(size_t num)
@@ -84,10 +84,6 @@ public:
 		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"
 		// "A Simulated Annealing based Genetic Local Search Algorithm for Multi-objective Multicast Routing Problems"
 
-		const auto minT = m_minT;
-		const auto maxT = m_maxT;
-		const auto tStep = m_tStep;
-
 		selectWeightVectors(end - begin);
 		std::vector<float> solution;
 		solution.resize(end - begin);
@@ -106,14 +102,11 @@ public:
 
 		for (size_t iteration = 0; iteration < m_numIterations; iteration++)
 		{
-			for (auto currentT = maxT; currentT > minT; currentT -= tStep)
+			for (size_t i = 0; i < m_populationSize; ++i)
 			{
-				for (size_t i = 0; i < m_populationSize; ++i)
-				{
-					Keyboard<KeyboardSize> newKeyboard;
-					simulatedAnnealing(i, begin, end, currentT, newKeyboard, solution);
-					updatePopulation(i, newKeyboard, solution);
-				}
+				Keyboard<KeyboardSize> newKeyboard;
+				simulatedAnnealing(i, begin, end, newKeyboard, solution);
+				updatePopulation(i, newKeyboard, solution);
 			}
 			for (auto i = 0; i < m_populationSize; i++)
 			{
@@ -125,12 +118,13 @@ public:
 
 protected:
 	template<typename Itr>
-	void simulatedAnnealing(size_t index, Itr begin, Itr end, float currentT, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution)
+	void simulatedAnnealing(size_t index, Itr begin, Itr end, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution)
 	{
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		outKeyboard = m_population[index];
 		outSolution = m_populationSolutions[index];
-		for (size_t c = 0; c < m_localSearchDepth; ++c)
+		float alpha = std::pow(m_minT / m_maxT, 1.0f / m_numTSteps);
+		for (float currentT = m_maxT; currentT >= m_minT; currentT *= alpha)
 		{
 			auto neighbour = mutate(outKeyboard);
 			evaluate(m_tempSolution, neighbour, begin, end);
@@ -138,12 +132,21 @@ protected:
 			{
 				m_NonDominatedSet.insert(neighbour, m_tempSolution);
 			}
-			if (probability(m_randomGenerator) < annealingProbability(m_population[index], neighbour, m_weights[index], currentT))
+			if (annealingProbability(outSolution, m_tempSolution, m_weights[index], currentT) > probability(m_randomGenerator))
 			{
 				outKeyboard = neighbour;
 				outSolution.swap(m_tempSolution);
 			}
 		}
+	}
+
+	float annealingProbability(const std::vector<float>& first, const std::vector<float>& second, std::vector<float>& weights, float t)
+	{ 
+		float sFirst =  weightedSum(first, weights);
+		float sSecond = weightedSum(second, weights);
+		float p = std::exp(-((sFirst - sSecond) / t));
+		p = std::min(1.0f, p);
+		return p;
 	}
 
 	void updatePopulation(size_t index, const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
@@ -174,7 +177,7 @@ protected:
 		m_weights.reserve(m_populationSize);
 		for (size_t i = 0; i < m_populationSize;i++)
 		{
-			m_weights.emplace_back(numObjectives);
+			m_weights.emplace_back(numObjectives, 1.0f);
 		}
 	}
 
@@ -234,10 +237,6 @@ protected:
 		return ret;
 	}
 
-	float annealingProbability(Keyboard<KeyboardSize>& first, Keyboard<KeyboardSize>& second, std::vector<float>& weights, float t)
-	{
-		return 0.5;
-	}
 
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
@@ -250,5 +249,5 @@ protected:
 	size_t m_numIterations = 0;
 	float m_maxT = 1.0f;
 	float m_minT = 0.1f;
-	float m_tStep = 0.01f;
+	size_t m_numTSteps = 10;
 };

@@ -255,9 +255,9 @@ TEST(OptimizerTSPTests, Burma14)
 	}; 
 	Optimizer<13> o;
 	o.populationSize(1);
-	o.localSearchDept(20);
-	o.numIterations(10);
-	;
+	o.localSearchDept(1);
+	o.numIterations(20);
+	o.temperature(50.0, 5.0, 10000);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
