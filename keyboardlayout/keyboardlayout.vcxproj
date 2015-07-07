@@ -127,6 +127,7 @@
     <ClInclude Include="NonDominatedSet.hpp" />
     <ClInclude Include="Objective.hpp" />
     <ClInclude Include="Optimizer.hpp" />
+    <ClInclude Include="TravelingSalesman.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dummy.cpp" />
