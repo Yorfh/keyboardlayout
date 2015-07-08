@@ -53,7 +53,7 @@ public:
 				sum += dist * flow;
 			}
 		}
-		return static_cast<float>(sum);
+		return -static_cast<float>(sum);
 	}
 private:
 	std::array<std::array<int, NumLocations>, NumLocations> m_distances;
