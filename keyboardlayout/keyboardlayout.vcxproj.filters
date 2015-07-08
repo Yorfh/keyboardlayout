@@ -39,6 +39,9 @@
     <ClInclude Include="TravelingSalesman.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mQAP.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dummy.cpp">

@@ -128,6 +128,7 @@
     <ClCompile Include="gmock-gtest-all.cc" />
     <ClCompile Include="HelpersTests.cpp" />
     <ClCompile Include="KeyboardTests.cpp" />
+    <ClCompile Include="mQAPTests.cpp" />
     <ClCompile Include="NonDominatedSetTests.cpp" />
     <ClCompile Include="OptimizerTests.cpp" />
     <ClCompile Include="OptimizerTSPTests.cpp" />
