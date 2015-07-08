@@ -6,7 +6,7 @@
 #include "Optimizer.hpp"
 #include "TravelingSalesman.hpp"
 
-enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS };
+enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, SEED };
 
 void printError(const char* msg1, const option::Option& opt, const char* msg2)
 {
@@ -43,26 +43,56 @@ option::ArgStatus floatingPoint(const option::Option& option, bool msg)
 	return option::ARG_ILLEGAL;
 }
 
+option::ArgStatus unsignedInteger(const option::Option& option, bool msg)
+{
+	bool invalid = true;
+	try
+	{
+		if (option.arg)
+		{
+			std::stoul(option.arg);
+		}
+
+		invalid = false;
+	}
+	catch (std::invalid_argument e)
+	{
+		
+	}
+	if (!invalid)
+	{
+		return option::ARG_OK;
+	}
+
+	if (msg)
+	{
+		printError("Option '", option, "' requires a numeric argument\n");
+	}
+	return option::ARG_ILLEGAL;
+}
+
 const char* optionNames[] =
 {
 	"",
 	"help",
 	"max_t",
 	"min_t",
-	"steps"
+	"steps",
+	"seed"
 };
 
 const option::Descriptor usage[] =
 {
 	{ UNKNOWN, 0, "" , optionNames[UNKNOWN],  option::Arg::None, "USAGE: keyboardlayout [options]\n\nOptions:" },
 	{ HELP,    0, "" , optionNames[HELP],     option::Arg::None, "  --help  \tPrint usage and exit." },
-	{ MAXT,    0, "" , optionNames[MAXT],     floatingPoint,           "  --max_t  \tThe maximum temperature" },
-	{ MINT,    0, "" , optionNames[MINT],     floatingPoint, "  --min_t  \tThe minimum temperature" },
-	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], floatingPoint, "  --steps  \tThe number of steps" },
+	{ MAXT,    0, "" , optionNames[MAXT],     floatingPoint,     "  --max_t  \tThe maximum temperature" },
+	{ MINT,    0, "" , optionNames[MINT],     floatingPoint,     "  --min_t  \tThe minimum temperature" },
+	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], floatingPoint,     "  --steps  \tThe number of steps" },
+	{ SEED,0, "" , optionNames[SEED], unsignedInteger,     "  --seed  \tThe random seed" },
 	{ 0,0,0,0,0,0 }
 };
 
-int burma14(float minT, float maxT, int numSteps)
+int burma14(float minT, float maxT, int numSteps, unsigned int seed)
 {
 	std::array<double, 14> latitudes = {
 		16.47,
@@ -96,11 +126,11 @@ int burma14(float minT, float maxT, int numSteps)
 		97.13,
 		94.55
 	};
-	Optimizer<13> o;
+	Optimizer<13> o(seed);
 	o.populationSize(1);
 	o.localSearchDept(1);
 	o.numIterations(20);
-	o.temperature(50.0, 5.0, 10000);
+	o.temperature(maxT, minT, numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
@@ -142,6 +172,7 @@ int main(int argc, char* argv[])
 	float minT = std::stof(options[MINT].arg);
 	float maxT = std::stof(options[MAXT].arg);
 	int steps = std::stol(options[NUMSTEPS].arg);
-	auto res = burma14(minT, maxT, steps);
+	unsigned int seed = std::stoul(options[SEED].arg);
+	auto res = burma14(minT, maxT, steps, seed);
 	std::cout << res << std::endl;
 }

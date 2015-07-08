@@ -38,11 +38,11 @@ namespace detail
 template<size_t KeyboardSize>
 class Optimizer
 {
+	static std::random_device rd;
 public:
-	Optimizer()
+	Optimizer(unsigned int seed = Optimizer::rd())
 	{
-		std::random_device rd;
-		m_randomGenerator.seed(rd());
+		m_randomGenerator.seed(seed);
 	}
 
 	void populationSize(size_t size)
@@ -251,3 +251,6 @@ protected:
 	float m_minT = 0.1f;
 	size_t m_numTSteps = 10;
 };
+
+template<size_t KeyboardSize>
+std::random_device Optimizer<KeyboardSize>::rd;

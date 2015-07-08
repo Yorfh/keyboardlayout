@@ -1,8 +1,10 @@
 #include "optimizer.hpp"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include <array>
 #include "Objective.hpp"
 #include "MakeArray.hpp"
+#include "TravelingSalesman.hpp"
 
 using namespace testing;
 
@@ -198,11 +200,12 @@ TEST(OptimizerTSPTests, Burma14)
 	o.populationSize(1);
 	o.localSearchDept(1);
 	o.numIterations(20);
-	o.temperature(50.0, 5.0, 10000);
+	o.temperature(252.0f, 3.9513f, 5000);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
-	ASSERT_EQ(1, solutions.size());
+	// The reverse direction is also a solution
+	EXPECT_THAT(solutions.size(), AnyOf(1, 2));
 	auto result = solutions.getResult()[0].first;
 	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
 	EXPECT_EQ(3323, resultValue);
