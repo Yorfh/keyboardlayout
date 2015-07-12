@@ -36,14 +36,18 @@ namespace detail
 	}
 
 	template<typename T>
-	void generateWeightVectorsHelper(T& output, size_t k, size_t maxDimension, size_t currentK, size_t currentDimension, std::vector<size_t>& current)
+	void generateWeightVectorsHelper(T& output, size_t k, size_t maxDimension, size_t currentK, size_t currentDimension, size_t sum, std::vector<size_t>& current)
 	{
+		if (sum > k)
+		{
+			return;
+		}
 		if (currentDimension == maxDimension)
 		{
-			if (std::accumulate(current.begin(), current.end(), static_cast<size_t>(1)) == k)
+			if (sum == k)
 			{
 				const float stepSize = 1.0f / (k - 1);
-				do 
+				do
 				{
 					output.emplace_back(maxDimension);
 					std::transform(current.begin(), current.end(), output.back().begin(), [stepSize](size_t element)
@@ -58,7 +62,7 @@ namespace detail
 			for (size_t i = currentK; i < k; i++)
 			{
 				current[currentDimension] = i;
-				generateWeightVectorsHelper(output, k, maxDimension, i, currentDimension + 1, current);
+				generateWeightVectorsHelper(output, k, maxDimension, i, currentDimension + 1, sum + i, current);
 			}
 		}
 	}
@@ -80,7 +84,7 @@ namespace detail
 			const float stepSize = 1.0f / (populationSize - 1);
 			std::vector<size_t> current;
 			current.resize(numObjectives);
-			generateWeightVectorsHelper(output, populationSize, numObjectives, 0, 0, current);
+			generateWeightVectorsHelper(output, populationSize, numObjectives, 0, 0, 1, current);
 		}
 	}
 }
