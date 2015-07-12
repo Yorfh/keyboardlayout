@@ -5,6 +5,7 @@
 #include <random>
 #include <vector>
 #include <utility>
+#include <numeric>
 
 template<size_t KeyboardSize>
 class Objective;
@@ -32,6 +33,55 @@ namespace detail
 			std::swap(mapping[value1], mapping[value2]);
 		}
 		return child;
+	}
+
+	template<typename T>
+	void generateWeightVectorsHelper(T& output, size_t k, size_t maxDimension, size_t currentK, size_t currentDimension, std::vector<size_t>& current)
+	{
+		if (currentDimension == maxDimension)
+		{
+			if (std::accumulate(current.begin(), current.end(), static_cast<size_t>(1)) == k)
+			{
+				const float stepSize = 1.0f / (k - 1);
+				do 
+				{
+					output.emplace_back(maxDimension);
+					std::transform(current.begin(), current.end(), output.back().begin(), [stepSize](size_t element)
+					{
+						return element * stepSize;
+					});
+				} while (std::next_permutation(current.begin(), current.end()));
+			}
+		}
+		else
+		{
+			for (size_t i = currentK; i < k; i++)
+			{
+				current[currentDimension] = i;
+				generateWeightVectorsHelper(output, k, maxDimension, i, currentDimension + 1, current);
+			}
+		}
+	}
+
+	template<typename T>
+	inline void generateWeightVectors(T& output, size_t populationSize, size_t numObjectives)
+	{
+		output.reserve(populationSize);
+		if (populationSize == 1)
+		{
+			output.emplace_back(numObjectives, 1.0f);
+		}
+		else if (numObjectives == 1)
+		{
+			std::fill_n(std::back_inserter(output), populationSize, std::vector<float>(1, 1.0f));
+		}
+		else
+		{
+			const float stepSize = 1.0f / (populationSize - 1);
+			std::vector<size_t> current;
+			current.resize(numObjectives);
+			generateWeightVectorsHelper(output, populationSize, numObjectives, 0, 0, current);
+		}
 	}
 }
 
@@ -174,11 +224,7 @@ protected:
 
 	void selectWeightVectors(size_t numObjectives)
 	{
-		m_weights.reserve(m_populationSize);
-		for (size_t i = 0; i < m_populationSize;i++)
-		{
-			m_weights.emplace_back(numObjectives, 1.0f);
-		}
+		detail::generateWeightVectors(m_weights, m_populationSize, numObjectives);
 	}
 
 	void adaptWeightVectors()

@@ -25,7 +25,6 @@ public:
 	std::function<float(const Keyboard<KeyboardSize>& keyboard)> m_func;
 };
 
-
 TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 {
 	auto evaluate = [](const Keyboard<3>& keyboard)
@@ -170,4 +169,76 @@ TEST(CrossOverTests, PartiallyMatchedCrossover3)
 	Keyboard<8> parent2({ 0, 4, 1, 7, 6, 3, 2, 5 });
 	auto child = detail::partiallyMatchedCrossover(parent1, parent2, 2, 4);
 	EXPECT_THAT(child.m_keys, ElementsAre(3, 4, 1, 7, 6, 2, 5, 0));
+}
+
+template<typename... T>
+auto ElementsAreClose(T... v) -> decltype(ElementsAre(FloatNear(v, 0.00001f)...))
+{
+	return ElementsAre(FloatNear(v, 0.00001f)...);
+}
+
+TEST(WeightVectorTests, GenerateOneDimensionalOneValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 1, 1);
+	ASSERT_EQ(1, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(1.0f));
+}
+
+TEST(WeightVectorTests, GenerateOneDimensionalTwoValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 2, 1);
+	ASSERT_EQ(2, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(1.0f));
+	EXPECT_THAT(output[1], ElementsAreClose(1.0f));
+}
+
+TEST(WeightVectorTests, GenerateOneDimensionalFourValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 4, 1);
+	ASSERT_EQ(4, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(1.0f));
+	EXPECT_THAT(output[1], ElementsAreClose(1.0f));
+	EXPECT_THAT(output[2], ElementsAreClose(1.0f));
+	EXPECT_THAT(output[3], ElementsAreClose(1.0f));
+}
+
+TEST(WeightVectorTests, GenerateTwoDimensionalOneValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 1, 2);
+	ASSERT_EQ(1, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(1.0f, 1.0f));
+}
+
+TEST(WeightVectorTests, GenerateTwoDimensionalTwoValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 2, 2);
+	ASSERT_EQ(2, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(0.0f, 1.0f));
+	EXPECT_THAT(output[1], ElementsAreClose(1.0f, 0.0f));
+}
+
+TEST(WeightVectorTests, GenerateTwoDimensionalThreeValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 3, 2);
+	ASSERT_EQ(3, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(0.0f, 1.0f));
+	EXPECT_THAT(output[1], ElementsAreClose(1.0f, 0.0f));
+	EXPECT_THAT(output[2], ElementsAreClose(0.5f, 0.5f));
+}
+
+TEST(WeightVectorTests, GenerateTwoDimensionalFourValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 4, 2);
+	ASSERT_EQ(4, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(0.0f, 1.0f));
+	EXPECT_THAT(output[1], ElementsAreClose(1.0f, 0.0f));
+	EXPECT_THAT(output[2], ElementsAreClose(0.3333333f, 0.6666667f));
+	EXPECT_THAT(output[3], ElementsAreClose(0.6666667f, 0.3333333f));
 }
