@@ -14,7 +14,7 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	Optimizer<10> o;
 	o.populationSize(50);
 	o.numIterations(20);
-	o.temperature(252.0f, 3.9513f, 5000);
+	o.temperature(727, 272, 5000);
 	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	std::vector<std::array<int, 10>> actual, expected;
@@ -42,5 +42,6 @@ TEST(mQAPTests, KC10_2fl_1uni)
 		actual.emplace_back();
 		std::copy(r.first.m_keys.begin(), r.first.m_keys.end(), actual.back().begin());
 	}
-	EXPECT_THAT(actual, UnorderedElementsAreArray(expected));
+	std::sort(actual.begin(), actual.end());
+	EXPECT_THAT(actual, ElementsAreArray(expected));
 }

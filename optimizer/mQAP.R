@@ -21,14 +21,34 @@
 library("irace")
 
 EXE <- "../x64/Release/keyboardlayout.exe"
+HYPERVOLUME <- "../x64/Release/wfg.exe"
+test_file <- "..tests/mQAPData/KC10-2fl-1uni.dat"
+
+dir.create("output", showWarnings = FALSE)
 
 instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps 300 --seed %s --test burma14", candidate$values[["max_t"]], candidate$values[["min_t"]], as.character(instance)) 
+  args <- sprintf("--max_t %f --min_t %f --steps 300 --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], as.character(instance), test_file, candidate$index) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
+}
+
+hook.evaluate <- function(instance, candidate, num.candidates, extra.params, config, hook.run.call)
+{
+  table <- NULL
+  for (i in 1:num.candidates)
+  {
+    outputFile <- sprintf("output/%i.txt", i)
+    table <- rbind(table, read.table(outputFile))
+  }
+  nadir <- apply(table, 2, max)
+  names(nadir) <- NULL
+  args <- sprintf("output/%i.txt %s", candidate$index, paste(nadir, collapse=" "))
+  output <- system2(HYPERVOLUME, args=args, stdout=TRUE, stderr=TRUE)
+  hv <- strsplit(output[1], "=")[[1]]
+  return(as.numeric(hv[2]))
 }
 
 parameters.table <- '
@@ -40,8 +60,9 @@ parameters <- readParameters(text = parameters.table)
 
 result <- irace(tunerConfig = list(
                   hookRun = hook.run,
+		  hookEvaluate = hook.evaluate,
                   instances = instances[1:100],
-                  maxExperiments = 10000,
+                  maxExperiments = 1000,
                   logFile = ""),
                 parameters = parameters)
 
