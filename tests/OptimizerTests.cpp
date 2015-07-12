@@ -210,7 +210,7 @@ TEST(WeightVectorTests, GenerateTwoDimensionalOneValueVector)
 	std::vector<std::vector<float>> output;
 	detail::generateWeightVectors(output, 1, 2);
 	ASSERT_EQ(1, output.size());
-	EXPECT_THAT(output[0], ElementsAreClose(1.0f, 1.0f));
+	EXPECT_THAT(output[0], ElementsAreClose(0.5f, 0.5f));
 }
 
 TEST(WeightVectorTests, GenerateTwoDimensionalTwoValueVector)
@@ -241,4 +241,79 @@ TEST(WeightVectorTests, GenerateTwoDimensionalFourValueVector)
 	EXPECT_THAT(output[1], ElementsAreClose(1.0f, 0.0f));
 	EXPECT_THAT(output[2], ElementsAreClose(0.3333333f, 0.6666667f));
 	EXPECT_THAT(output[3], ElementsAreClose(0.6666667f, 0.3333333f));
+}
+
+TEST(WeightVectorTests, GenerateThreeDimensionalOneValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 1, 3);
+	ASSERT_EQ(1, output.size());
+	EXPECT_THAT(output[0], ElementsAreClose(0.3333333f, 0.3333333f, 0.3333333f));
+}
+
+TEST(WeightVectorTests, GenerateThreeDimensionalTwoValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 2, 3);
+	ASSERT_EQ(2, output.size());
+	auto expectation1 = ElementsAreClose(0.0f, 0.0f, 1.0f);
+	auto expectation2 = ElementsAreClose(0.0f, 1.0f, 0.0f);
+	auto expectation3 = ElementsAreClose(1.0f, 0.0f, 0.0f);
+	EXPECT_THAT(output[0], AnyOf(expectation1, expectation2, expectation3));
+	EXPECT_THAT(output[1], AnyOf(expectation1, expectation2, expectation3));
+	EXPECT_NE(output[0], output[1]);
+}
+
+TEST(WeightVectorTests, GenerateThreeDimensionalThreeValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 3, 3);
+	ASSERT_EQ(3, output.size());
+	auto expectation1 = ElementsAreClose(0.0f, 0.0f, 1.0f);
+	auto expectation2 = ElementsAreClose(0.0f, 1.0f, 0.0f);
+	auto expectation3 = ElementsAreClose(1.0f, 0.0f, 0.0f);
+	EXPECT_THAT(output[0], expectation1);
+	EXPECT_THAT(output[1], expectation2);
+	EXPECT_THAT(output[2], expectation3);
+}
+
+TEST(WeightVectorTests, GenerateThreeDimensionalFourValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 4, 3);
+	ASSERT_EQ(4, output.size());
+	auto expectation1 = ElementsAreClose(0.0f, 0.0f, 1.0f);
+	auto expectation2 = ElementsAreClose(0.0f, 1.0f, 0.0f);
+	auto expectation3 = ElementsAreClose(1.0f, 0.0f, 0.0f);
+	auto expectation4 = ElementsAreClose(0.0f, 0.5f, 0.5f);
+	auto expectation5 = ElementsAreClose(0.5f, 0.0f, 0.5f);
+	auto expectation6 = ElementsAreClose(0.5f, 0.5f, 0.0f);
+	EXPECT_THAT(output[0], AnyOf(expectation1, expectation2, expectation3, expectation4, expectation5, expectation6));
+	EXPECT_THAT(output[1], AnyOf(expectation1, expectation2, expectation3, expectation4, expectation5, expectation6));
+	EXPECT_THAT(output[2], AnyOf(expectation1, expectation2, expectation3, expectation4, expectation5, expectation6));
+	EXPECT_THAT(output[3], AnyOf(expectation1, expectation2, expectation3, expectation4, expectation5, expectation6));
+	EXPECT_NE(output[0], output[1]);
+	EXPECT_NE(output[0], output[2]);
+	EXPECT_NE(output[0], output[3]);
+	EXPECT_NE(output[1], output[2]);
+	EXPECT_NE(output[1], output[3]);
+}
+
+TEST(WeightVectorTests, GenerateThreeDimensionalSixValueVector)
+{
+	std::vector<std::vector<float>> output;
+	detail::generateWeightVectors(output, 6, 3);
+	ASSERT_EQ(6, output.size());
+	auto expectation1 = ElementsAreClose(0.0f, 0.0f, 1.0f);
+	auto expectation2 = ElementsAreClose(0.0f, 1.0f, 0.0f);
+	auto expectation3 = ElementsAreClose(1.0f, 0.0f, 0.0f);
+	auto expectation4 = ElementsAreClose(0.0f, 0.5f, 0.5f);
+	auto expectation5 = ElementsAreClose(0.5f, 0.0f, 0.5f);
+	auto expectation6 = ElementsAreClose(0.5f, 0.5f, 0.0f);
+	EXPECT_THAT(output[0], expectation1);
+	EXPECT_THAT(output[1], expectation2);
+	EXPECT_THAT(output[2], expectation3);
+	EXPECT_THAT(output[3], expectation4);
+	EXPECT_THAT(output[4], expectation5);
+	EXPECT_THAT(output[5], expectation6);
 }

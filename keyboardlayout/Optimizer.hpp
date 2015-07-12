@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include <boost/math/special_functions/binomial.hpp>
 
 template<size_t KeyboardSize>
 class Objective;
@@ -68,12 +69,12 @@ namespace detail
 	}
 
 	template<typename T>
-	inline void generateWeightVectors(T& output, size_t populationSize, size_t numObjectives)
+	inline void generateWeightVectors(T& output, size_t populationSize, size_t numObjectives, std::mt19937* randomGenerator = nullptr)
 	{
 		output.reserve(populationSize);
 		if (populationSize == 1)
 		{
-			output.emplace_back(numObjectives, 1.0f);
+			output.emplace_back(numObjectives, 1.0f / numObjectives);
 		}
 		else if (numObjectives == 1)
 		{
@@ -82,9 +83,26 @@ namespace detail
 		else
 		{
 			const float stepSize = 1.0f / (populationSize - 1);
+			size_t h = 1;
+			while (static_cast<size_t>(boost::math::binomial_coefficient<double>(static_cast<unsigned int>(h + numObjectives - 1), static_cast<unsigned int>(numObjectives - 1))) < populationSize)
+			{
+				h++;
+			}
 			std::vector<size_t> current;
 			current.resize(numObjectives);
-			generateWeightVectorsHelper(output, populationSize, numObjectives, 0, 0, 1, current);
+			generateWeightVectorsHelper(output, h + 1, numObjectives, 0, 0, 1, current);
+			if (output.size() > populationSize)
+			{
+				std::unique_ptr<std::mt19937> g;
+				if (!randomGenerator)
+				{
+					std::random_device rd;
+					g = std::make_unique<std::mt19937>(rd());
+					randomGenerator = g.get();
+				}
+				std::shuffle(output.begin(), output.end(), *randomGenerator);
+				output.erase(output.begin() + populationSize, output.end());
+			}
 		}
 	}
 }
@@ -228,7 +246,7 @@ protected:
 
 	void selectWeightVectors(size_t numObjectives)
 	{
-		detail::generateWeightVectors(m_weights, m_populationSize, numObjectives);
+		detail::generateWeightVectors(m_weights, m_populationSize, numObjectives, &m_randomGenerator);
 	}
 
 	void adaptWeightVectors()
