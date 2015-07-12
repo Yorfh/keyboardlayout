@@ -122,11 +122,6 @@ public:
 		m_populationSize = size;
 	}
 
-	void localSearchDept(size_t size)
-	{
-		m_localSearchDepth = size;
-	}
-
 	void temperature(float maxT, float minT, size_t numSteps)
 	{
 		m_minT = minT;
@@ -313,7 +308,6 @@ protected:
 	std::vector<std::vector<float>> m_weights;
 	std::vector<float> m_tempSolution;
 	size_t m_populationSize = 0;
-	size_t m_localSearchDepth = 0;
 	size_t m_numIterations = 0;
 	float m_maxT = 1.0f;
 	float m_minT = 0.1f;

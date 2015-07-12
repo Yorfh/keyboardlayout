@@ -35,7 +35,6 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 	};
 	Optimizer<3> o; 
 	o.populationSize(50);
-	o.localSearchDept(0);
 	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
@@ -53,7 +52,6 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 	};
 	Optimizer<3> o; 
 	o.populationSize(50);
-	o.localSearchDept(0);
 	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
@@ -71,7 +69,6 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
@@ -89,7 +86,6 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
@@ -114,7 +110,6 @@ TEST(OptimizerTests, TwoObjectives)
 	};
 	Optimizer<3> o;
 	o.populationSize(3);
-	o.localSearchDept(20);
 	o.numIterations(1);
 	auto objectives = { TestObjective<3>(evaluate1), TestObjective<3>(evaluate2) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));

@@ -198,7 +198,6 @@ TEST(OptimizerTSPTests, Burma14)
 	}; 
 	Optimizer<13> o;
 	o.populationSize(1);
-	o.localSearchDept(1);
 	o.numIterations(20);
 	o.temperature(252.0f, 3.9513f, 5000);
 	TravelingSalesman<14> salesman(latitudes, longitudes);

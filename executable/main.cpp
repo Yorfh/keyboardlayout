@@ -128,7 +128,6 @@ int burma14(float minT, float maxT, int numSteps, unsigned int seed)
 	};
 	Optimizer<13> o(seed);
 	o.populationSize(1);
-	o.localSearchDept(1);
 	o.numIterations(20);
 	o.temperature(maxT, minT, numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
