@@ -6,6 +6,17 @@
 
 using namespace testing;
 
+TEST(mQAPTests, ObjectiveFunctionWorksCorrectly)
+{
+	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
+	mQAP<10> objective1(filename, 0);
+	mQAP<10> objective2(filename, 1);
+	Keyboard<10> keyboard;
+	keyboard.m_keys = { 1, 2, 7, 9, 6, 5, 0, 4, 3, 8};
+	EXPECT_EQ(-228322, objective1.evaluate(keyboard));
+	EXPECT_EQ(-193446, objective2.evaluate(keyboard));
+}
+
 TEST(mQAPTests, KC10_2fl_1uni)
 {
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
@@ -26,6 +37,7 @@ TEST(mQAPTests, KC10_2fl_1uni)
 		for (size_t i = 0; i < 10; i++)
 		{
 			stream >> expected.back()[i];
+			expected.back()[i]--;
 			if (!stream)
 			{
 				expected.pop_back();

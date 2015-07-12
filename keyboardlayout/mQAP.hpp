@@ -46,10 +46,10 @@ public:
 		{
 			for (size_t j = 0; j < NumLocations; j++)
 			{
-				int dist = m_distances[i][j];
 				int a = keyboard.m_keys[i];
 				int b = keyboard.m_keys[j];
-				int flow = m_flow[a][b];
+				int dist = m_distances[a][b];
+				int flow = m_flow[i][j];
 				sum += dist * flow;
 			}
 		}
