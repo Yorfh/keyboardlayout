@@ -22,18 +22,19 @@
 
 */
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 #include "wfg.h"
+
 
 #define BEATS(x,y)   (x > y) 
 #define WORSE(x,y)   (BEATS(y,x) ? (x) : (y)) 
 
 int n;     // the number of objectives 
-POINT ref; // the reference point 
+Point ref; // the reference point 
 
 FRONT *fs;    // memory management stuff 
 int fr = 0;   // current depth 
@@ -49,8 +50,8 @@ double hv(FRONT);
 int greater(const void *v1, const void *v2)
 // this sorts points worsening in the last objective
 {
-  POINT p = *(POINT*)v1;
-  POINT q = *(POINT*)v2;
+  Point p = *(Point*)v1;
+  Point q = *(Point*)v2;
   for (int i = n - 1; i >= 0; i--)
     if BEATS(p.objectives[i],q.objectives[i]) return -1;
     else
@@ -62,8 +63,8 @@ int greater(const void *v1, const void *v2)
 int greaterabbrev(const void *v1, const void *v2)
 // this sorts points worsening in the penultimate objective
 {
-  POINT p = *(POINT*)v1;
-  POINT q = *(POINT*)v2;
+  Point p = *(Point*)v1;
+  Point q = *(Point*)v2;
   for (int i = n - 2; i >= 0; i--)
     if BEATS(p.objectives[i],q.objectives[i]) return -1;
     else
@@ -72,7 +73,7 @@ int greaterabbrev(const void *v1, const void *v2)
 }
 
 
-int dominates2way(POINT p, POINT q, int k)
+int dominates2way(Point p, Point q, int k)
 // returns -1 if p dominates q, 1 if q dominates p, 2 if p == q, 0 otherwise 
 // k is the highest index inspected 
 {
@@ -90,7 +91,7 @@ int dominates2way(POINT p, POINT q, int k)
 }
 
 
-bool dominates1way(POINT p, POINT q, int k)
+bool dominates1way(Point p, Point q, int k)
 // returns true if p dominates q or p == q, false otherwise 
 // the assumption is that q doesn't dominate p 
 // k is the highest index inspected 
@@ -118,7 +119,7 @@ void makeDominatedBit(FRONT ps, int p)
        for (int j = 0; j < n - 1; j++) 
  	 fs[fr].points[l].objectives[j] = WORSE(ps.points[p].objectives[j],ps.points[i].objectives[j]); 
        l++;}
-  POINT t;
+  Point t;
   // points below l are all equal in the last objective; points above l are all worse 
   // points below l can dominate each other, and we don't need to compare the last objective 
   // points above l cannot dominate points that start below l, and we don't need to compare the last objective 
@@ -205,7 +206,7 @@ double hv2(FRONT ps, int k)
 }
 
 
-double inclhv(POINT p)
+double inclhv(Point p)
 // returns the inclusive hypervolume of p
 {
   double volume = 1;
@@ -215,7 +216,7 @@ double inclhv(POINT p)
 }
 
 
-double inclhv2(POINT p, POINT q)
+double inclhv2(Point p, Point q)
 // returns the hypervolume of {p, q}
 {
   double vp  = 1; double vq  = 1;
@@ -230,7 +231,7 @@ double inclhv2(POINT p, POINT q)
 }
 
 
-double inclhv3(POINT p, POINT q, POINT r)
+double inclhv3(Point p, Point q, Point r)
 // returns the hypervolume of {p, q, r}
 {
   double vp   = 1; double vq   = 1; double vr   = 1;
@@ -276,7 +277,7 @@ double inclhv3(POINT p, POINT q, POINT r)
 }
 
 
-double inclhv4(POINT p, POINT q, POINT r, POINT s)
+double inclhv4(Point p, Point q, Point r, Point s)
 // returns the hypervolume of {p, q, r, s}
 {
   double vp    = 1; double vq   = 1; double vr   = 1; double vs   = 1;
@@ -441,11 +442,11 @@ double hv(FRONT ps)
     }
 
   // these points need sorting 
-  qsort(&ps.points[safe], ps.nPoints - safe, sizeof(POINT), greater); 
+  qsort(&ps.points[safe], ps.nPoints - safe, sizeof(Point), greater); 
   // n = 2 implies that safe = 0 
   if (n == 2) return hv2(ps, ps.nPoints); 
   // these points don't NEED sorting, but it helps 
-  qsort(ps.points, safe, sizeof(POINT), greaterabbrev); 
+  qsort(ps.points, safe, sizeof(Point), greaterabbrev); 
 
   if (n == 3 && safe > 0) 
     {
@@ -474,6 +475,7 @@ int main(int argc, char *argv[])
 // processes each front from the file 
 {
   FILECONTENTS *f = readFile(argv[1]);
+  LARGE_INTEGER Frequency;
 
   // find the biggest fronts
   for (int i = 0; i < f->nFronts; i++)
@@ -485,7 +487,7 @@ int main(int argc, char *argv[])
   int maxdepth = maxn - 2; 
   fs = malloc(sizeof(FRONT) * maxdepth);
   for (int i = 0; i < maxdepth; i++) 
-    {fs[i].points = malloc(sizeof(POINT) * maxm); 
+    {fs[i].points = malloc(sizeof(Point) * maxm); 
      for (int j = 0; j < maxm; j++) 
        fs[i].points[j].objectives = malloc(sizeof(OBJECTIVE) * (maxn - i - 1));
     }
@@ -509,21 +511,19 @@ int main(int argc, char *argv[])
       for(int k = 0; k < f->fronts[i].n; k++)
 	f->fronts[i].points[j].objectives[k] = fabs(f->fronts[i].points[j].objectives[k] - ref.objectives[k]);
 
+  QueryPerformanceFrequency(&Frequency);
   for (int i = 0; i < f->nFronts; i++) 
     {      
-      struct timeval tv1, tv2;
-      struct rusage ru_before, ru_after;
-      getrusage (RUSAGE_SELF, &ru_before);
- 
+      LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
+      QueryPerformanceCounter(&StartingTime);
       n = f->fronts[i].n;
       safe = 0;
       printf("hv(%d) = %1.10f\n", i+1, hv(f->fronts[i])); 
 
-      getrusage (RUSAGE_SELF, &ru_after);
-      tv1 = ru_before.ru_utime;
-      tv2 = ru_after.ru_utime;
-      printf("Time: %f (s)\n", tv2.tv_sec + tv2.tv_usec * 1e-6 - tv1.tv_sec - tv1.tv_usec * 1e-6);
-      totaltime += tv2.tv_sec + tv2.tv_usec * 1e-6 - tv1.tv_sec - tv1.tv_usec * 1e-6;
+      QueryPerformanceCounter(&EndingTime);
+	  ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+      printf("Time: %f (s)\n", ElapsedMicroseconds.QuadPart * 1e-6);
+      totaltime += ElapsedMicroseconds.QuadPart * 1e-6;
     }
   printf("Total time = %f (s)\n", totaltime);
 

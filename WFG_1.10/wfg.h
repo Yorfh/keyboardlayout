@@ -7,16 +7,18 @@
 
 typedef double OBJECTIVE;
 
+#undef POINT
+
 typedef struct
 {
 	OBJECTIVE *objectives;
-} POINT;
+} Point;
 
 typedef struct
 {
 	int nPoints;
 	int n;
-	POINT *points;
+	Point *points;
 } FRONT;
 
 typedef struct

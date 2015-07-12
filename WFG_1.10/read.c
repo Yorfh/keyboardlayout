@@ -66,13 +66,13 @@ FILECONTENTS *readFile(char filename[])
 			FRONT *f = &fc->fronts[front];
 			point = f->nPoints;
 			f->nPoints++;
-			f->points = realloc(f->points, sizeof(POINT) * f->nPoints);
+			f->points = realloc(f->points, sizeof(Point) * f->nPoints);
 			f->n = 0;
 			f->points[point].objectives = NULL;
 			char *tok = strtok(line, " \t\n");
 			do
 			{
-				POINT *p = &f->points[point];
+				Point *p = &f->points[point];
 				objective = f->n;
 				f->n++;
 				p->objectives = realloc(p->objectives, sizeof(OBJECTIVE) * f->n);
