@@ -195,7 +195,6 @@ checkConfiguration <- function(configuration = defaultConfiguration())
     }
   }
   
-  if (configuration$hookEvaluate == "") configuration$hookEvaluate <- NULL
   if (is.null(configuration$hookEvaluate)) {
     .irace$hook.evaluate <- NULL
   } else if (is.function.name(configuration$hookEvaluate)) {
