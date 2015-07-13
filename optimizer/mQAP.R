@@ -1,5 +1,6 @@
 # ========================================================================= #
-# Optimizes the parameters for the burma14 traveling salesman problem       #
+# Optimizes the parameters for the multiobjective quadratic assignment      # 
+# problem                                                                   #
 # ------------------------------------------------------------------------- #
 # Copyright (C) 2015 Fred Sundvik                                           #
 # ========================================================================= #
@@ -22,7 +23,7 @@ library("irace")
 
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
-test_file <- "..tests/mQAPData/KC10-2fl-1uni.dat"
+test_file <- "../tests/mQAPData/KC10-2fl-1uni.dat"
 
 dir.create("output", showWarnings = FALSE)
 
@@ -48,11 +49,11 @@ hook.evaluate <- function(instance, candidate, num.candidates, extra.params, con
   args <- sprintf("output/%i.txt %s", candidate$index, paste(nadir, collapse=" "))
   output <- system2(HYPERVOLUME, args=args, stdout=TRUE, stderr=TRUE)
   hv <- strsplit(output[1], "=")[[1]]
-  return(as.numeric(hv[2]))
+  return(-as.numeric(hv[2]))
 }
 
 parameters.table <- '
-max_t "" i (0, 1000)
+max_t "" r (0, 1000)
 min_t "" r (0, 1000)
 '
 

@@ -41,7 +41,7 @@ public:
 
 	float evaluate(const Keyboard<NumLocations>& keyboard) const override
 	{
-		int sum = 0;
+		uint64_t sum = 0;
 		for (size_t i = 0; i < NumLocations; i++)
 		{
 			for (size_t j = 0; j < NumLocations; j++)

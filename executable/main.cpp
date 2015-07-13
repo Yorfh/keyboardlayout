@@ -173,7 +173,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, unsig
 	{
 		for (auto&& o : r.second)
 		{
-			f << o << " ";
+			f << std::setprecision(16) << -o << " ";
 		}
 		f << std::endl;
 	}

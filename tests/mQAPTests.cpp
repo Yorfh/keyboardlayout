@@ -25,7 +25,7 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	Optimizer<10> o;
 	o.populationSize(50);
 	o.numIterations(20);
-	o.temperature(727, 272, 5000);
+	o.temperature(988, 900, 1000);
 	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	std::vector<std::array<int, 10>> actual, expected;
