@@ -23,7 +23,7 @@ library("irace")
 
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
-test_file <- "../tests/mQAPData/KC10-2fl-1uni.dat"
+test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
 
 dir.create("output", showWarnings = FALSE)
 
@@ -45,6 +45,7 @@ hook.evaluate <- function(instance, candidate, num.candidates, extra.params, con
     table <- rbind(table, read.table(outputFile))
   }
   nadir <- apply(table, 2, max)
+  nadir <- nadir + 1
   names(nadir) <- NULL
   args <- sprintf("output/%i.txt %s", candidate$index, paste(nadir, collapse=" "))
   output <- system2(HYPERVOLUME, args=args, stdout=TRUE, stderr=TRUE)
