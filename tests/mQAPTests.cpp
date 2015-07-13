@@ -17,19 +17,10 @@ TEST(mQAPTests, ObjectiveFunctionWorksCorrectly)
 	EXPECT_EQ(-193446, objective2.evaluate(keyboard));
 }
 
-TEST(mQAPTests, KC10_2fl_1uni)
+template<typename Solutions>
+void checkResult(const std::string& resultFilename, Solutions& solutions)
 {
-	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
-	mQAP<10> objective1(filename, 0);
-	mQAP<10> objective2(filename, 1);
-	Optimizer<10> o;
-	o.populationSize(50);
-	o.numIterations(20);
-	o.temperature(988, 900, 1000);
-	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	std::vector<std::array<int, 10>> actual, expected;
-	std::string resultFilename = "../../tests/mQAPData/KC10-2fl-1uni.po";
 	std::ifstream stream(resultFilename);
 	while (stream)
 	{
@@ -56,4 +47,32 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	}
 	std::sort(actual.begin(), actual.end());
 	EXPECT_THAT(actual, ElementsAreArray(expected));
+}
+
+TEST(mQAPTests, KC10_2fl_1uni)
+{
+	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
+	mQAP<10> objective1(filename, 0);
+	mQAP<10> objective2(filename, 1);
+	Optimizer<10> o;
+	o.populationSize(50);
+	o.numIterations(20);
+	o.temperature(988, 900, 1000);
+	auto objectives = { objective1, objective2 };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	checkResult("../../tests/mQAPData/KC10-2fl-1uni.po", solutions);
+}
+
+TEST(mQAPTests, KC10_2fl_1rl)
+{
+	std::string filename = "../../tests/mQAPData/KC10-2fl-1rl.dat";
+	mQAP<10> objective1(filename, 0);
+	mQAP<10> objective2(filename, 1);
+	Optimizer<10> o;
+	o.populationSize(50);
+	o.numIterations(20);
+	o.temperature(822, 713, 10000);
+	auto objectives = { objective1, objective2 };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	checkResult("../../tests/mQAPData/KC10-2fl-1rl.po", solutions);
 }
