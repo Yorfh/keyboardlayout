@@ -105,6 +105,32 @@ namespace detail
 			}
 		}
 	}
+
+	template<typename T1, typename T2, typename T3>
+	void solutionToChebycheff(const T1& reference, const T2& solution, T3& output)
+	{
+		size_t numObjectives = reference.size();
+		float denominator = 0.0f;
+		float epsilon = 0.0f;
+		for (size_t i = 0; i < numObjectives; i++)
+		{
+			if (reference[i] - solution[i] == 0)
+			{
+				epsilon = 0.00000000000000000001f;
+				break;
+			}
+		}
+
+		for (size_t i = 0; i < numObjectives; i++)
+		{
+			denominator += 1.0f / (reference[i] - solution[i] + epsilon );
+		}
+		for (size_t i = 0; i < numObjectives; i++)
+		{
+			float numerator = 1.0f / (reference[i] - solution[i] + epsilon);
+			output[i] = numerator / denominator;
+		}
+	}
 }
 
 template<size_t KeyboardSize>

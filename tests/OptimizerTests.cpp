@@ -307,3 +307,57 @@ TEST(WeightVectorTests, GenerateThreeDimensionalSixValueVector)
 	EXPECT_THAT(output[4], expectation5);
 	EXPECT_THAT(output[5], expectation6);
 }
+
+TEST(TchebycheffTests, SolutionToChebycheffDiagonal)
+{
+	std::array<float, 2> solution = { 0.0f, 0.0f };
+	std::array<float, 2> reference = { 1.0f, 1.0f };
+	std::array<float, 2> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.5f, 0.5f));
+}
+
+TEST(TchebycheffTests, SolutionToChebycheffFullWeightOneDimension)
+{
+	std::array<float, 2> solution = { 0.0f, 0.0f };
+	std::array<float, 2> reference = { 0.000000000000001f, 1.0f };
+	std::array<float, 2> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(1.0f, 0.0f));
+}
+
+TEST(TchebycheffTests, SolutionToChebycheffFullWeightOneDimensionSameAsReference)
+{
+	std::array<float, 2> solution = { 1.0f, 1.0f };
+	std::array<float, 2> reference = { 2.0f, 1.0f };
+	std::array<float, 2> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.0f, 1.0f));
+}
+
+TEST(TchebycheffTests, SolutionToChebycheffSameAsReference)
+{
+	std::array<float, 2> solution = { 1.0f, 1.0f };
+	std::array<float, 2> reference = { 1.0f, 1.0f };
+	std::array<float, 2> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.5f, 0.5f));
+}
+
+TEST(TchebycheffTests, SolutionToChebycheffThreeDimensionalOneElementTheSame)
+{
+	std::array<float, 3> solution = { 0.0f, 1.0f, 0.0f };
+	std::array<float, 3> reference = { 1.0f, 1.0f, 1.0f };
+	std::array<float, 3> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.0f, 1.0f, 0.0f));
+}
+
+TEST(TchebycheffTests, SolutionToChebycheffThreeDimensionalTwoElementsBetween)
+{
+	std::array<float, 3> solution = { 0.5f, 0.5f, 0.0f };
+	std::array<float, 3> reference = { 1.0f, 1.0f, 1.0f };
+	std::array<float, 3> output;
+	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.4f, 0.4f, 0.2f));
+}
