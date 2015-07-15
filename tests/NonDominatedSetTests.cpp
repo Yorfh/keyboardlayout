@@ -2,6 +2,7 @@
 #include "gmock/gmock.h"
 #include "NonDominatedSet.hpp"
 #include <array>
+#include "TestUtilities.hpp"
 using namespace testing;
 
 template<typename KeyboardArray, typename SolutionArray>
@@ -38,6 +39,7 @@ TEST(NonDominatedSetTests, SimpleOneDimensionalOneValue)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(keyboards, solutions, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(1.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalTwoValues)
@@ -47,6 +49,7 @@ TEST(NonDominatedSetTests, OneDimensionalTwoValues)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(2.0f));
 }
 TEST(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
 {
@@ -55,6 +58,7 @@ TEST(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(2.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
@@ -68,7 +72,9 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
+
 TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
@@ -80,6 +86,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
@@ -93,6 +100,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
@@ -106,6 +114,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
@@ -120,6 +129,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
 TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
@@ -134,6 +144,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
 TEST(NonDominatedSetTests, TwoDimensional)
@@ -159,6 +170,7 @@ TEST(NonDominatedSetTests, TwoDimensional)
 	KeyboardArray<3> keyboardRes{ a.first, e.first, h.first };
 	SolutionArray<3, 2> solutionRes{ a.second, e.second, h.second };
 	testEqual(keyboardRes, solutionRes, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }
 
 TEST(NonDominatedSetTests, TwoDimensional2)
@@ -185,4 +197,5 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	KeyboardArray<2> keyboardRes{ a.first, e.first };
 	SolutionArray<2, 2> solutionRes{ a.second, e.second };
 	testEqual(keyboardRes, solutionRes, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }

@@ -4,6 +4,7 @@
 #include <array>
 #include "Objective.hpp"
 #include "MakeArray.hpp"
+#include "TestUtilities.hpp"
 
 using namespace testing;
 
@@ -164,12 +165,6 @@ TEST(CrossOverTests, PartiallyMatchedCrossover3)
 	Keyboard<8> parent2({ 0, 4, 1, 7, 6, 3, 2, 5 });
 	auto child = detail::partiallyMatchedCrossover(parent1, parent2, 2, 4);
 	EXPECT_THAT(child.m_keys, ElementsAre(3, 4, 1, 7, 6, 2, 5, 0));
-}
-
-template<typename... T>
-auto ElementsAreClose(T... v) -> decltype(ElementsAre(FloatNear(v, 0.00001f)...))
-{
-	return ElementsAre(FloatNear(v, 0.00001f)...);
 }
 
 TEST(WeightVectorTests, GenerateOneDimensionalOneValueVector)

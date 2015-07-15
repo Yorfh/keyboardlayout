@@ -25,7 +25,8 @@ public:
 		{
 			return;
 		}
-		size_t num_dimensions = solutions.size();
+		size_t numDimensions = solutions[0].size();
+		m_idealPoint.assign(numDimensions, std::numeric_limits<float>::min());
 		m_solutions.reserve(num_elements);
 		m_keyboards.reserve(num_elements);
 		m_indices.reserve(num_elements);
@@ -75,6 +76,11 @@ public:
 
 	size_t size() const { return m_firstFree - m_indices.begin(); }
 
+	const std::vector<float> getIdealPoint() const
+	{
+		return m_idealPoint;
+	}
+
 
 	template<typename SolutionType>
 	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
@@ -108,6 +114,12 @@ public:
 		m_firstFree = i;
 		if (!dominated)
 		{
+
+			for (size_t i = 0; i < m_idealPoint.size(); i++)
+			{
+				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
+			}
+
 			if (m_firstFree != m_indices.end())
 			{
 				unsigned int indexToInsert = *m_firstFree;
@@ -150,4 +162,5 @@ private:
 	using IndexVector = std::vector<unsigned int>;
 	IndexVector m_indices;
 	IndexVector::iterator m_firstFree;
+	std::vector<float> m_idealPoint;
 };

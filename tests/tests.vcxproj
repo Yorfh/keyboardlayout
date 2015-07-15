@@ -139,6 +139,7 @@
     <ClInclude Include="gmock\gmock.h" />
     <ClInclude Include="gtest\gtest.h" />
     <ClInclude Include="TestPrinter.hpp" />
+    <ClInclude Include="TestUtilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\keyboardlayout\keyboardlayout.vcxproj">
