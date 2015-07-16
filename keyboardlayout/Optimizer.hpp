@@ -109,6 +109,7 @@ namespace detail
 	template<typename T1, typename T2, typename T3>
 	void solutionToChebycheff(const T1& reference, const T2& solution, T3& output)
 	{
+		// This formula is based on a eq(5) and eq(6) in the paper "MOEA/D with adaptive weight adjustment"
 		size_t numObjectives = reference.size();
 		float denominator = 0.0f;
 		float epsilon = 0.0f;
@@ -130,6 +131,19 @@ namespace detail
 			float numerator = 1.0f / (reference[i] - solution[i] + epsilon);
 			output[i] = numerator / denominator;
 		}
+	}
+
+	template<typename T1, typename T2, typename T3>
+	float evaluateChebycheff(const T2& solution, const T1& reference, const T3& weights)
+	{
+		size_t numObjectives = reference.size();
+		float maxElement = std::numeric_limits<float>::min();
+		for (size_t i = 0; i < numObjectives; i++)
+		{
+			float v = weights[i] * std::abs(solution[i] - reference[i]);
+			maxElement = std::max(maxElement, v);
+		}
+		return -maxElement;
 	}
 }
 

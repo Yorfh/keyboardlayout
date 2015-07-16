@@ -308,6 +308,31 @@ TEST(WeightVectorTests, GenerateThreeDimensionalSixValueVector)
 	EXPECT_THAT(output[5], expectation6);
 }
 
+TEST(TchebycheffTests, ChebycheffDiagonal)
+{
+	std::array<float, 2> reference = { 1.0f, 1.0f };
+	std::array<float, 2> weights = { 0.5f, 0.5f };
+	float start = detail::evaluateChebycheff(make_array(0.0f, 0.0f), reference, weights);
+	EXPECT_EQ(start, detail::evaluateChebycheff(make_array(0.0f, 0.0f), reference, weights));
+	float diagonalMiddle = detail::evaluateChebycheff(make_array(0.5f, 0.5f), reference, weights);
+	EXPECT_LT(start, diagonalMiddle);
+	EXPECT_GT(diagonalMiddle, detail::evaluateChebycheff(make_array(0.4f, 0.5f), reference, weights));
+	EXPECT_EQ(diagonalMiddle, detail::evaluateChebycheff(make_array(0.6f, 0.5f), reference, weights));
+	EXPECT_EQ(diagonalMiddle, detail::evaluateChebycheff(make_array(0.5f, 0.6f), reference, weights));
+	EXPECT_LT(diagonalMiddle, detail::evaluateChebycheff(make_array(0.6f, 0.6f), reference, weights));
+}
+
+TEST(TchebycheffTests, ChebycheffAlmostFullWeightOneDimension)
+{
+	std::array<float, 2> reference = { 1.0f, 1.0f };
+	std::array<float, 2> weights = { 0.99999999990f, 0.00000000001f };
+	float start = detail::evaluateChebycheff(make_array(0.0f, 0.0f), reference, weights);
+	EXPECT_LT(start, detail::evaluateChebycheff(make_array(0.1f, 0.0f), reference, weights));
+	EXPECT_EQ(start, detail::evaluateChebycheff(make_array(0.0f, 0.3f), reference, weights));
+	float optimal = detail::evaluateChebycheff(make_array(1.0f, 1.0f), reference, weights);
+	EXPECT_GT(optimal, detail::evaluateChebycheff(make_array(1.0f, 0.9f), reference, weights));
+}
+
 TEST(TchebycheffTests, SolutionToChebycheffDiagonal)
 {
 	std::array<float, 2> solution = { 0.0f, 0.0f };
@@ -332,6 +357,8 @@ TEST(TchebycheffTests, SolutionToChebycheffFullWeightOneDimensionSameAsReference
 	std::array<float, 2> reference = { 2.0f, 1.0f };
 	std::array<float, 2> output;
 	detail::solutionToChebycheff(reference, solution, output);
+	EXPECT_THAT(output, ElementsAreClose(0.0f, 1.0f));
+	EXPECT_THAT(output, ElementsAre(Ne(0.0f), FloatNear(1.0f, 0.00000000001f)));
 	EXPECT_THAT(output, ElementsAreClose(0.0f, 1.0f));
 }
 
