@@ -145,6 +145,18 @@ namespace detail
 		}
 		return -maxElement;
 	}
+
+	inline float weightedSum(const std::vector<float>& solution, const std::vector<float>&, const std::vector<float>& weights)
+	{
+		auto weight = std::begin(weights);
+		float sum = 0.0f;
+		for (auto&& s : solution)
+		{
+			sum += s * (*weight);
+			++weight;
+		}
+		return sum;
+	}
 }
 
 template<size_t KeyboardSize>
@@ -206,13 +218,15 @@ public:
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
-
+		
 		for (size_t iteration = 0; iteration < m_numIterations; iteration++)
 		{
 			for (size_t i = 0; i < m_populationSize; ++i)
 			{
 				Keyboard<KeyboardSize> newKeyboard;
-				simulatedAnnealing(i, begin, end, newKeyboard, solution);
+
+				auto test = []() { return 0.0f; };
+				simulatedAnnealing(i, begin, end, newKeyboard, solution, iteration == 0 ? detail::weightedSum : detail::evaluateChebycheff<std::vector<float>, std::vector<float>, std::vector<float>>);
 				updatePopulation(i, newKeyboard, solution);
 			}
 			for (auto i = 0; i < m_populationSize; i++)
@@ -224,8 +238,8 @@ public:
 	}
 
 protected:
-	template<typename Itr>
-	void simulatedAnnealing(size_t index, Itr begin, Itr end, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution)
+	template<typename Itr, typename ScalarizeFunc>
+	void simulatedAnnealing(size_t index, Itr begin, Itr end, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution, ScalarizeFunc& scalarize)
 	{
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		outKeyboard = m_population[index];
@@ -239,7 +253,7 @@ protected:
 			{
 				m_NonDominatedSet.insert(neighbour, m_tempSolution);
 			}
-			if (annealingProbability(outSolution, m_tempSolution, m_weights[index], currentT) > probability(m_randomGenerator))
+			if (annealingProbability(outSolution, m_tempSolution, m_weights[index], currentT, scalarize) > probability(m_randomGenerator))
 			{
 				outKeyboard = neighbour;
 				outSolution.swap(m_tempSolution);
@@ -247,10 +261,11 @@ protected:
 		}
 	}
 
-	float annealingProbability(const std::vector<float>& first, const std::vector<float>& second, std::vector<float>& weights, float t)
+	template<typename ScalarizeFunc>
+	float annealingProbability(const std::vector<float>& first, const std::vector<float>& second, std::vector<float>& weights, float t, ScalarizeFunc& scalarize)
 	{ 
-		float sFirst =  weightedSum(first, weights);
-		float sSecond = weightedSum(second, weights);
+		float sFirst =  scalarize(first, m_NonDominatedSet.getIdealPoint(), weights);
+		float sSecond = scalarize(second, m_NonDominatedSet.getIdealPoint(), weights);
 		float p = std::exp(-((sFirst - sSecond) / t));
 		p = std::min(1.0f, p);
 		return p;
@@ -258,8 +273,8 @@ protected:
 
 	void updatePopulation(size_t index, const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
 	{
-		float solutionValue = weightedSum(solution, m_weights[index]);
-		float populationValue = weightedSum(m_populationSolutions[index], m_weights[index]);
+		float solutionValue = detail::weightedSum(solution, m_NonDominatedSet.getIdealPoint(), m_weights[index]);
+		float populationValue = detail::weightedSum(m_populationSolutions[index], m_NonDominatedSet.getIdealPoint(), m_weights[index]);
 		if (solutionValue > populationValue)
 		{
 			m_population[index] = keyboard;
@@ -267,17 +282,6 @@ protected:
 		}
 	}
 
-	float weightedSum(const std::vector<float>& solution, const std::vector<float>& weights)
-	{
-		auto weight = std::begin(weights);
-		float sum = 0.0f;
-		for (auto&& s : solution)
-		{
-			sum += s * (*weight);
-			++weight;
-		}
-		return sum;
-	}
 
 	void selectWeightVectors(size_t numObjectives)
 	{
