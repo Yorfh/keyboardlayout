@@ -198,7 +198,8 @@ TEST(OptimizerTSPTests, Burma14)
 	}; 
 	Optimizer<13> o;
 	o.populationSize(1);
-	o.temperature(252.0f, 3.9513f, 5000);
+	o.initialTemperature(252.0f, 3.9513f, 5000);
+	o.fastCoolingTemperature(252.0f, 3.9513f, 5000);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20 * 5000);

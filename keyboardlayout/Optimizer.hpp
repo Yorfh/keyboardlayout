@@ -174,11 +174,18 @@ public:
 		m_populationSize = size;
 	}
 
-	void temperature(float maxT, float minT, size_t numSteps)
+	void initialTemperature(float maxT, float minT, size_t numSteps)
 	{
-		m_minT = minT;
-		m_maxT = maxT;
-		m_numTSteps = numSteps;
+		m_initialMinT = minT;
+		m_initialMaxT = maxT;
+		m_initialTSteps = numSteps;
+	}
+
+	void fastCoolingTemperature(float maxT, float minT, size_t numSteps)
+	{
+		m_fastCoolingMinT = minT;
+		m_fastCoolingMaxT = maxT;
+		m_fastCoolingTSteps = numSteps;
 	}
 
 	template<typename Solution, typename Itr>
@@ -215,12 +222,19 @@ public:
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
 		
 		int numEvaluationsLeft = static_cast<int>(numEvaluations);
+		m_minT = m_initialMinT;
+		m_maxT = m_initialMaxT;
+		m_numTSteps = m_initialTSteps;
 		for (size_t i = 0; i < m_populationSize; ++i)
 		{
 			Keyboard<KeyboardSize> newKeyboard;
 			simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::weightedSum);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
+
+		m_minT = m_fastCoolingMinT;
+		m_maxT = m_fastCoolingMaxT;
+		m_numTSteps = m_fastCoolingTSteps;
 		
 		while(numEvaluationsLeft > 0)
 		{
@@ -360,9 +374,17 @@ protected:
 	std::vector<std::vector<float>> m_weights;
 	std::vector<float> m_tempSolution;
 	size_t m_populationSize = 0;
-	float m_maxT = 1.0f;
-	float m_minT = 0.1f;
-	size_t m_numTSteps = 10;
+	float m_initialMaxT = 1.0f;
+	float m_initialMinT = 0.1f;
+	size_t m_initialTSteps = 10;
+	float m_fastCoolingMaxT = 1.0f;
+	float m_fastCoolingMinT = 0.1f;
+	size_t m_fastCoolingTSteps = 10;
+
+
+	float m_maxT;
+	float m_minT;
+	size_t m_numTSteps;
 };
 
 template<size_t KeyboardSize>

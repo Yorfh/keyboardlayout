@@ -68,7 +68,8 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.temperature(1.0f, 0.1f, 10);
+	o.initialTemperature(1.0f, 0.1f, 10);
+	o.fastCoolingTemperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
@@ -85,7 +86,8 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.temperature(1.0f, 0.1f, 10);
+	o.initialTemperature(1.0f, 0.1f, 10);
+	o.fastCoolingTemperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
@@ -109,7 +111,8 @@ TEST(OptimizerTests, TwoObjectives)
 	};
 	Optimizer<3> o;
 	o.populationSize(3);
-	o.temperature(1.0f, 0.1f, 10);
+	o.initialTemperature(1.0f, 0.1f, 10);
+	o.fastCoolingTemperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate1), TestObjective<3>(evaluate2) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	auto results = solutions.getResult();

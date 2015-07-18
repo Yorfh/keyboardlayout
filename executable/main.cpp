@@ -150,7 +150,8 @@ int burma14(float minT, float maxT, int numSteps, int numEvaluations, unsigned i
 	};
 	Optimizer<13> o(seed);
 	o.populationSize(1);
-	o.temperature(maxT, minT, numSteps);
+	o.initialTemperature(maxT, minT, numSteps);
+	o.fastCoolingTemperature(maxT, minT, numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
@@ -165,7 +166,8 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, unsig
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
 	o.populationSize(population);
-	o.temperature(maxT, minT, numSteps);
+	o.initialTemperature(maxT, minT, numSteps);
+	o.fastCoolingTemperature(maxT, minT, numSteps);
 	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult();
