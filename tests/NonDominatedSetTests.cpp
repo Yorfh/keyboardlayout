@@ -138,9 +138,10 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
-	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1> s(keyboards, solutions);
+	NonDominatedSet<1> s;
+	s.insert(a.first, a.second);
+	s.insert(b.first, b.second);
+	s.insert(c.first, c.second);
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());

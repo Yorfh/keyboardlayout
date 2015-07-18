@@ -85,6 +85,10 @@ public:
 	template<typename SolutionType>
 	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
 	{
+		if (m_idealPoint.empty())
+		{
+			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::min());
+		}
 		if (std::find_if(m_indices.begin(), m_firstFree, 
 		[this, &keyboard](size_t index)
 		{
