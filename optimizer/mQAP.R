@@ -31,7 +31,7 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps 300 --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], as.character(instance), test_file, candidate$index) 
+  args <- sprintf("--max_t %f --min_t %f --steps %i --population %i --evaluations 100000 --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], candidate$values[["population"]], as.character(instance), test_file, candidate$index) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
 }
@@ -56,6 +56,8 @@ hook.evaluate <- function(instance, candidate, num.candidates, extra.params, con
 parameters.table <- '
 max_t "" r (0, 1000)
 min_t "" r (0, 1000)
+steps "" i (0, 1000)
+population "" i (0, 1000)
 '
 
 parameters <- readParameters(text = parameters.table)

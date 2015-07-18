@@ -26,14 +26,15 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps 300 --seed %s --test burma14", candidate$values[["max_t"]], candidate$values[["min_t"]], as.character(instance)) 
+  args <- sprintf("--max_t %f --min_t %f --steps %i --evaluations 5000 --seed %s --test burma14", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], as.character(instance)) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
 }
 
 parameters.table <- '
-max_t "" i (0, 1000)
+max_t "" r (0, 1000)
 min_t "" r (0, 1000)
+steps "" i (0, 1000)
 '
 
 parameters <- readParameters(text = parameters.table)
@@ -41,7 +42,7 @@ parameters <- readParameters(text = parameters.table)
 result <- irace(tunerConfig = list(
                   hookRun = hook.run,
                   instances = instances[1:100],
-                  maxExperiments = 10000,
+                  maxExperiments = 1000,
                   logFile = ""),
                 parameters = parameters)
 

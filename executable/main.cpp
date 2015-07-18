@@ -84,7 +84,7 @@ option::ArgStatus required(const option::Option& option, bool msg)
 	return option::ARG_ILLEGAL;
 }
 
-enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, TEST, OUTPUT, SEED };
+enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED };
 const char* optionNames[] =
 {
 	"",
@@ -92,6 +92,8 @@ const char* optionNames[] =
 	"max_t",
 	"min_t",
 	"steps",
+	"evaluations",
+	"population",
 	"test",
 	"output",
 	"seed"
@@ -103,14 +105,16 @@ const option::Descriptor usage[] =
 	{ HELP,    0, "" , optionNames[HELP],     option::Arg::None, "  --help  \tPrint usage and exit." },
 	{ MAXT,    0, "" , optionNames[MAXT],     floatingPoint,     "  --max_t  \tThe maximum temperature" },
 	{ MINT,    0, "" , optionNames[MINT],     floatingPoint,     "  --min_t  \tThe minimum temperature" },
-	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], floatingPoint,     "  --steps  \tThe number of steps" },
+	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], floatingPoint,     "  --steps  \tThe number of temperature steps" },
+	{ NUMEVALUATIONS,0, "" , optionNames[NUMEVALUATIONS], unsignedInteger,     "  --population  \tThe population size" },
+	{ POPULATION,0, "" , optionNames[POPULATION], unsignedInteger,     "  --evaluations  \tThe maximum number of evaluations" },
 	{ TEST,    0, "" , optionNames[TEST],     required,          "  --test  \tThe name of the test to execute" },
-	{ OUTPUT,    0, "" , optionNames[OUTPUT],   required,          "  --output  \tThe name of the output file" },
+	{ OUTPUT,    0, "" , optionNames[OUTPUT], required,			 "  --output  \tThe name of the output file" },
 	{ SEED,    0, "" , optionNames[SEED],     unsignedInteger,   "  --seed  \tThe random seed" },
 	{ 0,0,0,0,0,0 }
 };
 
-int burma14(float minT, float maxT, int numSteps, unsigned int seed)
+int burma14(float minT, float maxT, int numSteps, int numEvaluations, unsigned int seed)
 {
 	std::array<double, 14> latitudes = {
 		16.47,
@@ -149,21 +153,21 @@ int burma14(float minT, float maxT, int numSteps, unsigned int seed)
 	o.temperature(maxT, minT, numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numSteps * 20);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult()[0].first;
 	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
 	return resultValue;
 }
 
-int mqap(const std::string filename, float minT, float maxT, int numSteps, unsigned int seed, const std::string outputFile)
+int mqap(const std::string filename, float minT, float maxT, int numSteps, unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
-	o.populationSize(50);
+	o.populationSize(population);
 	o.temperature(maxT, minT, numSteps);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numSteps * 20 * 50);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult();
 	std::ofstream f(outputFile, std::ios::out | std::ios::trunc);
 	f << "#" << std::endl;
@@ -212,12 +216,13 @@ int main(int argc, char* argv[])
 	float minT = std::stof(options[MINT].arg);
 	float maxT = std::stof(options[MAXT].arg);
 	int steps = std::stol(options[NUMSTEPS].arg);
+	unsigned int evaluations = std::stol(options[NUMEVALUATIONS].arg);
 	unsigned int seed = std::stoul(options[SEED].arg);
 	if (options[TEST])
 	{
 		if (strcmp(options[TEST].arg, "burma14") == 0)
 		{
-			auto res = burma14(minT, maxT, steps, seed);
+			auto res = burma14(minT, maxT, steps, evaluations, seed);
 			std::cout << res << std::endl;
 		}
 		else
@@ -227,7 +232,8 @@ int main(int argc, char* argv[])
 				std::cout << "An output file is required" << std::endl;
 				return 1;
 			}
-			auto res = mqap(options[TEST].arg, minT, maxT, steps, seed, options[OUTPUT].arg);
+			unsigned int population = std::stol(options[POPULATION].arg);
+			auto res = mqap(options[TEST].arg, minT, maxT, steps, evaluations, population, seed, options[OUTPUT].arg);
 			std::cout << res << std::endl;
 		}
 	}
