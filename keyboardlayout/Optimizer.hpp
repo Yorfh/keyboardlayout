@@ -224,14 +224,20 @@ public:
 			for (size_t i = 0; i < m_populationSize; ++i)
 			{
 				Keyboard<KeyboardSize> newKeyboard;
-
-				auto test = []() { return 0.0f; };
 				simulatedAnnealing(i, begin, end, newKeyboard, solution, iteration == 0 ? detail::weightedSum : detail::evaluateChebycheff<std::vector<float>, std::vector<float>, std::vector<float>>);
-				updatePopulation(i, newKeyboard, solution);
 			}
 			for (auto i = 0; i < m_populationSize; i++)
 			{
 				adaptWeightVectors();
+			}
+
+			auto currentFront = m_NonDominatedSet.getResult();
+			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
+			for (auto i = 0; i < m_populationSize; i++)
+			{
+				auto index = selector(m_randomGenerator);
+				m_population[i] = currentFront[index].first;
+				m_populationSolutions[i] = currentFront[index].second;
 			}
 		}
 		return m_NonDominatedSet;
