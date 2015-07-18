@@ -181,11 +181,6 @@ public:
 		m_numTSteps = numSteps;
 	}
 
-	void numIterations(size_t num)
-	{
-		m_numIterations = num;
-	}
-
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
@@ -197,7 +192,7 @@ public:
 	}
 
 	template<typename Itr>
-	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end)
+	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
 		// The algorithm is based on 
 		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"
@@ -218,14 +213,16 @@ public:
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
-
+		
+		int numEvaluationsLeft = static_cast<int>(numEvaluations);
 		for (size_t i = 0; i < m_populationSize; ++i)
 		{
 			Keyboard<KeyboardSize> newKeyboard;
 			simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::weightedSum);
+			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
 		
-		for (size_t iteration = 1; iteration < m_numIterations * m_populationSize; iteration++)
+		while(numEvaluationsLeft > 0)
 		{
 			auto currentFront = m_NonDominatedSet.getResult();
 			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
@@ -247,6 +244,7 @@ public:
 			typedef std::vector<float> V;
 			Keyboard<KeyboardSize> newKeyboard;
 			simulatedAnnealing(0, begin, end, newKeyboard, solution, detail::evaluateChebycheff<V, V, V>);
+			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
 		return m_NonDominatedSet;
 	}
@@ -362,7 +360,6 @@ protected:
 	std::vector<std::vector<float>> m_weights;
 	std::vector<float> m_tempSolution;
 	size_t m_populationSize = 0;
-	size_t m_numIterations = 0;
 	float m_maxT = 1.0f;
 	float m_minT = 0.1f;
 	size_t m_numTSteps = 10;

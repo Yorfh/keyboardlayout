@@ -146,11 +146,10 @@ int burma14(float minT, float maxT, int numSteps, unsigned int seed)
 	};
 	Optimizer<13> o(seed);
 	o.populationSize(1);
-	o.numIterations(20);
 	o.temperature(maxT, minT, numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numSteps * 20);
 	auto result = solutions.getResult()[0].first;
 	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
 	return resultValue;
@@ -162,10 +161,9 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, unsig
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
 	o.populationSize(50);
-	o.numIterations(20);
 	o.temperature(maxT, minT, numSteps);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numSteps * 20 * 50);
 	auto result = solutions.getResult();
 	std::ofstream f(outputFile, std::ios::out | std::ios::trunc);
 	f << "#" << std::endl;

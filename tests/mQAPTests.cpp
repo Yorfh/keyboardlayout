@@ -56,10 +56,9 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
 	o.populationSize(50);
-	o.numIterations(20);
 	o.temperature(988, 900, 1000);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 50 * 20 * 1000);
 	checkResult("../../tests/mQAPData/KC10-2fl-1uni.po", solutions);
 }
 
@@ -70,9 +69,8 @@ TEST(mQAPTests, KC10_2fl_1rl)
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
 	o.populationSize(50);
-	o.numIterations(20);
 	o.temperature(578, 179, 1000);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 50 * 20 * 1000);
 	checkResult("../../tests/mQAPData/KC10-2fl-1rl.po", solutions);
 }

@@ -36,9 +36,8 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 	};
 	Optimizer<3> o; 
 	o.populationSize(50);
-	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
@@ -53,9 +52,8 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 	};
 	Optimizer<3> o; 
 	o.populationSize(50);
-	o.numIterations(0);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
@@ -70,9 +68,9 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.numIterations(1);
+	o.temperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
 }
@@ -87,9 +85,9 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	};
 	Optimizer<3> o; 
 	o.populationSize(3);
-	o.numIterations(1);
+	o.temperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
 }
@@ -111,9 +109,9 @@ TEST(OptimizerTests, TwoObjectives)
 	};
 	Optimizer<3> o;
 	o.populationSize(3);
-	o.numIterations(1);
+	o.temperature(1.0f, 0.1f, 10);
 	auto objectives = { TestObjective<3>(evaluate1), TestObjective<3>(evaluate2) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	auto results = solutions.getResult();
 	ASSERT_EQ(4, solutions.size());
 	std::sort(results.begin(), results.end(), 
