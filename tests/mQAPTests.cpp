@@ -71,7 +71,7 @@ TEST(mQAPTests, KC10_2fl_1rl)
 	Optimizer<10> o;
 	o.populationSize(50);
 	o.numIterations(20);
-	o.temperature(822, 713, 10000);
+	o.temperature(578, 179, 1000);
 	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives));
 	checkResult("../../tests/mQAPData/KC10-2fl-1rl.po", solutions);
