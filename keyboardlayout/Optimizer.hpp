@@ -145,6 +145,57 @@ namespace detail
 		}
 		return -maxElement;
 	}
+
+	template<typename T1, typename T2, typename T3>
+	void generateWeightVectorsFromFront(const T1& front, const T2& reference, T3& output)
+	{
+		std::vector<std::pair<float, unsigned int>> distances;
+		distances.reserve(front.size());
+		const size_t numDimensions = reference.size();
+		for (unsigned int i = 0; i < front.size() - 1; i++)
+		{
+			float dist = 0.0f;
+			for (size_t j = 0; j < numDimensions; j++)
+			{
+				float temp = front[i][j] - front[i + 1][j];
+				temp *= temp;
+				dist += temp;
+			}
+			distances.push_back(std::make_pair(dist, i));
+		}
+		std::sort(distances.begin(), distances.end(), [](const auto& lhs, const auto& rhs)
+		{
+			return lhs.first > rhs.first;
+		});
+
+		size_t outputSize = output.size();
+		std::vector<float> newPoint(numDimensions);
+		size_t numPointsPerPair = output.size() / distances.size();
+		if (numPointsPerPair == 0)
+		{
+			numPointsPerPair = 1;
+		}
+		size_t currentOutput = 0;
+		for (size_t i = 0; i < distances.size(); i++)
+		{
+			auto& a = front[distances[i].second];
+			auto& b = front[distances[i].second + 1];
+
+			float multiplier = 1.0f / (numPointsPerPair + 1.0f);
+
+			size_t numPoints = std::min(numPointsPerPair, outputSize - currentOutput);
+
+			for (size_t j = 1; j <= numPoints; j++)
+			{
+				for (size_t k = 0; k < numDimensions; k++)
+				{
+					newPoint[k] = a[k] +  j * multiplier * (b[k] - a[k]);
+				}
+				solutionToChebycheff(reference, newPoint, output[currentOutput++]);
+			}
+
+		}
+	}
 }
 
 template<size_t KeyboardSize>

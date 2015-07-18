@@ -308,6 +308,55 @@ TEST(WeightVectorTests, GenerateThreeDimensionalSixValueVector)
 	EXPECT_THAT(output[5], expectation6);
 }
 
+TEST(WeightVectorTests, GenerateNewWeightVectorsFromFront)
+{
+	auto a = make_array(0.0f, 2.0f);
+	auto b = make_array(1.0f, 1.0f);
+	auto c = make_array(2.0f, 0.0f);
+	auto front = make_array(a, b, c);
+	auto reference = make_array(2.0f, 2.0f);
+	std::array<std::array<float, 2>, 2> weightVectors;
+	detail::generateWeightVectorsFromFront(front, reference, weightVectors);
+	std::array<float, 2> expectedA, expectedB;
+	detail::solutionToChebycheff(reference, make_array(0.5f, 1.5f), expectedA);
+	detail::solutionToChebycheff(reference, make_array(1.5f, 0.5f), expectedB);
+	EXPECT_THAT(weightVectors[0], ElementsAreClose(expectedA[0], expectedA[1]));
+	EXPECT_THAT(weightVectors[1], ElementsAreClose(expectedB[0], expectedB[1]));
+}
+
+TEST(WeightVectorTests, GenerateNewWeightVectorsFromFrontTheLargestGapsAreUsed)
+{
+	auto a = make_array(0.0f, 2.0f);
+	auto b = make_array(0.3f, 1.8f);
+	auto c = make_array(1.0f, 1.0f);
+	auto d = make_array(2.0f, 0.0f);
+	auto front = make_array(a, b, c, d);
+	auto reference = make_array(2.0f, 2.0f);
+	std::array<std::array<float, 2>, 1> weightVectors;
+	detail::generateWeightVectorsFromFront(front, reference, weightVectors);
+	std::array<float, 2> expected;
+	detail::solutionToChebycheff(reference, make_array(1.5f, 0.5f), expected);
+	EXPECT_THAT(weightVectors[0], ElementsAreClose(expected[0], expected[1]));
+}
+
+TEST(WeightVectorTests, GenerateNewWeightVectorsFromFrontMoreGeneratedThanFront)
+{
+	auto a = make_array(0.0f, 5.0f);
+	auto b = make_array(3.0f, 2.0f);
+	auto c = make_array(5.0f, 0.0f);
+	auto front = make_array(a, b);
+	auto reference = make_array(5.0f, 5.0f);
+	std::array<std::array<float, 2>, 3> weightVectors;
+	detail::generateWeightVectorsFromFront(front, reference, weightVectors);
+	std::array<float, 2> expectedA, expectedB, expectedC;
+	detail::solutionToChebycheff(reference, make_array(1.0f, 4.0f), expectedA);
+	detail::solutionToChebycheff(reference, make_array(2.0f, 3.0f), expectedB);
+	detail::solutionToChebycheff(reference, make_array(4.0f, 1.0f), expectedC);
+	EXPECT_THAT(weightVectors[0], ElementsAreClose(expectedA[0], expectedA[1]));
+	EXPECT_THAT(weightVectors[1], ElementsAreClose(expectedB[0], expectedB[1]));
+	EXPECT_THAT(weightVectors[2], ElementsAreClose(expectedC[0], expectedC[1]));
+}
+
 TEST(TchebycheffTests, ChebycheffDiagonal)
 {
 	std::array<float, 2> reference = { 1.0f, 1.0f };
