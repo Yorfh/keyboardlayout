@@ -218,27 +218,35 @@ public:
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
 		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
-		
-		for (size_t iteration = 0; iteration < m_numIterations; iteration++)
-		{
-			for (size_t i = 0; i < m_populationSize; ++i)
-			{
-				Keyboard<KeyboardSize> newKeyboard;
-				simulatedAnnealing(i, begin, end, newKeyboard, solution, iteration == 0 ? detail::weightedSum : detail::evaluateChebycheff<std::vector<float>, std::vector<float>, std::vector<float>>);
-			}
-			for (auto i = 0; i < m_populationSize; i++)
-			{
-				adaptWeightVectors();
-			}
 
+		for (size_t i = 0; i < m_populationSize; ++i)
+		{
+			Keyboard<KeyboardSize> newKeyboard;
+			simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::weightedSum);
+		}
+		
+		for (size_t iteration = 1; iteration < m_numIterations * m_populationSize; iteration++)
+		{
 			auto currentFront = m_NonDominatedSet.getResult();
 			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
-			for (auto i = 0; i < m_populationSize; i++)
+			auto index = selector(m_randomGenerator);
+			m_population[0] = currentFront[index].first;
+			m_populationSolutions[0] = currentFront[index].second;
+
+			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
+			for (auto&& w : m_weights[0])
 			{
-				auto index = selector(m_randomGenerator);
-				m_population[i] = currentFront[index].first;
-				m_populationSolutions[i] = currentFront[index].second;
+				w = weightGenerator(m_randomGenerator);
 			}
+			auto sum = std::accumulate(m_weights[0].begin(), m_weights[0].end(), 0.0f);
+			for (auto&& w : m_weights[0])
+			{
+				w = w / sum;
+			}
+
+			typedef std::vector<float> V;
+			Keyboard<KeyboardSize> newKeyboard;
+			simulatedAnnealing(0, begin, end, newKeyboard, solution, detail::evaluateChebycheff<V, V, V>);
 		}
 		return m_NonDominatedSet;
 	}
@@ -292,10 +300,6 @@ protected:
 	void selectWeightVectors(size_t numObjectives)
 	{
 		detail::generateWeightVectors(m_weights, m_populationSize, numObjectives, &m_randomGenerator);
-	}
-
-	void adaptWeightVectors()
-	{
 	}
 
 	size_t selectParent(std::vector<float>& fitnesses)
