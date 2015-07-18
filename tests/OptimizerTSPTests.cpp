@@ -198,11 +198,11 @@ TEST(OptimizerTSPTests, Burma14)
 	}; 
 	Optimizer<13> o;
 	o.populationSize(1);
-	o.initialTemperature(252.0f, 3.9513f, 5000);
-	o.fastCoolingTemperature(252.0f, 3.9513f, 5000);
+	o.initialTemperature(591.5637f, 121.418f, 528);
+	o.fastCoolingTemperature(349.3616f, 0.5561f, 393);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20 * 5000);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
 	// The reverse direction is also a solution
 	EXPECT_THAT(solutions.size(), AnyOf(1, 2));
 	auto result = solutions.getResult()[0].first;

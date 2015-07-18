@@ -26,7 +26,7 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps %i --evaluations 5000 --seed %s --test burma14", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], as.character(instance)) 
+  args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --evaluations 20000 --seed %s --test burma14", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], candidate$values[["fast_max_t"]], candidate$values[["fast_min_t"]], candidate$values[["fast_steps"]], as.character(instance)) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
 }
@@ -35,6 +35,9 @@ parameters.table <- '
 max_t "" r (0, 1000)
 min_t "" r (0, 1000)
 steps "" i (0, 1000)
+fast_max_t "" r (0, 1000)
+fast_min_t "" r (0, 1000)
+fast_steps "" i (0, 1000)
 '
 
 parameters <- readParameters(text = parameters.table)
@@ -43,6 +46,7 @@ result <- irace(tunerConfig = list(
                   hookRun = hook.run,
                   instances = instances[1:100],
                   maxExperiments = 1000,
+				  forbiddenFile = "parameters.forbidden",
                   logFile = ""),
                 parameters = parameters)
 

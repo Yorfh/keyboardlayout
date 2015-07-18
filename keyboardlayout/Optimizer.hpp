@@ -230,6 +230,8 @@ public:
 			Keyboard<KeyboardSize> newKeyboard;
 			simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::weightedSum);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
+			if (numEvaluationsLeft < 0)
+				break;
 		}
 
 		m_minT = m_fastCoolingMinT;

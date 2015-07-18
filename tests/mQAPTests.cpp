@@ -55,11 +55,11 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
-	o.populationSize(50);
-	o.initialTemperature(988, 900, 1000);
-	o.fastCoolingTemperature(998, 900, 1000);
+	o.populationSize(902);
+	o.initialTemperature(848.8709f, 447.3805f, 410);
+	o.fastCoolingTemperature(675.0417f, 566.9724f, 396);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 50 * 20 * 1000);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 200000);
 	checkResult("../../tests/mQAPData/KC10-2fl-1uni.po", solutions);
 }
 
@@ -69,10 +69,10 @@ TEST(mQAPTests, KC10_2fl_1rl)
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
-	o.populationSize(919);
-	o.initialTemperature(871.6187f, 527.6194f, 662);
-	o.fastCoolingTemperature(871.6187f, 527.6194f, 662);
+	o.populationSize(363);
+	o.initialTemperature(860.2982f, 321.2859f, 195);
+	o.fastCoolingTemperature(598.3387f, 155.8366f, 150);
 	auto objectives = { objective1, objective2 };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 100000);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 200000);
 	checkResult("../../tests/mQAPData/KC10-2fl-1rl.po", solutions);
 }

@@ -84,7 +84,7 @@ option::ArgStatus required(const option::Option& option, bool msg)
 	return option::ARG_ILLEGAL;
 }
 
-enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED };
+enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED };
 const char* optionNames[] =
 {
 	"",
@@ -92,6 +92,9 @@ const char* optionNames[] =
 	"max_t",
 	"min_t",
 	"steps",
+	"fast_max_t",
+	"fast_min_t",
+	"fast_steps",
 	"evaluations",
 	"population",
 	"test",
@@ -105,7 +108,10 @@ const option::Descriptor usage[] =
 	{ HELP,    0, "" , optionNames[HELP],     option::Arg::None, "  --help  \tPrint usage and exit." },
 	{ MAXT,    0, "" , optionNames[MAXT],     floatingPoint,     "  --max_t  \tThe maximum temperature" },
 	{ MINT,    0, "" , optionNames[MINT],     floatingPoint,     "  --min_t  \tThe minimum temperature" },
-	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], floatingPoint,     "  --steps  \tThe number of temperature steps" },
+	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], unsignedInteger,     "  --steps  \tThe number of temperature steps" },
+	{ FAST_MAXT,    0, "" , optionNames[FAST_MAXT],     floatingPoint,     "  --max_t  \tThe fast cooling maximum temperature" },
+	{ FAST_MINT,    0, "" , optionNames[FAST_MINT],     floatingPoint,     "  --min_t  \tThe fast cooling minimum temperature" },
+	{ FAST_NUMSTEPS,0, "" , optionNames[FAST_NUMSTEPS], unsignedInteger,     "  --steps  \tThe number of fast cooling temperature steps" },
 	{ NUMEVALUATIONS,0, "" , optionNames[NUMEVALUATIONS], unsignedInteger,     "  --population  \tThe population size" },
 	{ POPULATION,0, "" , optionNames[POPULATION], unsignedInteger,     "  --evaluations  \tThe maximum number of evaluations" },
 	{ TEST,    0, "" , optionNames[TEST],     required,          "  --test  \tThe name of the test to execute" },
@@ -114,7 +120,7 @@ const option::Descriptor usage[] =
 	{ 0,0,0,0,0,0 }
 };
 
-int burma14(float minT, float maxT, int numSteps, int numEvaluations, unsigned int seed)
+int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, int numEvaluations, unsigned int seed)
 {
 	std::array<double, 14> latitudes = {
 		16.47,
@@ -151,7 +157,7 @@ int burma14(float minT, float maxT, int numSteps, int numEvaluations, unsigned i
 	Optimizer<13> o(seed);
 	o.populationSize(1);
 	o.initialTemperature(maxT, minT, numSteps);
-	o.fastCoolingTemperature(maxT, minT, numSteps);
+	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
@@ -160,14 +166,15 @@ int burma14(float minT, float maxT, int numSteps, int numEvaluations, unsigned i
 	return resultValue;
 }
 
-int mqap(const std::string filename, float minT, float maxT, int numSteps, unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
+int mqap(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, 
+	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
 	Optimizer<10> o;
 	o.populationSize(population);
 	o.initialTemperature(maxT, minT, numSteps);
-	o.fastCoolingTemperature(maxT, minT, numSteps);
+	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
 	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult();
@@ -218,13 +225,16 @@ int main(int argc, char* argv[])
 	float minT = std::stof(options[MINT].arg);
 	float maxT = std::stof(options[MAXT].arg);
 	int steps = std::stol(options[NUMSTEPS].arg);
+	float fast_minT = std::stof(options[FAST_MINT].arg);
+	float fast_maxT = std::stof(options[FAST_MAXT].arg);
+	int fast_steps = std::stol(options[FAST_NUMSTEPS].arg);
 	unsigned int evaluations = std::stol(options[NUMEVALUATIONS].arg);
 	unsigned int seed = std::stoul(options[SEED].arg);
 	if (options[TEST])
 	{
 		if (strcmp(options[TEST].arg, "burma14") == 0)
 		{
-			auto res = burma14(minT, maxT, steps, evaluations, seed);
+			auto res = burma14(minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
 			std::cout << res << std::endl;
 		}
 		else
@@ -235,7 +245,7 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 			unsigned int population = std::stol(options[POPULATION].arg);
-			auto res = mqap(options[TEST].arg, minT, maxT, steps, evaluations, population, seed, options[OUTPUT].arg);
+			auto res = mqap(options[TEST].arg, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, population, seed, options[OUTPUT].arg);
 			std::cout << res << std::endl;
 		}
 	}
