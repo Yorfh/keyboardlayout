@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <regex>
 #include "optionparser.h"
 #include "Optimizer.hpp"
 #include "TravelingSalesman.hpp"
@@ -109,11 +110,11 @@ const option::Descriptor usage[] =
 	{ MAXT,    0, "" , optionNames[MAXT],     floatingPoint,     "  --max_t  \tThe maximum temperature" },
 	{ MINT,    0, "" , optionNames[MINT],     floatingPoint,     "  --min_t  \tThe minimum temperature" },
 	{ NUMSTEPS,0, "" , optionNames[NUMSTEPS], unsignedInteger,     "  --steps  \tThe number of temperature steps" },
-	{ FAST_MAXT,    0, "" , optionNames[FAST_MAXT],     floatingPoint,     "  --max_t  \tThe fast cooling maximum temperature" },
-	{ FAST_MINT,    0, "" , optionNames[FAST_MINT],     floatingPoint,     "  --min_t  \tThe fast cooling minimum temperature" },
-	{ FAST_NUMSTEPS,0, "" , optionNames[FAST_NUMSTEPS], unsignedInteger,     "  --steps  \tThe number of fast cooling temperature steps" },
-	{ NUMEVALUATIONS,0, "" , optionNames[NUMEVALUATIONS], unsignedInteger,     "  --population  \tThe population size" },
-	{ POPULATION,0, "" , optionNames[POPULATION], unsignedInteger,     "  --evaluations  \tThe maximum number of evaluations" },
+	{ FAST_MAXT,    0, "" , optionNames[FAST_MAXT],     floatingPoint,     "  --fast_max_t  \tThe fast cooling maximum temperature" },
+	{ FAST_MINT,    0, "" , optionNames[FAST_MINT],     floatingPoint,     "  --fast_min_t  \tThe fast cooling minimum temperature" },
+	{ FAST_NUMSTEPS,0, "" , optionNames[FAST_NUMSTEPS], unsignedInteger,     "  --fast_steps  \tThe number of fast cooling temperature steps" },
+	{ NUMEVALUATIONS,0, "" , optionNames[NUMEVALUATIONS], unsignedInteger,     "  --evaluations  \tThe maximum number of evaluations" },
+	{ POPULATION,0, "" , optionNames[POPULATION], unsignedInteger,     "  --population  \tThe population size"},
 	{ TEST,    0, "" , optionNames[TEST],     required,          "  --test  \tThe name of the test to execute" },
 	{ OUTPUT,    0, "" , optionNames[OUTPUT], required,			 "  --output  \tThe name of the output file" },
 	{ SEED,    0, "" , optionNames[SEED],     unsignedInteger,   "  --seed  \tThe random seed" },
@@ -166,21 +167,25 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 	return resultValue;
 }
 
-int mqap(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, 
+template<size_t NumLocations>
+int mqap_helper(size_t NumObjectives, const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps,
 	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
-	mQAP<10> objective1(filename, 0);
-	mQAP<10> objective2(filename, 1);
-	Optimizer<10> o;
+	std::vector<mQAP<NumLocations>> objectives;
+	for (size_t i = 0; i < NumObjectives; i++)
+	{
+		mQAP<NumLocations> objective(filename, i);
+		objectives.push_back(objective);
+	}
+	Optimizer<NumLocations> o;
 	o.populationSize(population);
 	o.initialTemperature(maxT, minT, numSteps);
 	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
-	auto objectives = { objective1, objective2 };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult();
 	std::ofstream f(outputFile, std::ios::out | std::ios::trunc);
 	f << "#" << std::endl;
-	for (auto&& r: result)
+	for (auto&& r : result)
 	{
 		for (auto&& o : r.second)
 		{
@@ -189,6 +194,29 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 		f << std::endl;
 	}
 	f << "#" << std::endl;
+	return 0;
+}
+
+int mqap(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, 
+	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
+{
+	auto regex = std::regex("KC(.*)-(.)fl");
+	std::smatch match;
+	std::regex_search(filename, match, regex);
+	int numLocations = std::stoi(match.str(1));
+	int numObjectives = std::stoi(match.str(2));
+	if (numLocations == 10)
+	{
+		return mqap_helper<10>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+	}
+	else if (numLocations == 20)
+	{
+		return mqap_helper<20>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+	}
+	else if (numLocations == 30)
+	{
+		return mqap_helper<30>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+	}
 	return 0;
 }
 

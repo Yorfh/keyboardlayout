@@ -34,10 +34,10 @@ hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 parameters.table <- '
 max_t "" r (0, 1000)
 min_t "" r (0, 1000)
-steps "" i (0, 1000)
+steps "" i (1, 1000)
 fast_max_t "" r (0, 1000)
 fast_min_t "" r (0, 1000)
-fast_steps "" i (0, 1000)
+fast_steps "" i (1, 1000)
 '
 
 parameters <- readParameters(text = parameters.table)

@@ -24,7 +24,7 @@ library("irace")
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
 test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
-num_evaluations <- 200000
+num_evaluations <- 1000000
 
 dir.create("output", showWarnings = FALSE)
 
@@ -57,10 +57,10 @@ hook.evaluate <- function(instance, candidate, num.candidates, extra.params, con
 parameters.table <- '
 max_t "" r (0, 1000)
 min_t "" r (0, 1000)
-steps "" i (0, 1000)
+steps "" i (1, 1000)
 fast_max_t "" r (0, 1000)
 fast_min_t "" r (0, 1000)
-fast_steps "" i (0, 1000)
+fast_steps "" i (1, 1000)
 population "" i (1, 1000)
 '
 
