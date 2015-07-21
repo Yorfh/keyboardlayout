@@ -218,5 +218,5 @@ TEST(SelectPivotPointTests, SelectPivotPoint)
 	auto l = make_array(-9.0f, -1.0f);
 	std::vector<std::array<float, 2>> solutionVector{ a, b, c, d, e, f, g, h, i, j, k, l };
 	nondominatedset_detail::selectPivoitPoint(solutionVector);
-	EXPECT_THAT(solutionVector, ElementsAre(e, b, i, k, l));
+	EXPECT_THAT(solutionVector, ElementsAre(e, l, k, i, b));
 }

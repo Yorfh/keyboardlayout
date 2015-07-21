@@ -3,6 +3,7 @@
 #include "Helpers.hpp"
 #include <algorithm>
 
+
 namespace nondominatedset_detail
 {
 
@@ -17,23 +18,34 @@ namespace nondominatedset_detail
 	template<typename SolutionArray>
 	void selectPivoitPoint(SolutionArray& solutions)
 	{
+		// This is based on the paper:
+		// BSkyTree: Scalable Skyline Computation Using A Balanced Pivot Selection
+
 		if (solutions.size() >= 2)
 		{
 			auto head = std::begin(solutions);
 			auto cur = head + 1;
-			auto tail = std::end(solutions);
+			auto tail = std::end(solutions) - 1;
 			float minDist = distance(*head);
-			while (cur < tail)
+			while (cur <= tail)
 			{
 				if (isDominated(*cur, *head))
 				{
-					solutions.erase(cur);
+					if (cur != tail)
+					{
+						*cur = std::move(*tail);
+					}
+					solutions.erase(tail);
 					tail--;
 				}
 				else if (isDominated(*head, *cur))
 				{
 					*head = std::move(*cur);
-					solutions.erase(cur);
+					if (cur != tail)
+					{
+						*cur = std::move(*tail);
+					}
+					solutions.erase(tail);
 					tail--;
 					cur = head + 1;
 					minDist = distance(*head);
