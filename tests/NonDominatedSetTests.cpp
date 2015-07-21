@@ -3,6 +3,7 @@
 #include "NonDominatedSet.hpp"
 #include <array>
 #include "TestUtilities.hpp"
+#include "MakeArray.hpp"
 using namespace testing;
 
 template<typename KeyboardArray, typename SolutionArray>
@@ -199,4 +200,23 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	SolutionArray<2, 2> solutionRes{ a.second, e.second };
 	testEqual(keyboardRes, solutionRes, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
+}
+
+TEST(SelectPivotPointTests, SelectPivotPoint)
+{
+	auto a = make_array(-2.0f, -8.0f);
+	auto b = make_array(-2.0f, -5.0f);
+	auto c = make_array(-3.0f, -9.0f);
+	auto d = make_array(-4.0f, -6.0f);
+	auto e = make_array(-4.0f, -4.0f);
+	auto f = make_array(-5.0f, -7.0f);
+	auto g = make_array(-6.0f, -4.0f);
+	auto h = make_array(-7.0f, -6.0f);
+	auto i = make_array(-7.0f, -2.0f);
+	auto j = make_array(-8.0f, -8.0f);
+	auto k = make_array(-8.0f, -3.0f);
+	auto l = make_array(-9.0f, -1.0f);
+	std::vector<std::array<float, 2>> solutionVector{ a, b, c, d, e, f, g, h, i, j, k, l };
+	nondominatedset_detail::selectPivoitPoint(solutionVector);
+	EXPECT_THAT(solutionVector, ElementsAre(e, b, i, k, l));
 }

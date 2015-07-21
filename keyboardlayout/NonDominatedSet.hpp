@@ -3,6 +3,68 @@
 #include "Helpers.hpp"
 #include <algorithm>
 
+namespace nondominatedset_detail
+{
+
+	template<typename S>
+	float distance(const S& s)
+	{
+		auto maximum = *std::max_element(std::begin(s), std::end(s));
+		auto minimum = *std::min_element(std::begin(s), std::end(s));
+		return maximum - minimum;
+	}
+
+	template<typename SolutionArray>
+	void selectPivoitPoint(SolutionArray& solutions)
+	{
+		if (solutions.size() >= 2)
+		{
+			auto head = std::begin(solutions);
+			auto cur = head + 1;
+			auto tail = std::end(solutions);
+			float minDist = distance(*head);
+			while (cur < tail)
+			{
+				if (isDominated(*cur, *head))
+				{
+					solutions.erase(cur);
+					tail--;
+				}
+				else if (isDominated(*head, *cur))
+				{
+					*head = std::move(*cur);
+					solutions.erase(cur);
+					tail--;
+					cur = head + 1;
+					minDist = distance(*head);
+				}
+				else
+				{
+					float curDist = distance(*cur);
+					if (curDist < minDist)
+					{
+						bool dominated = false;
+						for (auto i = head + 1; i != cur; i++)
+						{
+							if (isDominated(*cur, *i))
+							{
+								dominated = true;
+								break;
+							}
+						}
+						if (!dominated)
+						{
+							std::swap(*head, *cur);
+							minDist = curDist;
+						}
+					}
+					++cur;
+				}
+			}
+		}
+	}
+}
+
 template<size_t KeyboardSize>
 class NonDominatedSet
 {
