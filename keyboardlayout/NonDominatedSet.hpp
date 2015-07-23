@@ -187,6 +187,9 @@ public:
 			}
 			if (isDominated(*sItr, solution))
 			{
+				// This is bascically the same as std::remove_if
+				// But since the standard algorithms doesn't work with zip iterators
+				// it has to be done manually
 				auto sOut = sItr;
 				auto kOut = kItr;
 				++sItr;
