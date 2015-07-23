@@ -26,17 +26,13 @@ public:
 	template<typename NDS, typename SolutionArray, typename OutItr>
 	void calculateFitness(const NDS& nds, const SolutionArray& solutions, OutItr output)
 	{
-		auto& indices = nds.m_indices;
+		auto& ndsSolutions = nds.m_solutions;
 		size_t ndsSize = nds.size();
-		using IndexItr = typename NDS::IndexVector::const_iterator;
-		IndexItr indexBegin = indices.begin();
-		IndexItr indexEnd = nds.m_firstFree;
 		m_ndsFitnesses.reserve(ndsSize);
 		m_ndsFitnesses.clear();
-		std::transform(indexBegin, indexEnd, std::back_inserter(m_ndsFitnesses),
-		[&solutions, &nds](size_t index)
+		std::transform(ndsSolutions.begin(), ndsSolutions.end(), std::back_inserter(m_ndsFitnesses),
+		[&solutions, &nds](const auto& ndsSolution)
 		{
-			auto& ndsSolution = nds.m_solutions[index];
 			auto numDominating = std::count_if(std::begin(solutions), std::end(solutions), 
 			[&ndsSolution](auto& s)
 			{
@@ -46,13 +42,12 @@ public:
 			return static_cast<float>(numDominating) / populationSize;
 		});
 		std::transform(std::begin(solutions), std::end(solutions), output,
-		[&indexBegin, &indexEnd, this, &nds](auto& solution)
+		[this, &nds](auto& solution)
 		{
 			float sum = 1.0f;
 			auto ndsFittness = std::begin(m_ndsFitnesses);
-			for (auto i = indexBegin; i != indexEnd; ++i)
+			for (auto&& ndsSolution: nds.m_solutions)
 			{
-				auto& ndsSolution = nds.m_solutions[*i];
 				if (isDominated(solution, ndsSolution))
 				{
 					sum += *ndsFittness;
