@@ -220,3 +220,24 @@ TEST(SelectPivotPointTests, SelectPivotPoint)
 	nondominatedset_detail::selectPivoitPoint(solutionVector);
 	EXPECT_THAT(solutionVector, ElementsAre(e, l, k, i, b));
 }
+
+TEST(MapPointToRegionTests, MapPointToRegion2D)
+{
+	auto b = make_array(-2.0f, -5.0f);
+	auto e = make_array(-4.0f, -4.0f);
+	auto g = make_array(-6.0f, -4.0f);
+	auto h = make_array(-7.0f, -6.0f);
+	auto i = make_array(-7.0f, -2.0f);
+	unsigned int res = nondominatedset_detail::mapPointToRegion(e, e);
+	EXPECT_EQ(0b11, res);
+	res = nondominatedset_detail::mapPointToRegion(e, b);
+	EXPECT_EQ(0b10, res);
+	res = nondominatedset_detail::mapPointToRegion(e, g);
+	EXPECT_EQ(0b11, res);
+	res = nondominatedset_detail::mapPointToRegion(e, h);
+	EXPECT_EQ(0b11, res);
+	res = nondominatedset_detail::mapPointToRegion(e, i);
+	EXPECT_EQ(0b01, res);
+	res = nondominatedset_detail::mapPointToRegion(h, e);
+	EXPECT_EQ(0b00, res);
+}

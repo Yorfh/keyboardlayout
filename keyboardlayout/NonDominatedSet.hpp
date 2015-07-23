@@ -75,6 +75,22 @@ namespace nondominatedset_detail
 			}
 		}
 	}
+
+	template<typename Point>
+	unsigned int mapPointToRegion(Point& reference, Point& p)
+	{
+		unsigned int mask = 1;
+		unsigned int ret = 0;
+		for (size_t i = 0; i < reference.size(); i++)
+		{
+			if (p[i] <= reference[i])
+			{
+				ret |= mask;
+			}
+			mask <<= 1;
+		}
+		return ret;
+	}
 }
 
 template<size_t KeyboardSize>
