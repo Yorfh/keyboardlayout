@@ -179,6 +179,7 @@ public:
 		auto sItr = m_solutions.begin();
 		auto end = m_solutions.end();
 
+		bool solutionAssigned = false;
 		while (sItr != end)
 		{
 			if (*kItr == keyboard)
@@ -187,30 +188,42 @@ public:
 			}
 			if (isDominated(*sItr, solution))
 			{
-				// This is bascically the same as std::remove_if
-				// But since the standard algorithms doesn't work with zip iterators
-				// it has to be done manually
-				auto sOut = sItr;
-				auto kOut = kItr;
-				++sItr;
-				++kItr;
-				while (sItr != end)
+				if (!solutionAssigned)
 				{
-					if (!isDominated(*sItr, solution))
-					{
-						*sOut = std::move(*sItr);
-						*kOut = std::move(*kItr);
-						++sOut;
-						++kOut;
-					}
+					sItr->assign(std::begin(solution), std::end(solution));
+					*kItr = keyboard;
+					solutionAssigned = true;
+				}
+				else
+				{
+					// This is bascically the same as std::remove_if
+					// But since the standard algorithms doesn't work with zip iterators
+					// it has to be done manually
+					auto sOut = sItr;
+					auto kOut = kItr;
 					++sItr;
 					++kItr;
+					while (sItr != end)
+					{
+						if (!isDominated(*sItr, solution))
+						{
+							if (sItr != sOut)
+							{
+								*sOut = std::move(*sItr);
+								*kOut = std::move(*kItr);
+							}
+							++sOut;
+							++kOut;
+						}
+						++sItr;
+						++kItr;
+					}
+					m_solutions.erase(sOut, m_solutions.end());
+					m_keyboards.erase(kOut, m_keyboards.end());
+					break;
 				}
-				m_solutions.erase(sOut, m_solutions.end());
-				m_keyboards.erase(kOut, m_keyboards.end());
-				break;
 			}
-			else if (isDominated(solution, *sItr))
+			else if (!solutionAssigned && isDominated(solution, *sItr))
 			{
 				dominated = true;
 				break;
@@ -226,8 +239,11 @@ public:
 			{
 				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
 			}
-			m_keyboards.emplace_back(keyboard);
-			m_solutions.emplace_back(std::begin(solution), std::end(solution));
+			if (!solutionAssigned)
+			{
+				m_keyboards.emplace_back(keyboard);
+				m_solutions.emplace_back(std::begin(solution), std::end(solution));
+			}
 		}
 		return !dominated;
 	}
