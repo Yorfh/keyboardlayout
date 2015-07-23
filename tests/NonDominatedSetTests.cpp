@@ -16,10 +16,10 @@ void testEqual(const KeyboardArray& expectedKeyboards, const SolutionArray& expe
 	auto es = std::begin(expectedSolutions);
 	for (auto&& i : actual)
 	{
-		EXPECT_EQ(*ek, i.first);
+		EXPECT_EQ(*ek, i.m_keyboard);
 		
 		auto si = std::begin(*es);
-		for (auto&& j : i.second)
+		for (auto&& j : i.m_solution)
 		{
 			EXPECT_EQ(*si, j);
 			++si;

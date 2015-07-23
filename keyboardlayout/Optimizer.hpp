@@ -243,8 +243,8 @@ public:
 			auto currentFront = m_NonDominatedSet.getResult();
 			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
 			auto index = selector(m_randomGenerator);
-			m_population[0] = currentFront[index].first;
-			m_populationSolutions[0] = currentFront[index].second;
+			m_population[0] = currentFront[index].m_keyboard;
+			m_populationSolutions[0] = currentFront[index].m_solution;
 
 			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
 			for (auto&& w : m_weights[0])

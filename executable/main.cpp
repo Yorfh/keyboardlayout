@@ -162,7 +162,7 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
-	auto result = solutions.getResult()[0].first;
+	auto result = solutions.getResult()[0].m_keyboard;
 	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
 	return resultValue;
 }
@@ -187,7 +187,7 @@ int mqap_helper(size_t NumObjectives, const std::string filename, float minT, fl
 	f << "#" << std::endl;
 	for (auto&& r : result)
 	{
-		for (auto&& o : r.second)
+		for (auto&& o : r.m_solution)
 		{
 			f << std::setprecision(16) << -o << " ";
 		}

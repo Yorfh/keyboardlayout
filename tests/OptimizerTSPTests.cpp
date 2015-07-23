@@ -205,7 +205,7 @@ TEST(OptimizerTSPTests, Burma14)
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
 	// The reverse direction is also a solution
 	EXPECT_THAT(solutions.size(), AnyOf(1, 2));
-	auto result = solutions.getResult()[0].first;
+	auto result = solutions.getResult()[0].m_keyboard;
 	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
 	EXPECT_EQ(3323, resultValue);
 }

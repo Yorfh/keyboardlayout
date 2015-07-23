@@ -39,7 +39,7 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
 	ASSERT_EQ(1, solutions.size());
-	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
+	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(0, 1, 2));
 }
 
 TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
@@ -55,7 +55,7 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
 	ASSERT_EQ(1, solutions.size());
-	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
+	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(2, 1, 0));
 }
 
 TEST(OptimizerTests, IncreasingOrderSmallPopulation)
@@ -73,7 +73,7 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
-	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(0, 1, 2));
+	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(0, 1, 2));
 }
 
 TEST(OptimizerTests, DecreasingOrderSmallPopulation)
@@ -91,7 +91,7 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30);
 	ASSERT_EQ(1, solutions.size());
-	EXPECT_THAT(solutions.getResult()[0].first.m_keys, ElementsAre(2, 1, 0));
+	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(2, 1, 0));
 }
 
 TEST(OptimizerTests, TwoObjectives)
@@ -120,8 +120,8 @@ TEST(OptimizerTests, TwoObjectives)
 	std::sort(results.begin(), results.end(), 
 	[](auto& lhs, auto& rhs)
 	{
-		auto& lhsKeys = lhs.first.m_keys;
-		auto& rhsKeys = rhs.first.m_keys;
+		auto& lhsKeys = lhs.m_keyboard.m_keys;
+		auto& rhsKeys = rhs.m_keyboard.m_keys;
 		if (lhsKeys[0] == rhsKeys[0])
 		{
 			if (lhsKeys[1] == rhsKeys[1])
@@ -138,10 +138,10 @@ TEST(OptimizerTests, TwoObjectives)
 			return lhsKeys[0] < rhsKeys[0];
 		}
 	});
-	EXPECT_THAT(results[0].first.m_keys, ElementsAre(0, 1, 2));
-	EXPECT_THAT(results[1].first.m_keys, ElementsAre(1, 0, 2));
-	EXPECT_THAT(results[2].first.m_keys, ElementsAre(2, 0, 1));
-	EXPECT_THAT(results[3].first.m_keys, ElementsAre(2, 1, 0));
+	EXPECT_THAT(results[0].m_keyboard.m_keys, ElementsAre(0, 1, 2));
+	EXPECT_THAT(results[1].m_keyboard.m_keys, ElementsAre(1, 0, 2));
+	EXPECT_THAT(results[2].m_keyboard.m_keys, ElementsAre(2, 0, 1));
+	EXPECT_THAT(results[3].m_keyboard.m_keys, ElementsAre(2, 1, 0));
 }
 
 TEST(CrossOverTests, PartiallyMatchedCrossover1)

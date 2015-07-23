@@ -43,7 +43,7 @@ void checkResult(const std::string& resultFilename, Solutions& solutions)
 	for (auto&& r : solutionResult)
 	{
 		actual.emplace_back();
-		std::copy(r.first.m_keys.begin(), r.first.m_keys.end(), actual.back().begin());
+		std::copy(r.m_keyboard.m_keys.begin(), r.m_keyboard.m_keys.end(), actual.back().begin());
 	}
 	std::sort(actual.begin(), actual.end());
 	EXPECT_THAT(actual, ElementsAreArray(expected));

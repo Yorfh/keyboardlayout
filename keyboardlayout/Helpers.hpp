@@ -36,7 +36,7 @@ public:
 			auto numDominating = std::count_if(std::begin(solutions), std::end(solutions), 
 			[&ndsSolution](auto& s)
 			{
-				return isDominated(s, ndsSolution);
+				return isDominated(s, ndsSolution.m_solution);
 			});
 			size_t populationSize = solutions.size();
 			return static_cast<float>(numDominating) / populationSize;
@@ -48,7 +48,7 @@ public:
 			auto ndsFittness = std::begin(m_ndsFitnesses);
 			for (auto&& ndsSolution: nds.m_solutions)
 			{
-				if (isDominated(solution, ndsSolution))
+				if (isDominated(solution, ndsSolution.m_solution))
 				{
 					sum += *ndsFittness;
 				}

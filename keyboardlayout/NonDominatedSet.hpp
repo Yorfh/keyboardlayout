@@ -99,7 +99,12 @@ class NonDominatedSet
 	friend class FitnessCalculator;
 public:
 	using KeyboardType = Keyboard<KeyboardSize>;
-	using Solution = std::pair<KeyboardType, std::vector<float>>;
+	struct Solution
+	{
+		KeyboardType m_keyboard;
+		std::vector<float> m_solution;
+	};
+
 	using SolutionsVector = std::vector<Solution>;
 
 	NonDominatedSet()
@@ -117,7 +122,6 @@ public:
 		size_t numDimensions = solutions[0].size();
 		m_idealPoint.assign(numDimensions, std::numeric_limits<float>::min());
 		m_solutions.reserve(num_elements);
-		m_keyboards.reserve(num_elements);
 		auto s = solutions.begin();
 		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
 		{
@@ -154,7 +158,6 @@ public:
 
 	NonDominatedSet& operator=(NonDominatedSet&& rhs)
 	{
-		m_keyboards = std::move(rhs.m_keyboards);
 		m_solutions = std::move(rhs.m_solutions);
 		return *this;
 	}
@@ -175,62 +178,37 @@ public:
 			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::min());
 		}
 		bool dominated = false;
-		auto kItr = m_keyboards.begin();
 		auto sItr = m_solutions.begin();
 		auto end = m_solutions.end();
 
 		bool solutionAssigned = false;
 		while (sItr != end)
 		{
-			if (*kItr == keyboard)
+			if (sItr->m_keyboard == keyboard)
 			{
 				return false;
 			}
-			if (isDominated(*sItr, solution))
+			if (isDominated(sItr->m_solution, solution))
 			{
 				if (!solutionAssigned)
 				{
-					sItr->assign(std::begin(solution), std::end(solution));
-					*kItr = keyboard;
+					sItr->m_solution.assign(std::begin(solution), std::end(solution));
+					sItr->m_keyboard = keyboard;
 					solutionAssigned = true;
 				}
 				else
 				{
-					// This is bascically the same as std::remove_if
-					// But since the standard algorithms doesn't work with zip iterators
-					// it has to be done manually
-					auto sOut = sItr;
-					auto kOut = kItr;
-					++sItr;
-					++kItr;
-					while (sItr != end)
-					{
-						if (!isDominated(*sItr, solution))
-						{
-							if (sItr != sOut)
-							{
-								*sOut = std::move(*sItr);
-								*kOut = std::move(*kItr);
-							}
-							++sOut;
-							++kOut;
-						}
-						++sItr;
-						++kItr;
-					}
-					m_solutions.erase(sOut, m_solutions.end());
-					m_keyboards.erase(kOut, m_keyboards.end());
+					m_solutions.erase(std::remove_if(sItr, end, [&solution](auto& s) { return isDominated(s.m_solution, solution); }), end);
 					break;
 				}
 			}
-			else if (!solutionAssigned && isDominated(solution, *sItr))
+			else if (!solutionAssigned && isDominated(solution, sItr->m_solution))
 			{
 				dominated = true;
 				break;
 			}
 
 			++sItr;
-			++kItr;
 		}
 
 		if (!dominated)
@@ -241,26 +219,19 @@ public:
 			}
 			if (!solutionAssigned)
 			{
-				m_keyboards.emplace_back(keyboard);
-				m_solutions.emplace_back(std::begin(solution), std::end(solution));
+				m_solutions.emplace_back(Solution{ keyboard, {std::begin(solution), std::end(solution)} });
 			}
 		}
 		return !dominated;
 	}
 
 
-	SolutionsVector getResult() const
+	const SolutionsVector& getResult() const
 	{
-		SolutionsVector res;
-		for (size_t i = 0; i < m_solutions.size(); ++i)
-		{
-			res.emplace_back( Solution{ m_keyboards[i], m_solutions[i]});
-		}
-		return res;
+		return m_solutions;
 	}
 
 private:
-	std::vector<KeyboardType> m_keyboards;
-	std::vector<std::vector<float>> m_solutions;
+	SolutionsVector m_solutions;
 	std::vector<float> m_idealPoint;
 };
