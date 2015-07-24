@@ -196,7 +196,7 @@ TEST(OptimizerTSPTests, Burma14)
 		97.13,
 		94.55
 	}; 
-	Optimizer<13> o;
+	Optimizer<13, 1> o;
 	o.populationSize(1);
 	o.initialTemperature(591.5637f, 121.418f, 528);
 	o.fastCoolingTemperature(349.3616f, 0.5561f, 393);

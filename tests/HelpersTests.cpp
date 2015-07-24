@@ -59,7 +59,7 @@ TEST(HelpersTest, CalculateFitnessOneElement)
 {
 	auto keyboards = make_keyboards(1);
 	auto solutions = make_solutions(1.0f);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 1> nds(keyboards, solutions);
 	std::array<float, 1> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_THAT(output, ElementsAre(1.0f));
@@ -69,7 +69,7 @@ TEST(HelpersTest, CalculateFitnessTwoElements)
 {
 	auto keyboards = make_keyboards(1, 2);
 	auto solutions = make_solutions(1.0f, 2.0f);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 1> nds(keyboards, solutions);
 	std::array<float, 2> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_THAT(output, ElementsAre(FloatNear(0.66667f, eps), 1.0f));
@@ -79,7 +79,7 @@ TEST(HelpersTest, CalculateFitnessTwoElementsDifferentOrder)
 {
 	auto keyboards = make_keyboards(2, 1);
 	auto solutions = make_solutions(2.0f, 1.0f);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 1> nds(keyboards, solutions);
 	EXPECT_EQ(1, nds.size());
 	std::array<float, 2> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
@@ -90,7 +90,7 @@ TEST(HelpersTest, CalculateFitnessThreeElements)
 {
 	auto keyboards = make_keyboards(1, 2, 3);
 	auto solutions = make_solutions(1.0f, 2.0f, 3.0f);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 1> nds(keyboards, solutions);
 	std::array<float, 3> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_THAT(output, ElementsAre(FloatNear(0.6f, eps), FloatNear(0.6f, eps), 1.0f));
@@ -103,7 +103,7 @@ TEST(HelpersTest, CalculateFitnessTwoDimensional)
 	auto b = make_solution_dimension(5.0f, 10.0f);
 	auto c = make_solution_dimension(7.0f, 4.0f);
 	auto solutions = make_array(a, b, c);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 2> nds(keyboards, solutions);
 	std::array<float, 3> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_EQ(1.0f, output[0]);
@@ -119,7 +119,7 @@ TEST(HelpersTest, CalculateFitnessTwoDimensionalDominatedByTwoIsWorseThanDominat
 	auto c = make_solution_dimension(7.0f, 4.0f);
 	auto d = make_solution_dimension(3.0f, 4.0f);
 	auto solutions = make_array(a, b, c, d);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 2> nds(keyboards, solutions);
 	std::array<float, 4> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_EQ(1.0f, output[0]);
@@ -138,7 +138,7 @@ TEST(HelpersTest, CalculateFitnessTwoDimensionalDominatedByBetterSolutionIsWorse
 	auto d = make_solution_dimension(6.0f, 4.0f);
 	auto e = make_solution_dimension(4.0f, 6.0f);
 	auto solutions = make_array(a, b, c, d, e);
-	NonDominatedSet<1> nds(keyboards, solutions);
+	NonDominatedSet<1, 2> nds(keyboards, solutions);
 	std::array<float, 5> output;
 	FitnessCalculator().calculateFitness(nds, solutions, output.begin());
 	EXPECT_EQ(1.0f, output[0]);

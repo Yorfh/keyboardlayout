@@ -54,7 +54,7 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
-	Optimizer<10> o;
+	Optimizer<10, 2> o;
 	o.populationSize(902);
 	o.initialTemperature(848.8709f, 447.3805f, 410);
 	o.fastCoolingTemperature(675.0417f, 566.9724f, 396);
@@ -68,7 +68,7 @@ TEST(mQAPTests, KC10_2fl_1rl)
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1rl.dat";
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
-	Optimizer<10> o;
+	Optimizer<10, 2> o;
 	o.populationSize(363);
 	o.initialTemperature(860.2982f, 321.2859f, 195);
 	o.fastCoolingTemperature(598.3387f, 155.8366f, 150);

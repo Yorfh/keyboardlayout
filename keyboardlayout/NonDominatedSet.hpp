@@ -3,6 +3,7 @@
 #include "Helpers.hpp"
 #include <algorithm>
 #include <numeric>
+#include <cassert>
 
 
 namespace nondominatedset_detail
@@ -94,7 +95,7 @@ namespace nondominatedset_detail
 	}
 }
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, size_t NumObjectives>
 class NonDominatedSet
 {
 	friend class FitnessCalculator;
@@ -102,8 +103,16 @@ public:
 	using KeyboardType = Keyboard<KeyboardSize>;
 	struct Solution
 	{
+		template<typename Itr>
+		Solution(const KeyboardType& keyboard, Itr begin, Itr end)
+			: m_keyboard(keyboard)
+			, m_pruningPower(0)
+		{
+			std::copy(begin, end, std::begin(m_solution));
+		}
+
 		KeyboardType m_keyboard;
-		std::vector<float> m_solution;
+		std::array<float, NumObjectives> m_solution;
 		unsigned int m_pruningPower;
 	};
 
@@ -121,8 +130,8 @@ public:
 		{
 			return;
 		}
-		size_t numDimensions = solutions[0].size();
-		m_idealPoint.assign(numDimensions, std::numeric_limits<float>::min());
+		assert(solutions[0].size() == NumObjectives);
+		m_idealPoint.assign(NumObjectives, std::numeric_limits<float>::min());
 		m_solutions.reserve(num_elements);
 		auto s = solutions.begin();
 		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
@@ -194,7 +203,7 @@ public:
 			{
 				if (!solutionAssigned)
 				{
-					sItr->m_solution.assign(std::begin(solution), std::end(solution));
+					std::copy(std::begin(solution), std::end(solution), std::begin(sItr->m_solution));
 					sItr->m_keyboard = keyboard;
 					// The pruning power stays the same
 					solutionAssigned = true;
@@ -237,7 +246,7 @@ public:
 			}
 			if (!solutionAssigned)
 			{
-				m_solutions.emplace_back(Solution{ keyboard, {std::begin(solution), std::end(solution)}, 0});
+				m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
 			}
 		}
 		return !dominated;

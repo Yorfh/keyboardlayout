@@ -159,7 +159,7 @@ namespace detail
 	}
 }
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, size_t NumObjectives>
 class Optimizer
 {
 	static std::random_device rd;
@@ -199,7 +199,7 @@ public:
 	}
 
 	template<typename Itr>
-	const NonDominatedSet<KeyboardSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
+	const NonDominatedSet<KeyboardSize, NumObjectives>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
 		// The algorithm is based on 
 		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"
@@ -219,7 +219,7 @@ public:
 			Keyboard<KeyboardSize> keyboard = m_population[i];
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize>(m_population, m_populationSolutions);
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize, NumObjectives>(m_population, m_populationSolutions);
 		
 		int numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_minT = m_initialMinT;
@@ -244,7 +244,7 @@ public:
 			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
 			auto index = selector(m_randomGenerator);
 			m_population[0] = currentFront[index].m_keyboard;
-			m_populationSolutions[0] = currentFront[index].m_solution;
+			m_populationSolutions[0].assign(std::begin(currentFront[index].m_solution), std::end(currentFront[index].m_solution));
 
 			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
 			for (auto&& w : m_weights[0])
@@ -370,7 +370,7 @@ protected:
 
 
 	std::mt19937 m_randomGenerator;
-	NonDominatedSet<KeyboardSize> m_NonDominatedSet;
+	NonDominatedSet<KeyboardSize, NumObjectives> m_NonDominatedSet;
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	std::vector<std::vector<float>> m_weights;
@@ -389,5 +389,5 @@ protected:
 	size_t m_numTSteps;
 };
 
-template<size_t KeyboardSize>
-std::random_device Optimizer<KeyboardSize>::rd;
+template<size_t KeyboardSize, size_t NumObjectives>
+std::random_device Optimizer<KeyboardSize, NumObjectives>::rd;

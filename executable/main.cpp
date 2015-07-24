@@ -155,7 +155,7 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 		97.13,
 		94.55
 	};
-	Optimizer<13> o(seed);
+	Optimizer<13, 1> o(seed);
 	o.populationSize(1);
 	o.initialTemperature(maxT, minT, numSteps);
 	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
@@ -167,8 +167,8 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 	return resultValue;
 }
 
-template<size_t NumLocations>
-int mqap_helper(size_t NumObjectives, const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps,
+template<size_t NumLocations, size_t NumObjectives>
+int mqap_helper(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps,
 	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
 	std::vector<mQAP<NumLocations>> objectives;
@@ -177,7 +177,7 @@ int mqap_helper(size_t NumObjectives, const std::string filename, float minT, fl
 		mQAP<NumLocations> objective(filename, i);
 		objectives.push_back(objective);
 	}
-	Optimizer<NumLocations> o;
+	Optimizer<NumLocations, NumObjectives> o;
 	o.populationSize(population);
 	o.initialTemperature(maxT, minT, numSteps);
 	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
@@ -207,15 +207,36 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 	int numObjectives = std::stoi(match.str(2));
 	if (numLocations == 10)
 	{
-		return mqap_helper<10>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		if (numObjectives == 2)
+		{
+			return mqap_helper<10, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
+		else if (numObjectives == 3)
+		{
+			return mqap_helper<10, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
 	}
 	else if (numLocations == 20)
 	{
-		return mqap_helper<20>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		if (numObjectives == 2)
+		{
+			return mqap_helper<20, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
+		else if (numObjectives == 3)
+		{
+			return mqap_helper<20, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
 	}
 	else if (numLocations == 30)
 	{
-		return mqap_helper<30>(numObjectives, filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		if (numObjectives == 2)
+		{
+			return mqap_helper<30, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
+		else if (numObjectives == 3)
+		{
+			return mqap_helper<30, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+		}
 	}
 	return 0;
 }

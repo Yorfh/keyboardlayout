@@ -34,7 +34,7 @@ TEST(OptimizerTests, IncreasingOrderNoLocalSearch)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 1> o; 
 	o.populationSize(50);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
@@ -50,7 +50,7 @@ TEST(OptimizerTests, DecreasingOrderNoLocalSearch)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 1> o; 
 	o.populationSize(50);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 0);
@@ -66,7 +66,7 @@ TEST(OptimizerTests, IncreasingOrderSmallPopulation)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 1> o; 
 	o.populationSize(3);
 	o.initialTemperature(1.0f, 0.1f, 10);
 	o.fastCoolingTemperature(1.0f, 0.1f, 10);
@@ -84,7 +84,7 @@ TEST(OptimizerTests, DecreasingOrderSmallPopulation)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3> o; 
+	Optimizer<3, 1> o; 
 	o.populationSize(3);
 	o.initialTemperature(1.0f, 0.1f, 10);
 	o.fastCoolingTemperature(1.0f, 0.1f, 10);
@@ -109,7 +109,7 @@ TEST(OptimizerTests, TwoObjectives)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	Optimizer<3> o;
+	Optimizer<3, 2> o;
 	o.populationSize(3);
 	o.initialTemperature(1.0f, 0.1f, 10);
 	o.fastCoolingTemperature(1.0f, 0.1f, 10);
