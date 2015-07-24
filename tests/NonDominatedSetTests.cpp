@@ -221,9 +221,19 @@ TEST(SelectPivotPointTests, SelectPivotPoint)
 	auto j = make_array(-8.0f, -8.0f);
 	auto k = make_array(-8.0f, -3.0f);
 	auto l = make_array(-9.0f, -1.0f);
-	std::vector<std::array<float, 2>> solutionVector{ a, b, c, d, e, f, g, h, i, j, k, l };
+	using Solution = NonDominatedSet<1, 2>::Solution;
+	auto makeSolution = [](std::array<float, 2>& s)
+	{
+		return Solution(Keyboard<1>(), std::begin(s), std::end(s));
+	};
+	std::vector<Solution> solutionVector{ makeSolution(a), makeSolution(b), makeSolution(c), makeSolution(d), makeSolution(e),
+		makeSolution(f), makeSolution(g), makeSolution(h), makeSolution(i), makeSolution(j), makeSolution(k), makeSolution(l) };
 	nondominatedset_detail::selectPivoitPoint(solutionVector);
-	EXPECT_THAT(solutionVector, ElementsAre(e, l, k, i, b));
+	EXPECT_EQ(solutionVector[0].m_solution, makeSolution(e).m_solution);
+	EXPECT_EQ(solutionVector[1].m_solution, makeSolution(l).m_solution);
+	EXPECT_EQ(solutionVector[2].m_solution, makeSolution(k).m_solution);
+	EXPECT_EQ(solutionVector[3].m_solution, makeSolution(i).m_solution);
+	EXPECT_EQ(solutionVector[4].m_solution, makeSolution(b).m_solution);
 }
 
 TEST(MapPointToRegionTests, MapPointToRegion2D)

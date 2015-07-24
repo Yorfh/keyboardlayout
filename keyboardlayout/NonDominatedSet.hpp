@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <numeric>
 #include <cassert>
+#include <memory>
 
 
 namespace nondominatedset_detail
@@ -28,10 +29,10 @@ namespace nondominatedset_detail
 			auto head = std::begin(solutions);
 			auto cur = head + 1;
 			auto tail = std::end(solutions) - 1;
-			float minDist = distance(*head);
+			float minDist = distance(head->m_solution);
 			while (cur <= tail)
 			{
-				if (isDominated(*cur, *head))
+				if (isDominated(cur->m_solution, head->m_solution))
 				{
 					if (cur != tail)
 					{
@@ -40,7 +41,7 @@ namespace nondominatedset_detail
 					solutions.erase(tail);
 					tail--;
 				}
-				else if (isDominated(*head, *cur))
+				else if (isDominated(head->m_solution, cur->m_solution))
 				{
 					*head = std::move(*cur);
 					if (cur != tail)
@@ -50,17 +51,17 @@ namespace nondominatedset_detail
 					solutions.erase(tail);
 					tail--;
 					cur = head + 1;
-					minDist = distance(*head);
+					minDist = distance(head->m_solution);
 				}
 				else
 				{
-					float curDist = distance(*cur);
+					float curDist = distance(cur->m_solution);
 					if (curDist < minDist)
 					{
 						bool dominated = false;
 						for (auto i = head + 1; i != cur; i++)
 						{
-							if (isDominated(*cur, *i))
+							if (isDominated(cur->m_solution, i->m_solution))
 							{
 								dominated = true;
 								break;
@@ -98,7 +99,6 @@ namespace nondominatedset_detail
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
 class NonDominatedSet
 {
-	friend class FitnessCalculator;
 public:
 	using KeyboardType = Keyboard<KeyboardSize>;
 	struct Solution
@@ -117,6 +117,32 @@ public:
 	};
 
 	using SolutionsVector = std::vector<Solution>;
+private:
+	struct BaseNode
+	{
+		std::unique_ptr<BaseNode> m_child;
+		std::unique_ptr<BaseNode> m_nextSibling;
+	};
+	
+	struct Node : public BaseNode
+	{
+		Node(unsigned int region, Solution&& solution)
+			: m_region(region)
+			, m_solution(std::move(solution))
+		{}
+		Solution m_solution;
+		unsigned int m_region;
+	};
+
+	struct LeafNode : public BaseNode
+	{
+		LeafNode(unsigned int region)
+			: m_region(region)
+		{}
+		SolutionsVector m_solutions;
+		unsigned int m_region;
+	};
+public:
 
 	NonDominatedSet()
 	{
@@ -132,7 +158,6 @@ public:
 		}
 		assert(solutions[0].size() == NumObjectives);
 		m_idealPoint.assign(NumObjectives, std::numeric_limits<float>::min());
-		m_solutions.reserve(num_elements);
 		auto s = solutions.begin();
 		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
 		{
@@ -169,17 +194,19 @@ public:
 
 	NonDominatedSet& operator=(NonDominatedSet&& rhs)
 	{
-		m_solutions = std::move(rhs.m_solutions);
+		m_root = std::move(rhs.m_root);
 		return *this;
 	}
 
-	size_t size() const { return m_solutions.size(); }
+	size_t size() const
+	{
+		return getResult().size();
+	}
 
 	const std::vector<float> getIdealPoint() const
 	{
 		return m_idealPoint;
 	}
-
 
 	template<typename SolutionType>
 	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
@@ -188,16 +215,59 @@ public:
 		{
 			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::min());
 		}
+		bool inserted = false;
+		if (!m_root)
+		{
+			auto root = std::make_unique<LeafNode>(0);
+			root->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+			m_root = std::move(root);
+			inserted = true;
+		}
+		else
+		{
+			if (m_root->m_child)
+			{
+				inserted = insertToChild(keyboard, solution, static_cast<Node&>(*m_root));
+			}
+			else
+			{
+				auto res = insertToLeaf(keyboard, solution, static_cast<LeafNode&>(*m_root));
+				inserted = res.first;
+				if (res.second)
+				{
+					m_root = std::move(res.second);
+				}
+			}
+		}
+		if (inserted)
+		{
+			for (size_t i = 0; i < m_idealPoint.size(); i++)
+			{
+				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
+			}
+		}
+		return inserted;
+	}
+
+	template<typename SolutionType>
+	bool insertToChild(const KeyboardType& keyboard, const SolutionType& solution, Node& node)
+	{
+		return false;
+	}
+
+	template<typename SolutionType>
+	std::pair<bool, std::unique_ptr<Node>> insertToLeaf(const KeyboardType& keyboard, const SolutionType& solution, LeafNode& node)
+	{
 		bool dominated = false;
-		auto sItr = m_solutions.begin();
-		auto end = m_solutions.end();
+		auto sItr = node.m_solutions.begin();
+		auto end = node.m_solutions.end();
 
 		bool solutionAssigned = false;
 		while (sItr != end)
 		{
 			if (sItr->m_keyboard == keyboard)
 			{
-				return false;
+				return std::make_pair(false, nullptr);
 			}
 			if (isDominated(sItr->m_solution, solution))
 			{
@@ -210,7 +280,7 @@ public:
 				}
 				else
 				{
-					m_solutions.erase(std::remove_if(sItr, end, [&solution](auto& s) { return isDominated(s.m_solution, solution); }), end);
+					node.m_solutions.erase(std::remove_if(sItr, end, [&solution](auto& s) { return isDominated(s.m_solution, solution); }), end);
 					break;
 				}
 			}
@@ -218,7 +288,7 @@ public:
 			{
 				sItr->m_pruningPower++;
 				unsigned int pruningPower = sItr->m_pruningPower;
-				while (sItr != m_solutions.begin())
+				while (sItr != node.m_solutions.begin())
 				{
 					auto prev = sItr - 1;
 					if (prev->m_pruningPower < pruningPower)
@@ -240,30 +310,82 @@ public:
 
 		if (!dominated)
 		{
-			for (size_t i = 0; i < m_idealPoint.size(); i++)
-			{
-				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
-			}
 			if (!solutionAssigned)
 			{
-				m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+				node.m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+			}
+
+			if (node.m_solutions.size() > MaxLeafSize)
+			{
+				nondominatedset_detail::selectPivoitPoint(node.m_solutions);
+				const unsigned int numRegions = 1u << NumObjectives;
+				std::array<std::unique_ptr<LeafNode>, numRegions> regions;
+				auto newNode = std::make_unique<Node>(node.m_region, std::move(node.m_solutions[0]));
+				for (auto itr = node.m_solutions.begin() + 1; itr != node.m_solutions.end(); ++itr)
+				{
+					auto& s = *itr;
+					unsigned int region = nondominatedset_detail::mapPointToRegion(newNode->m_solution.m_solution, s.m_solution);
+					if (!regions[region])
+					{
+						regions[region] = std::make_unique<LeafNode>(region);
+					}
+					regions[region]->m_solutions.emplace_back(s);
+					regions[region]->m_solutions.back().m_pruningPower = 0;
+				}
+				std::unique_ptr<LeafNode> firstChild;
+				for (int i = numRegions - 1; i >= 0; i--)
+				{
+					if (regions[i])
+					{
+						if (firstChild)
+						{
+							regions[i]->m_nextSibling = std::move(firstChild);
+						}
+						firstChild = std::move(regions[i]);
+					}
+				}
+				newNode->m_child = std::move(firstChild);
+				return std::make_pair(true, std::move(newNode));
 			}
 		}
-		return !dominated;
+		return std::make_pair(true, nullptr);
 	}
 
 
-	const SolutionsVector& getResult() const
+	SolutionsVector getResult() const
 	{
-		return m_solutions;
+		SolutionsVector res;
+		if (m_root)
+		{
+			getResult(res, *m_root);
+		}
+		return res;
 	}
 
-	const Solution& operator[](size_t index)
+	const Solution operator[](size_t index)
 	{
-		return m_solutions[index];
+		return getResult()[index];
 	}
 
 private:
-	SolutionsVector m_solutions;
+	void getResult(SolutionsVector& res, BaseNode& node) const
+	{
+		if (!node.m_child)
+		{
+			auto& leafNode = static_cast<LeafNode&>(node);
+			res.insert(res.end(), leafNode.m_solutions.begin(), leafNode.m_solutions.end());
+		}
+		else
+		{
+			auto& n = static_cast<Node&>(node);
+			getResult(res, *n.m_child);
+			if (n.m_nextSibling)
+			{
+				getResult(res, *n.m_nextSibling);
+			}
+		}
+	}
+
 	std::vector<float> m_idealPoint;
+	std::unique_ptr<BaseNode> m_root;
 };
