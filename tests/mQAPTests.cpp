@@ -6,6 +6,7 @@
 
 using namespace testing;
 
+
 TEST(mQAPTests, ObjectiveFunctionWorksCorrectly)
 {
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
@@ -49,12 +50,18 @@ void checkResult(const std::string& resultFilename, Solutions& solutions)
 	EXPECT_THAT(actual, ElementsAreArray(expected));
 }
 
-TEST(mQAPTests, KC10_2fl_1uni)
+template<typename SizeType>
+class mQAPTestsWithVaryingLeafSize : public testing::Test
+{
+};
+
+TYPED_TEST_CASE_P(mQAPTestsWithVaryingLeafSize);
+TYPED_TEST_P(mQAPTestsWithVaryingLeafSize, KC10_2fl_1uni)
 {
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1uni.dat";
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
-	Optimizer<10, 2> o;
+	Optimizer<10, 2, TypeParam::value> o;
 	o.populationSize(902);
 	o.initialTemperature(848.8709f, 447.3805f, 410);
 	o.fastCoolingTemperature(675.0417f, 566.9724f, 396);
@@ -63,12 +70,12 @@ TEST(mQAPTests, KC10_2fl_1uni)
 	checkResult("../../tests/mQAPData/KC10-2fl-1uni.po", solutions);
 }
 
-TEST(mQAPTests, KC10_2fl_1rl)
+TYPED_TEST_P(mQAPTestsWithVaryingLeafSize, KC10_2fl_1rl)
 {
 	std::string filename = "../../tests/mQAPData/KC10-2fl-1rl.dat";
 	mQAP<10> objective1(filename, 0);
 	mQAP<10> objective2(filename, 1);
-	Optimizer<10, 2> o;
+	Optimizer<10, 2, TypeParam::value> o;
 	o.populationSize(363);
 	o.initialTemperature(860.2982f, 321.2859f, 195);
 	o.fastCoolingTemperature(598.3387f, 155.8366f, 150);
@@ -76,3 +83,13 @@ TEST(mQAPTests, KC10_2fl_1rl)
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 200000);
 	checkResult("../../tests/mQAPData/KC10-2fl-1rl.po", solutions);
 }
+
+REGISTER_TYPED_TEST_CASE_P(mQAPTestsWithVaryingLeafSize, KC10_2fl_1uni, KC10_2fl_1rl);
+typedef ::testing::Types <
+	std::integral_constant<size_t, 4>,
+	std::integral_constant<size_t, 8>,
+	std::integral_constant<size_t, 16>,
+	std::integral_constant<size_t, 32>,
+	std::integral_constant<size_t, 64>,
+	std::integral_constant<size_t, std::numeric_limits<size_t>::max()>> Sizes;
+INSTANTIATE_TYPED_TEST_CASE_P(mQAPTests, mQAPTestsWithVaryingLeafSize, Sizes);

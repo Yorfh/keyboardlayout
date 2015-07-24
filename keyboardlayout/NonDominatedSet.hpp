@@ -95,7 +95,7 @@ namespace nondominatedset_detail
 	}
 }
 
-template<size_t KeyboardSize, size_t NumObjectives>
+template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
 class NonDominatedSet
 {
 	friend class FitnessCalculator;

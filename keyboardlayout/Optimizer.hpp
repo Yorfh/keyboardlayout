@@ -159,7 +159,7 @@ namespace detail
 	}
 }
 
-template<size_t KeyboardSize, size_t NumObjectives>
+template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
 class Optimizer
 {
 	static std::random_device rd;
@@ -199,7 +199,7 @@ public:
 	}
 
 	template<typename Itr>
-	const NonDominatedSet<KeyboardSize, NumObjectives>& optimize(Itr begin, Itr end, size_t numEvaluations)
+	const NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
 		// The algorithm is based on 
 		// "An Adaptive Evolutionary Multi-objective Approach Based on Simulated Annealing"
@@ -219,7 +219,7 @@ public:
 			Keyboard<KeyboardSize> keyboard = m_population[i];
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
-		m_NonDominatedSet = NonDominatedSet<KeyboardSize, NumObjectives>(m_population, m_populationSolutions);
+		m_NonDominatedSet = NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>(m_population, m_populationSolutions);
 		
 		int numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_minT = m_initialMinT;
@@ -370,7 +370,7 @@ protected:
 
 
 	std::mt19937 m_randomGenerator;
-	NonDominatedSet<KeyboardSize, NumObjectives> m_NonDominatedSet;
+	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	std::vector<std::vector<float>> m_weights;
@@ -389,5 +389,5 @@ protected:
 	size_t m_numTSteps;
 };
 
-template<size_t KeyboardSize, size_t NumObjectives>
-std::random_device Optimizer<KeyboardSize, NumObjectives>::rd;
+template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>
+std::random_device Optimizer<KeyboardSize, NumObjectives, MaxLeafSize>::rd;
