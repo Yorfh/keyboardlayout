@@ -258,6 +258,11 @@ public:
 		return m_solutions;
 	}
 
+	const Solution& operator[](size_t index)
+	{
+		return m_solutions[index];
+	}
+
 private:
 	SolutionsVector m_solutions;
 	std::vector<float> m_idealPoint;

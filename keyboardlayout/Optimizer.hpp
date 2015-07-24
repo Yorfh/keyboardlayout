@@ -240,11 +240,11 @@ public:
 		
 		while(numEvaluationsLeft > 0)
 		{
-			auto currentFront = m_NonDominatedSet.getResult();
-			auto selector = std::uniform_int<size_t>(0, currentFront.size() - 1);
+			auto selector = std::uniform_int<size_t>(0, m_NonDominatedSet.size() - 1);
 			auto index = selector(m_randomGenerator);
-			m_population[0] = currentFront[index].m_keyboard;
-			m_populationSolutions[0].assign(std::begin(currentFront[index].m_solution), std::end(currentFront[index].m_solution));
+			const auto& selectedSolution = m_NonDominatedSet[index];
+			m_population[0] = selectedSolution.m_keyboard;
+			m_populationSolutions[0].assign(std::begin(selectedSolution.m_solution), std::end(selectedSolution.m_solution));
 
 			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
 			for (auto&& w : m_weights[0])
