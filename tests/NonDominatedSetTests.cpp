@@ -12,6 +12,11 @@ void testEqual(const KeyboardArray& expectedKeyboards, const SolutionArray& expe
 {
 	ASSERT_EQ(expectedKeyboards.size(), actual.size());
 	ASSERT_EQ(expectedSolutions.size(), actual.size());
+	auto sortedSolutions = actual;
+	std::sort(sortedSolutions.begin(), sortedSolutions.end(), [](const auto& lhs, const auto& rhs)
+	{
+		return lhs.m_solution < rhs.m_solution;
+	});
 	auto ek = std::begin(expectedKeyboards);
 	auto es = std::begin(expectedSolutions);
 	for (auto&& i : actual)
@@ -196,8 +201,8 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	NonDominatedSet<1> s(keyboards, solutions);
 	ASSERT_EQ(2, s.size()); 
 	std::array<A, 2> res{ a, e };
-	KeyboardArray<2> keyboardRes{ a.first, e.first };
-	SolutionArray<2, 2> solutionRes{ a.second, e.second };
+	KeyboardArray<2> keyboardRes{ e.first, a.first };
+	SolutionArray<2, 2> solutionRes{ e.second, a.second };
 	testEqual(keyboardRes, solutionRes, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }

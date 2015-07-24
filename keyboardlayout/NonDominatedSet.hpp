@@ -2,6 +2,7 @@
 #include "Keyboard.hpp"
 #include "Helpers.hpp"
 #include <algorithm>
+#include <numeric>
 
 
 namespace nondominatedset_detail
@@ -103,6 +104,7 @@ public:
 	{
 		KeyboardType m_keyboard;
 		std::vector<float> m_solution;
+		unsigned int m_pruningPower;
 	};
 
 	using SolutionsVector = std::vector<Solution>;
@@ -194,6 +196,7 @@ public:
 				{
 					sItr->m_solution.assign(std::begin(solution), std::end(solution));
 					sItr->m_keyboard = keyboard;
+					// The pruning power stays the same
 					solutionAssigned = true;
 				}
 				else
@@ -204,6 +207,21 @@ public:
 			}
 			else if (!solutionAssigned && isDominated(solution, sItr->m_solution))
 			{
+				sItr->m_pruningPower++;
+				unsigned int pruningPower = sItr->m_pruningPower;
+				while (sItr != m_solutions.begin())
+				{
+					auto prev = sItr - 1;
+					if (prev->m_pruningPower < pruningPower)
+					{
+						std::swap(*sItr, *prev);
+					}
+					else
+					{
+						break;
+					}
+					sItr = prev;
+				}
 				dominated = true;
 				break;
 			}
@@ -219,7 +237,7 @@ public:
 			}
 			if (!solutionAssigned)
 			{
-				m_solutions.emplace_back(Solution{ keyboard, {std::begin(solution), std::end(solution)} });
+				m_solutions.emplace_back(Solution{ keyboard, {std::begin(solution), std::end(solution)}, 0});
 			}
 		}
 		return !dominated;
