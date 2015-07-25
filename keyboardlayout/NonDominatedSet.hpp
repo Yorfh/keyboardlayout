@@ -313,17 +313,16 @@ private:
 	InsertResult insertToChild(const KeyboardType& keyboard, const SolutionType& solution, unsigned int region, InsertMode mode, std::unique_ptr<BaseNode>& baseNode)
 	{
 		bool compatible = (baseNode->m_region | region) == (mode == InsertMode::Dominating ? baseNode->m_region : region);
-		//KLUDGE always forcing checks
-		compatible = true;
 		assert(!baseNode->m_nextSibling || baseNode->m_nextSibling->m_region > baseNode->m_region);
 		InsertResult insertRes = mode == InsertMode::Dominating ? InsertResult::Inserted : InsertResult::Unknown;
-		if (mode != InsertMode::Dominating || baseNode->m_region > region)
+		if (compatible && (mode != InsertMode::Dominating || baseNode->m_region > region))
 		{
 			if (baseNode->m_child == nullptr)
 			{
 				insertRes = insertToLeaf(keyboard, solution, mode, baseNode);
 				if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 				{
+					assert(mode != InsertMode::Dominating);
 					return insertRes;
 				}
 				//KLUDGE patchup
@@ -334,7 +333,6 @@ private:
 			}
 			else
 			{
-				//KLUDGE should probably not be here
 				if (getNode(baseNode).m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
 				{
 					getNode(baseNode).m_referenceValid = false;
@@ -431,9 +429,6 @@ private:
 
 		bool checkIsDominated = mode == InsertMode::Both || mode == InsertMode::Dominated;
 		bool checkIsDominating = mode == InsertMode::Both || mode == InsertMode::Dominating;
-		//KLUDGE: We shouldn't force this
-		checkIsDominating = true;
-		checkIsDominated = true;
 
 		while (sItr != end)
 		{
