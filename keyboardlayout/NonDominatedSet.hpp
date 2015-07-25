@@ -285,7 +285,7 @@ private:
 	template<typename SolutionType>
 	InsertResult insertToHelper(unsigned int region, const KeyboardType& keyboard, const SolutionType& solution, InsertMode insertMode, std::unique_ptr<BaseNode>& node)
 	{
-		if (node && node->m_region <= region)
+		if (node && ((insertMode != InsertMode::Dominating && node->m_region <= region) || (insertMode == InsertMode::Dominating && node->m_region > region)))
 		{
 			if (node->m_child)
 			{
@@ -331,13 +331,24 @@ private:
 			{
 				return insertRes;
 			}
+			else if (insertRes == InsertResult::Inserted)
+			{
+				insertToHelper(newRegion, keyboard, solution, InsertMode::Dominating, node.m_child);
+			}
 		}
-		insertRes = insertToHelper(region, keyboard, solution, mode, node.m_nextSibling);
-		if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+		if (insertRes != InsertResult::Inserted)
 		{
-			return insertRes;
+			insertRes = insertToHelper(region, keyboard, solution, mode, node.m_nextSibling);
+			if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+			{
+				return insertRes;
+			}
 		}
-		return InsertResult::NonDominated;
+		if (insertRes == InsertResult::Inserted)
+		{
+			insertToHelper(region, keyboard, solution, InsertMode::Dominating, node.m_nextSibling);
+		}
+		return insertRes;
 	}
 
 	template<typename SolutionType>
