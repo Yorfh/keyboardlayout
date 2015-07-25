@@ -247,6 +247,7 @@ public:
 				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
 			}
 		}
+		auto res = getResult();
 		return inserted;
 	}
 
@@ -451,6 +452,7 @@ private:
 				const unsigned int numRegions = 1u << NumObjectives;
 				std::array<std::unique_ptr<LeafNode>, numRegions> regions;
 				auto newNode = std::make_unique<Node>(static_cast<unsigned int>(node.m_region), std::move(node.m_solutions[0]));
+				newNode->m_nextSibling = std::move(node.m_nextSibling);
 				for (auto itr = node.m_solutions.begin() + 1; itr != node.m_solutions.end(); ++itr)
 				{
 					auto& s = *itr;
