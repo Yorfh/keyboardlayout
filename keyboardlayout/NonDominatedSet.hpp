@@ -315,7 +315,7 @@ private:
 		bool compatible = (baseNode->m_region | region) == (mode == InsertMode::Dominating ? baseNode->m_region : region);
 		assert(!baseNode->m_nextSibling || baseNode->m_nextSibling->m_region > baseNode->m_region);
 		InsertResult insertRes = mode == InsertMode::Dominating ? InsertResult::Inserted : InsertResult::Unknown;
-		if (compatible && (mode != InsertMode::Dominating || baseNode->m_region > region))
+		if (compatible && (mode != InsertMode::Dominating || baseNode->m_region >= region))
 		{
 			if (baseNode->m_child == nullptr)
 			{
@@ -355,9 +355,9 @@ private:
 							}
 						}
 					}
+					InsertMode newInsertMode = (mode == InsertMode::Both && getNode(baseNode).m_region == region) ? InsertMode::Both : InsertMode::Dominated;
 					if (insertRes != InsertResult::Inserted)
 					{
-						InsertMode newInsertMode = (mode == InsertMode::Both && getNode(baseNode).m_region == region) ? InsertMode::Both : InsertMode::Dominated;
 						if (getNode(baseNode).m_child && getNode(baseNode).m_child->m_region <= newRegion)
 						{
 							insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, getNode(baseNode).m_child);
@@ -378,9 +378,13 @@ private:
 					}
 					if (insertRes == InsertResult::Inserted)
 					{
-						if (getNode(baseNode).m_child)
+						if (newInsertMode == InsertMode::Both && baseNode->m_child->m_nextSibling)
 						{
-							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, getNode(baseNode).m_child);
+							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, baseNode->m_child->m_nextSibling);
+						}
+						else if (baseNode->m_child)
+						{
+							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, baseNode->m_child);
 						}
 					}
 				}
@@ -432,7 +436,7 @@ private:
 
 		while (sItr != end)
 		{
-			if (sItr->m_keyboard == keyboard)
+			if (mode != InsertMode::Dominating && sItr->m_keyboard == keyboard)
 			{
 				return InsertResult::Duplicate;
 			}
