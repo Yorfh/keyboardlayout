@@ -319,7 +319,12 @@ private:
 		{
 			if (baseNode->m_child == nullptr)
 			{
-				insertRes = insertToLeaf(keyboard, solution, mode, baseNode);
+				InsertMode newInsertMode = mode;
+				if (mode == InsertMode::Both && baseNode->m_region != region)
+				{
+					newInsertMode = InsertMode::Dominated;
+				}
+				insertRes = insertToLeaf(keyboard, solution, newInsertMode, baseNode);
 				if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 				{
 					assert(mode != InsertMode::Dominating);
