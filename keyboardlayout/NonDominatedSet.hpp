@@ -120,10 +120,11 @@ public:
 private:
 	struct BaseNode
 	{
-		BaseNode(unsigned int region) : m_region(region) {}
+		BaseNode(unsigned int region) : m_region(region), m_referenceValid(1) {}
 		std::unique_ptr<BaseNode> m_child;
 		std::unique_ptr<BaseNode> m_nextSibling;
-		unsigned int m_region;
+		unsigned int m_region : 31;
+		unsigned int m_referenceValid : 1;
 	};
 	
 	struct Node : public BaseNode
@@ -228,7 +229,7 @@ public:
 			if (m_root->m_child)
 			{
 				auto res = insertToChild(keyboard, solution, 0, InsertMode::Both, static_cast<Node&>(*m_root));
-				return res == InsertResult::Inserted || res == InsertResult::Duplicate;
+				inserted = (res == InsertResult::Inserted || res == InsertResult::Duplicate);
 			}
 			else
 			{
@@ -307,6 +308,7 @@ private:
 			newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
 			newNode->m_nextSibling = std::move(node);
 			node = std::move(newNode);
+			assert(!node->m_nextSibling || node->m_region < node->m_nextSibling->m_region);
 			return InsertResult::Inserted;
 		}
 		return InsertResult::Unknown;
@@ -315,23 +317,46 @@ private:
 	template<typename SolutionType>
 	InsertResult insertToChild(const KeyboardType& keyboard, const SolutionType& solution, unsigned int region, InsertMode mode, Node& node)
 	{
-		bool canDominate = (node.m_region | region) == region;
-		InsertResult insertRes = InsertResult::Unknown;
-		if (canDominate)
+		bool compatible = (node.m_region | region) == (mode == InsertMode::Dominating ? node.m_region : region);
+		//KLUDGE always forcing checks
+		compatible = true;
+
+		//KLUDGE should probably not be here
+		if (node.m_referenceValid && isDominated(node.m_solution.m_solution, solution))
+		{
+			node.m_referenceValid = false;
+		}
+
+		assert(!node.m_nextSibling || node.m_nextSibling->m_region > node.m_region);
+
+		InsertResult insertRes = mode == InsertMode::Dominating ? InsertResult::Inserted : InsertResult::Unknown;
+		if (compatible)
 		{
 			unsigned int newRegion = nondominatedset_detail::mapPointToRegion(node.m_solution.m_solution, solution);
 			if (newRegion == (1u << NumObjectives) - 1)
 			{
-				//TODO: We still need to check against the reference point, in case the point is the same
-				return InsertResult::Dominated;
+				if (node.m_solution.m_keyboard == keyboard)
+				{
+					return InsertResult::Duplicate;
+				}
+				if (mode == InsertMode::Both || mode == InsertMode::Dominated)
+				{
+					if (isDominated(solution, node.m_solution.m_solution))
+					{
+						return InsertResult::Dominated;
+					}
+				}
 			}
-			InsertMode newInsertMode = (mode == InsertMode::Both && node.m_region == region) ? InsertMode::Both : InsertMode::Dominated;
-			insertRes = insertToHelper(newRegion, keyboard, solution, newInsertMode, node.m_child);
-			if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+			if (insertRes != InsertResult::Inserted)
 			{
-				return insertRes;
+				InsertMode newInsertMode = (mode == InsertMode::Both && node.m_region == region) ? InsertMode::Both : InsertMode::Dominated;
+				insertRes = insertToHelper(newRegion, keyboard, solution, newInsertMode, node.m_child);
+				if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+				{
+					return insertRes;
+				}
 			}
-			else if (insertRes == InsertResult::Inserted)
+			if (insertRes == InsertResult::Inserted)
 			{
 				insertToHelper(newRegion, keyboard, solution, InsertMode::Dominating, node.m_child);
 			}
@@ -362,6 +387,9 @@ private:
 
 		bool checkIsDominated = mode == InsertMode::Both || mode == InsertMode::Dominated;
 		bool checkIsDominating = mode == InsertMode::Both || mode == InsertMode::Dominating;
+		//KLUDGE: We shouldn't force this
+		checkIsDominating = true;
+		checkIsDominated = true;
 
 		while (sItr != end)
 		{
@@ -423,7 +451,7 @@ private:
 				nondominatedset_detail::selectPivoitPoint(node.m_solutions);
 				const unsigned int numRegions = 1u << NumObjectives;
 				std::array<std::unique_ptr<LeafNode>, numRegions> regions;
-				auto newNode = std::make_unique<Node>(node.m_region, std::move(node.m_solutions[0]));
+				auto newNode = std::make_unique<Node>(static_cast<unsigned int>(node.m_region), std::move(node.m_solutions[0]));
 				for (auto itr = node.m_solutions.begin() + 1; itr != node.m_solutions.end(); ++itr)
 				{
 					auto& s = *itr;
@@ -472,12 +500,15 @@ private:
 		else
 		{
 			auto& n = static_cast<Node&>(node);
-			res.push_back(n.m_solution);
-			getResult(res, *n.m_child);
-			if (n.m_nextSibling)
+			if (n.m_referenceValid)
 			{
-				getResult(res, *n.m_nextSibling);
+				res.push_back(n.m_solution);
 			}
+			getResult(res, *n.m_child);
+		}
+		if (node.m_nextSibling)
+		{
+			getResult(res, *node.m_nextSibling);
 		}
 	}
 

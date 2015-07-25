@@ -19,7 +19,7 @@ void testEqual(const KeyboardArray& expectedKeyboards, const SolutionArray& expe
 	});
 	auto ek = std::begin(expectedKeyboards);
 	auto es = std::begin(expectedSolutions);
-	for (auto&& i : actual)
+	for (auto&& i : sortedSolutions)
 	{
 		EXPECT_EQ(*ek, i.m_keyboard);
 		
@@ -38,36 +38,44 @@ using KeyboardArray = std::array<Keyboard<1>, Size>;
 template<size_t Size, size_t NumDimensions = 1>
 using SolutionArray = std::array<std::array<float, NumDimensions>, Size>;
 
-TEST(NonDominatedSetTests, SimpleOneDimensionalOneValue)
+template<typename SizeType>
+class NonDominatedSetTests : public testing::Test
+{
+};
+
+TYPED_TEST_CASE_P(NonDominatedSetTests);
+
+TYPED_TEST_P(NonDominatedSetTests, SimpleOneDimensionalOneValue)
 {
 	KeyboardArray<1> keyboards{ Keyboard<1>({1}) };
 	SolutionArray<1> solutions{ {1.0} };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(keyboards, solutions, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(1.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalTwoValues)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalTwoValues)
 {
 	KeyboardArray<2> keyboards{ Keyboard<1>({1}), Keyboard<1>({2}) };
 	SolutionArray<2> solutions{ 1.0, 2.0 };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(2.0f));
 }
-TEST(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
+
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalTwoDifferentOrder)
 {
 	KeyboardArray<2> keyboards{ Keyboard<1>({2}), Keyboard<1>({1}) };
 	SolutionArray<2> solutions{ 2.0, 1.0 };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ Keyboard<1>({2}) }, SolutionArray<1>{ {2.0} }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(2.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues1)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
@@ -75,13 +83,13 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues1)
 	A c = { Keyboard<1>({3}), { 3.0f } };
 	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
 	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues2)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
@@ -89,13 +97,13 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues2)
 	A c = { Keyboard<1>({3}), { 3.0f } };
 	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
 	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues3)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
@@ -103,13 +111,13 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues3)
 	A c = { Keyboard<1>({3}), { 3.0f } };
 	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
 	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues4)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
@@ -117,13 +125,13 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues4)
 	A c = { Keyboard<1>({3}), { 3.0f } };
 	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
 	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues5)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
@@ -131,20 +139,20 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues5)
 	A c = { Keyboard<1>({3}), { 3.0f } };
 	KeyboardArray<3> keyboards{ a.first, b.first, c.first };
 	SolutionArray<3> solutions{ a.second, b.second, c.second };
-	NonDominatedSet<1, 1> s(keyboards, solutions);
+	NonDominatedSet<1, 1, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(1, s.size()); 
 	std::array<A, 1> res{ c };
 	testEqual(KeyboardArray<1>{ c.first }, SolutionArray<1>{ c.second }, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
+TYPED_TEST_P(NonDominatedSetTests, OneDimensionalThreeValues6)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 1>>;
 	A a = { Keyboard<1>({1}), { 1.0f } };
 	A b = { Keyboard<1>({2}), { 2.0f } };
 	A c = { Keyboard<1>({3}), { 3.0f } };
-	NonDominatedSet<1, 1> s;
+	NonDominatedSet<1, 1, TypeParam::value> s;
 	s.insert(a.first, a.second);
 	s.insert(b.first, b.second);
 	s.insert(c.first, c.second);
@@ -154,7 +162,7 @@ TEST(NonDominatedSetTests, OneDimensionalThreeValues6)
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(3.0f));
 }
 
-TEST(NonDominatedSetTests, TwoDimensional)
+TYPED_TEST_P(NonDominatedSetTests, TwoDimensional)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
 	A a = { Keyboard<1>({1}), { 4.0f, 1.0f } };
@@ -172,15 +180,15 @@ TEST(NonDominatedSetTests, TwoDimensional)
 	// 2 g f e
 	// 1 d c b a
 	//   1 2 3 4
-	NonDominatedSet<1, 2> s(keyboards, solutions);
+	NonDominatedSet<1, 2, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(3, s.size()); 
-	KeyboardArray<3> keyboardRes{ a.first, e.first, h.first };
-	SolutionArray<3, 2> solutionRes{ a.second, e.second, h.second };
+	KeyboardArray<3> keyboardRes{ h.first, e.first, a.first };
+	SolutionArray<3, 2> solutionRes{ h.second, e.second, a.second };
 	testEqual(keyboardRes, solutionRes, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }
 
-TEST(NonDominatedSetTests, TwoDimensional2)
+TYPED_TEST_P(NonDominatedSetTests, TwoDimensional2)
 {
 	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
 	A a = { Keyboard<1>({1}), { 4.0f, 1.0f } };
@@ -198,7 +206,7 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	// 2 g f b
 	// 1 d c   a
 	//   1 2 3 4
-	NonDominatedSet<1, 2> s(keyboards, solutions);
+	NonDominatedSet<1, 2, TypeParam::value> s(keyboards, solutions);
 	ASSERT_EQ(2, s.size()); 
 	std::array<A, 2> res{ a, e };
 	KeyboardArray<2> keyboardRes{ e.first, a.first };
@@ -206,6 +214,17 @@ TEST(NonDominatedSetTests, TwoDimensional2)
 	testEqual(keyboardRes, solutionRes, s.getResult());
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }
+
+REGISTER_TYPED_TEST_CASE_P(NonDominatedSetTests, SimpleOneDimensionalOneValue, OneDimensionalTwoValues, OneDimensionalTwoDifferentOrder, OneDimensionalThreeValues1,
+	OneDimensionalThreeValues2, OneDimensionalThreeValues3, OneDimensionalThreeValues4, OneDimensionalThreeValues5,
+	OneDimensionalThreeValues6, TwoDimensional, TwoDimensional2);
+typedef ::testing::Types <
+	std::integral_constant<size_t, 1>,
+	std::integral_constant<size_t, 2>,
+	std::integral_constant<size_t, 4>,
+	std::integral_constant<size_t, 8>,
+	std::integral_constant<size_t, std::numeric_limits<size_t>::max()>> Sizes;
+INSTANTIATE_TYPED_TEST_CASE_P(NonDominatedSetTests, NonDominatedSetTests, Sizes);
 
 TEST(SelectPivotPointTests, SelectPivotPoint)
 {
