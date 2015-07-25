@@ -211,6 +211,9 @@ public:
 	template<typename SolutionType>
 	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
 	{
+		// The algorithm used is based on the two following papers
+		// "Scalable Skyline Computation Using Object-based Space Partitioning"
+		// "BSkyTree: Scalable Skyline Computation Using A Balanced Pivot Selection"
 		if (m_idealPoint.empty())
 		{
 			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::lowest());
@@ -235,7 +238,6 @@ public:
 				m_idealPoint[i] = std::max(m_idealPoint[i], solution[i]);
 			}
 		}
-		auto res = getResult();
 		return inserted;
 	}
 
@@ -271,39 +273,6 @@ private:
 		Both = 4,
 	};
 
-#if 0
-	template<typename SolutionType>
-	InsertResult insertToHelper(unsigned int region, const KeyboardType& keyboard, const SolutionType& solution, InsertMode insertMode, std::unique_ptr<BaseNode>& node)
-	{
-		if (node && ((insertMode != InsertMode::Dominating && node->m_region <= region) || (insertMode == InsertMode::Dominating && node->m_region > region)))
-		{
-			if (node->m_child)
-			{
-				return insertToChild(keyboard, solution, region, insertMode, static_cast<Node&>(*node));
-			}
-			else
-			{
-				auto res = insertToLeaf(keyboard, solution, static_cast<LeafNode&>(*node), insertMode);
-				if (res.second)
-				{ 
-					node = std::move(res.second);
-				}
-				return res.first;
-			}
-		}
-		else if (insertMode == InsertMode::Both)
-		{
-			auto newNode = std::make_unique<LeafNode>(region);
-			newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
-			newNode->m_nextSibling = std::move(node);
-			node = std::move(newNode);
-			assert(!node->m_nextSibling || node->m_region < node->m_nextSibling->m_region);
-			return InsertResult::Inserted;
-		}
-		return InsertResult::Unknown;
-	}
-#endif
-
 	Node& getNode(std::unique_ptr<BaseNode>& ptr)
 	{
 		return static_cast<Node&>(*ptr);
@@ -330,7 +299,6 @@ private:
 					assert(mode != InsertMode::Dominating);
 					return insertRes;
 				}
-				//KLUDGE patchup
 				if (mode == InsertMode::Dominating)
 				{
 					insertRes = InsertResult::Inserted;
@@ -338,9 +306,9 @@ private:
 			}
 			else
 			{
-				if (getNode(baseNode).m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
+				if (baseNode->m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
 				{
-					getNode(baseNode).m_referenceValid = false;
+					baseNode->m_referenceValid = false;
 				}
 
 				if (compatible)
@@ -360,12 +328,12 @@ private:
 							}
 						}
 					}
-					InsertMode newInsertMode = (mode == InsertMode::Both && getNode(baseNode).m_region == region) ? InsertMode::Both : InsertMode::Dominated;
+					InsertMode newInsertMode = (mode == InsertMode::Both && baseNode->m_region == region) ? InsertMode::Both : InsertMode::Dominated;
 					if (insertRes != InsertResult::Inserted)
 					{
-						if (getNode(baseNode).m_child && getNode(baseNode).m_child->m_region <= newRegion)
+						if (baseNode->m_child && baseNode->m_child->m_region <= newRegion)
 						{
-							insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, getNode(baseNode).m_child);
+							insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, baseNode->m_child);
 							if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 							{
 								return insertRes;
