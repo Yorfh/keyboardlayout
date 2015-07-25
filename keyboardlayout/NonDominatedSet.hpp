@@ -79,8 +79,8 @@ namespace nondominatedset_detail
 		}
 	}
 
-	template<typename Point>
-	unsigned int mapPointToRegion(Point& reference, Point& p)
+	template<typename Point1, typename Point2>
+	unsigned int mapPointToRegion(Point1& reference, Point2& p)
 	{
 		unsigned int mask = 1;
 		unsigned int ret = 0;
@@ -120,27 +120,27 @@ public:
 private:
 	struct BaseNode
 	{
+		BaseNode(unsigned int region) : m_region(region) {}
 		std::unique_ptr<BaseNode> m_child;
 		std::unique_ptr<BaseNode> m_nextSibling;
+		unsigned int m_region;
 	};
 	
 	struct Node : public BaseNode
 	{
 		Node(unsigned int region, Solution&& solution)
-			: m_region(region)
+			: BaseNode(region)
 			, m_solution(std::move(solution))
 		{}
 		Solution m_solution;
-		unsigned int m_region;
 	};
 
 	struct LeafNode : public BaseNode
 	{
 		LeafNode(unsigned int region)
-			: m_region(region)
+			: BaseNode(region)
 		{}
 		SolutionsVector m_solutions;
-		unsigned int m_region;
 	};
 public:
 
@@ -227,12 +227,13 @@ public:
 		{
 			if (m_root->m_child)
 			{
-				inserted = insertToChild(keyboard, solution, static_cast<Node&>(*m_root));
+				auto res = insertToChild(keyboard, solution, 0, true, static_cast<Node&>(*m_root));
+				return res == InsertResult::Inserted || res == InsertResult::Duplicate;
 			}
 			else
 			{
 				auto res = insertToLeaf(keyboard, solution, static_cast<LeafNode&>(*m_root));
-				inserted = res.first;
+				inserted = res.first == InsertResult::Inserted || res.first == InsertResult::Duplicate;
 				if (res.second)
 				{
 					m_root = std::move(res.second);
@@ -249,14 +250,111 @@ public:
 		return inserted;
 	}
 
-	template<typename SolutionType>
-	bool insertToChild(const KeyboardType& keyboard, const SolutionType& solution, Node& node)
+	SolutionsVector getResult() const
 	{
-		return false;
+		SolutionsVector res;
+		if (m_root)
+		{
+			getResult(res, *m_root);
+		}
+		return res;
+	}
+
+	const Solution operator[](size_t index)
+	{
+		return getResult()[index];
+	}
+
+private:
+	enum class InsertResult
+	{
+		Inserted,
+		Dominated,
+		Duplicate,
+		NonDominated,
+	};
+
+	template<typename SolutionType>
+	InsertResult insertToChild(const KeyboardType& keyboard, const SolutionType& solution, unsigned int region, bool isTarget, Node& node)
+	{
+		bool canDominate = (node.m_region | region) == region;
+		if (canDominate)
+		{
+			unsigned int newRegion = nondominatedset_detail::mapPointToRegion(node.m_solution.m_solution, solution);
+			if (newRegion == (1u << NumObjectives) - 1)
+			{
+				//TODO: We still need to check against the reference point, in case the point is the same
+				return InsertResult::Dominated;
+			}
+			bool newRegionIsTarget = isTarget && node.m_region == region;
+			if (node.m_child && node.m_child->m_region <= newRegion)
+			{
+				if (node.m_child->m_child)
+				{
+					auto res = insertToChild(keyboard, solution, newRegion, newRegionIsTarget, static_cast<Node&>(*node.m_child));
+					if (res != InsertResult::NonDominated)
+					{
+						return res;
+					}
+				}
+				else
+				{
+					auto res = insertToLeaf(keyboard, solution, static_cast<LeafNode&>(*node.m_child));
+					if (res.second)
+					{
+						node.m_child = std::move(res.second);
+					}
+					if (res.first != InsertResult::NonDominated)
+					{
+						return res.first;
+					}
+				}
+			}
+			else if (newRegionIsTarget)
+			{
+				auto newNode = std::make_unique<LeafNode>(newRegion);
+				newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+				newNode->m_nextSibling = std::move(node.m_child);
+				node.m_child = std::move(newNode);
+				return InsertResult::Inserted;
+			}
+		}
+		if (node.m_nextSibling && (node.m_nextSibling->m_region <= region))
+		{
+			if (node.m_nextSibling->m_child)
+			{
+				auto res = insertToChild(keyboard, solution, region, isTarget, static_cast<Node&>(*node.m_nextSibling));
+				if (res != InsertResult::NonDominated)
+				{
+					return res;
+				}
+			}
+			else
+			{
+				auto res = insertToLeaf(keyboard, solution, static_cast<LeafNode&>(*node.m_nextSibling));
+				if (res.second)
+				{
+					node.m_nextSibling = std::move(res.second);
+				}
+				if (res.first != InsertResult::NonDominated)
+				{
+					return res.first;
+				}
+			}
+		}
+		else if (isTarget && node.m_region < region)
+		{
+			auto newNode = std::make_unique<LeafNode>(region);
+			newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+			newNode->m_nextSibling = std::move(node.m_nextSibling);
+			node.m_nextSibling = std::move(newNode);
+			return InsertResult::Inserted;
+		}
+		return InsertResult::NonDominated;
 	}
 
 	template<typename SolutionType>
-	std::pair<bool, std::unique_ptr<Node>> insertToLeaf(const KeyboardType& keyboard, const SolutionType& solution, LeafNode& node)
+	std::pair<InsertResult, std::unique_ptr<Node>> insertToLeaf(const KeyboardType& keyboard, const SolutionType& solution, LeafNode& node)
 	{
 		bool dominated = false;
 		auto sItr = node.m_solutions.begin();
@@ -267,7 +365,7 @@ public:
 		{
 			if (sItr->m_keyboard == keyboard)
 			{
-				return std::make_pair(false, nullptr);
+				return std::make_pair(InsertResult::Duplicate, nullptr);
 			}
 			if (isDominated(sItr->m_solution, solution))
 			{
@@ -345,29 +443,16 @@ public:
 					}
 				}
 				newNode->m_child = std::move(firstChild);
-				return std::make_pair(true, std::move(newNode));
+				return std::make_pair(InsertResult::Inserted, std::move(newNode));
 			}
+			return std::make_pair(InsertResult::Inserted, nullptr);
 		}
-		return std::make_pair(true, nullptr);
-	}
-
-
-	SolutionsVector getResult() const
-	{
-		SolutionsVector res;
-		if (m_root)
+		else
 		{
-			getResult(res, *m_root);
+			return std::make_pair(InsertResult::Dominated, nullptr);
 		}
-		return res;
 	}
 
-	const Solution operator[](size_t index)
-	{
-		return getResult()[index];
-	}
-
-private:
 	void getResult(SolutionsVector& res, BaseNode& node) const
 	{
 		if (!node.m_child)
@@ -378,6 +463,7 @@ private:
 		else
 		{
 			auto& n = static_cast<Node&>(node);
+			res.push_back(n.m_solution);
 			getResult(res, *n.m_child);
 			if (n.m_nextSibling)
 			{
