@@ -317,66 +317,73 @@ private:
 		compatible = true;
 		assert(!baseNode->m_nextSibling || baseNode->m_nextSibling->m_region > baseNode->m_region);
 		InsertResult insertRes = mode == InsertMode::Dominating ? InsertResult::Inserted : InsertResult::Unknown;
-
-		if (baseNode->m_child == nullptr)
+		if (mode != InsertMode::Dominating || baseNode->m_region > region)
 		{
-			insertRes = insertToLeaf(keyboard, solution, mode, baseNode);
-			if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+			if (baseNode->m_child == nullptr)
 			{
-				return insertRes;
-			}
-		}
-		else
-		{
-			//KLUDGE should probably not be here
-			if (getNode(baseNode).m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
-			{
-				getNode(baseNode).m_referenceValid = false;
-			}
-
-			if (compatible)
-			{
-				unsigned int newRegion = nondominatedset_detail::mapPointToRegion(getNode(baseNode).m_solution.m_solution, solution);
-				if (newRegion == (1u << NumObjectives) - 1)
+				insertRes = insertToLeaf(keyboard, solution, mode, baseNode);
+				if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 				{
-					if (getNode(baseNode).m_solution.m_keyboard == keyboard)
+					return insertRes;
+				}
+				//KLUDGE patchup
+				if (mode == InsertMode::Dominating)
+				{
+					insertRes = InsertResult::Inserted;
+				}
+			}
+			else
+			{
+				//KLUDGE should probably not be here
+				if (getNode(baseNode).m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
+				{
+					getNode(baseNode).m_referenceValid = false;
+				}
+
+				if (compatible)
+				{
+					unsigned int newRegion = nondominatedset_detail::mapPointToRegion(getNode(baseNode).m_solution.m_solution, solution);
+					if (newRegion == (1u << NumObjectives) - 1)
 					{
-						return InsertResult::Duplicate;
-					}
-					if (mode == InsertMode::Both || mode == InsertMode::Dominated)
-					{
-						if (isDominated(solution, getNode(baseNode).m_solution.m_solution))
+						if (getNode(baseNode).m_solution.m_keyboard == keyboard)
 						{
-							return InsertResult::Dominated;
+							return InsertResult::Duplicate;
+						}
+						if (mode == InsertMode::Both || mode == InsertMode::Dominated)
+						{
+							if (isDominated(solution, getNode(baseNode).m_solution.m_solution))
+							{
+								return InsertResult::Dominated;
+							}
 						}
 					}
-				}
-				if (insertRes != InsertResult::Inserted)
-				{
-					InsertMode newInsertMode = (mode == InsertMode::Both && getNode(baseNode).m_region == region) ? InsertMode::Both : InsertMode::Dominated;
-					if (getNode(baseNode).m_child && getNode(baseNode).m_region <= newRegion)
+					if (insertRes != InsertResult::Inserted)
 					{
-						insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, getNode(baseNode).m_child);
-						if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+						InsertMode newInsertMode = (mode == InsertMode::Both && getNode(baseNode).m_region == region) ? InsertMode::Both : InsertMode::Dominated;
+						if (getNode(baseNode).m_child && getNode(baseNode).m_child->m_region <= newRegion)
 						{
-							return insertRes;
+							insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, getNode(baseNode).m_child);
+							if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
+							{
+								return insertRes;
+							}
+						}
+						else if (newInsertMode == InsertMode::Both)
+						{
+							auto newNode = std::make_unique<LeafNode>(newRegion);
+							newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+							newNode->m_nextSibling = std::move(baseNode->m_child);
+							baseNode->m_child = std::move(newNode);
+							assert(!baseNode->m_child->m_nextSibling || baseNode->m_child->m_nextSibling->m_region > baseNode->m_child->m_region);
+							insertRes = InsertResult::Inserted;
 						}
 					}
-					else if (newInsertMode == InsertMode::Both)
+					if (insertRes == InsertResult::Inserted)
 					{
-						auto newNode = std::make_unique<LeafNode>(newRegion);
-						newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
-						newNode->m_nextSibling = std::move(baseNode->m_child);
-						baseNode->m_child = std::move(newNode);
-						assert(!baseNode->m_child->m_nextSibling || baseNode->m_child->m_nextSibling->m_region > baseNode->m_child->m_region);
-						insertRes = InsertResult::Inserted;
-					}
-				}
-				if (insertRes == InsertResult::Inserted)
-				{
-					if (getNode(baseNode).m_child)
-					{
-						insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, getNode(baseNode).m_child);
+						if (getNode(baseNode).m_child)
+						{
+							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, getNode(baseNode).m_child);
+						}
 					}
 				}
 			}
