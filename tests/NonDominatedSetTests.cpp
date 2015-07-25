@@ -215,13 +215,67 @@ TYPED_TEST_P(NonDominatedSetTests, TwoDimensional2)
 	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(4.0f, 3.0f));
 }
 
+TYPED_TEST_P(NonDominatedSetTests, TwoDimensional3)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
+	A a = { Keyboard<1>({1}), {-2.0f, -8.0f} };
+	A b = { Keyboard<1>({2}), {-2.0f, -5.0f} };
+	A c = { Keyboard<1>({3}), {-3.0f, -9.0f} };
+	A d = { Keyboard<1>({4}), {-4.0f, -6.0f} };
+	A e = { Keyboard<1>({5}), {-4.0f, -4.0f} };
+	A f = { Keyboard<1>({6}), {-5.0f, -7.0f} };
+	A g = { Keyboard<1>({7}), {-6.0f, -4.0f} };
+	A h = { Keyboard<1>({8}), {-7.0f, -6.0f} };
+	A i = { Keyboard<1>({9}), {-7.0f, -2.0f} };
+	A j = { Keyboard<1>({10}), {-8.0f, -8.0f} };
+	A k = { Keyboard<1>({11}), {-8.0f, -3.0f} };
+	A l = { Keyboard<1>({12}), {-9.0f, -1.0f} };
+	KeyboardArray<12> keyboards{ a.first, b.first, c.first, d.first, e.first, f.first, g.first, h.first, i.first, j.first, k.first, l.first };
+	SolutionArray<12, 2> solutions{ a.second, b.second, c.second, d.second, e.second, f.second, g.second, h.second, i.second, j.second, k.second, l.second };
+	NonDominatedSet<1, 2, TypeParam::value> s(keyboards, solutions);
+	ASSERT_EQ(4, s.size()); 
+	KeyboardArray<4> keyboardRes{ l.first, i.first, e.first, b.first };
+	SolutionArray<4, 2> solutionRes{ l.second, i.second, e.second, b.second};
+	testEqual(keyboardRes, solutionRes, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(-2.0f, -1.0f));
+}
+
+TYPED_TEST_P(NonDominatedSetTests, TwoDimensional4)
+{
+	using A = std::pair<Keyboard<1>, std::array<float, 2>>;
+	A a = { Keyboard<1>({1}), {2.0f, 8.0f} };
+	A b = { Keyboard<1>({2}), {2.0f, 5.0f} };
+	A c = { Keyboard<1>({3}), {3.0f, 9.0f} };
+	A d = { Keyboard<1>({4}), {4.0f, 6.0f} };
+	A e = { Keyboard<1>({5}), {4.0f, 4.0f} };
+	A f = { Keyboard<1>({6}), {5.0f, 7.0f} };
+	A g = { Keyboard<1>({7}), {6.0f, 4.0f} };
+	A h = { Keyboard<1>({8}), {7.0f, 6.0f} };
+	A i = { Keyboard<1>({9}), {7.0f, 2.0f} };
+	A j = { Keyboard<1>({10}), {8.0f, 8.0f} };
+	A k = { Keyboard<1>({11}), {8.0f, 3.0f} };
+	A l = { Keyboard<1>({12}), {9.0f, 1.0f} };
+	KeyboardArray<12> keyboards{ a.first, b.first, c.first, d.first, e.first, f.first, g.first, h.first, i.first, j.first, k.first, l.first };
+	SolutionArray<12, 2> solutions{ a.second, b.second, c.second, d.second, e.second, f.second, g.second, h.second, i.second, j.second, k.second, l.second };
+	NonDominatedSet<1, 2, TypeParam::value> s(keyboards, solutions);
+	ASSERT_EQ(3, s.size()); 
+	KeyboardArray<3> keyboardRes{ c.first, j.first, l.first };
+	SolutionArray<3, 2> solutionRes{ c.second, j.second, l.second };
+	testEqual(keyboardRes, solutionRes, s.getResult());
+	EXPECT_THAT(s.getIdealPoint(), ElementsAreClose(9.0f, 9.0f));
+}
+
 REGISTER_TYPED_TEST_CASE_P(NonDominatedSetTests, SimpleOneDimensionalOneValue, OneDimensionalTwoValues, OneDimensionalTwoDifferentOrder, OneDimensionalThreeValues1,
 	OneDimensionalThreeValues2, OneDimensionalThreeValues3, OneDimensionalThreeValues4, OneDimensionalThreeValues5,
-	OneDimensionalThreeValues6, TwoDimensional, TwoDimensional2);
+	OneDimensionalThreeValues6, TwoDimensional, TwoDimensional2, TwoDimensional3, TwoDimensional4);
 typedef ::testing::Types <
 	std::integral_constant<size_t, 1>,
 	std::integral_constant<size_t, 2>,
+	std::integral_constant<size_t, 3>,
 	std::integral_constant<size_t, 4>,
+	std::integral_constant<size_t, 5>,
+	std::integral_constant<size_t, 6>,
+	std::integral_constant<size_t, 7>,
 	std::integral_constant<size_t, 8>,
 	std::integral_constant<size_t, std::numeric_limits<size_t>::max()>> Sizes;
 INSTANTIATE_TYPED_TEST_CASE_P(NonDominatedSetTests, NonDominatedSetTests, Sizes);

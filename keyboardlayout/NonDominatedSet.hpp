@@ -158,7 +158,6 @@ public:
 			return;
 		}
 		assert(solutions[0].size() == NumObjectives);
-		m_idealPoint.assign(NumObjectives, std::numeric_limits<float>::min());
 		auto s = solutions.begin();
 		for (auto k = keyboards.begin(); k != keyboards.end(); ++k, ++s)
 		{
@@ -214,7 +213,7 @@ public:
 	{
 		if (m_idealPoint.empty())
 		{
-			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::min());
+			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::lowest());
 		}
 		bool inserted = false;
 		if (!m_root)
