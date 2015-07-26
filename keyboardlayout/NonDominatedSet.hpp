@@ -259,9 +259,9 @@ public:
 		return res;
 	}
 
-	const Solution operator[](size_t index)
+	const Solution& operator[](size_t index) const
 	{
-		return getResult()[index];
+		return getIndex(*m_root, static_cast<unsigned int>(index));
 	}
 
 private:
@@ -570,6 +570,44 @@ private:
 		if (node.m_nextSibling)
 		{
 			getResult(res, *node.m_nextSibling);
+		}
+	}
+
+	const Solution& getIndex(const BaseNode& node, unsigned int index) const
+	{
+		if (node.m_child)
+		{
+			if (index == node.m_child->m_size)
+			{
+				if (node.m_referenceValid)
+				{
+					return static_cast<const Node&>(node).m_solution;
+				}
+				else
+				{
+					return getIndex(*node.m_nextSibling, index - node.m_child->m_size);
+				}
+			}
+			else if (index > node.m_child->m_size)
+			{
+				return getIndex(*node.m_nextSibling, index - node.m_child->m_size - node.m_referenceValid ? 1 : 0);
+			}
+			else
+			{
+				return getIndex(*node.m_child, index);
+			}
+		}
+		else
+		{
+			auto& leafNode = static_cast<const LeafNode&>(node);
+			if (index < leafNode.m_solutions.size())
+			{
+				return leafNode.m_solutions[index];
+			}
+			else
+			{
+				return getIndex(*leafNode.m_nextSibling, index - static_cast<unsigned int>(leafNode.m_solutions.size()));
+			}
 		}
 	}
 
