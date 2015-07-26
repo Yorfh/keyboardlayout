@@ -391,12 +391,8 @@ TEST(SelectPivotPointTests, SelectPivotPoint)
 	};
 	std::vector<Solution> solutionVector{ makeSolution(a), makeSolution(b), makeSolution(c), makeSolution(d), makeSolution(e),
 		makeSolution(f), makeSolution(g), makeSolution(h), makeSolution(i), makeSolution(j), makeSolution(k), makeSolution(l) };
-	nondominatedset_detail::selectPivoitPoint(solutionVector);
+	nondominatedset_detail::selectPivotPoint(solutionVector);
 	EXPECT_EQ(solutionVector[0].m_solution, makeSolution(e).m_solution);
-	EXPECT_EQ(solutionVector[1].m_solution, makeSolution(l).m_solution);
-	EXPECT_EQ(solutionVector[2].m_solution, makeSolution(k).m_solution);
-	EXPECT_EQ(solutionVector[3].m_solution, makeSolution(i).m_solution);
-	EXPECT_EQ(solutionVector[4].m_solution, makeSolution(b).m_solution);
 }
 
 TEST(MapPointToRegionTests, MapPointToRegion2D)

@@ -19,63 +19,19 @@ namespace nondominatedset_detail
 	}
 
 	template<typename SolutionArray>
-	void selectPivoitPoint(SolutionArray& solutions)
+	void selectPivotPoint(SolutionArray& solutions)
 	{
 		// This is based on the paper:
 		// BSkyTree: Scalable Skyline Computation Using A Balanced Pivot Selection
 
 		if (solutions.size() >= 2)
 		{
-			auto head = std::begin(solutions);
-			auto cur = head + 1;
-			auto tail = std::end(solutions) - 1;
-			float minDist = distance(head->m_solution);
-			while (cur <= tail)
+			auto ret = std::min_element(std::begin(solutions), std::end(solutions), 
+			[](auto& element1, auto& element2)
 			{
-				if (isDominated(cur->m_solution, head->m_solution))
-				{
-					if (cur != tail)
-					{
-						*cur = std::move(*tail);
-					}
-					solutions.erase(tail);
-					tail--;
-				}
-				else if (isDominated(head->m_solution, cur->m_solution))
-				{
-					*head = std::move(*cur);
-					if (cur != tail)
-					{
-						*cur = std::move(*tail);
-					}
-					solutions.erase(tail);
-					tail--;
-					cur = head + 1;
-					minDist = distance(head->m_solution);
-				}
-				else
-				{
-					float curDist = distance(cur->m_solution);
-					if (curDist < minDist)
-					{
-						bool dominated = false;
-						for (auto i = head + 1; i != cur; i++)
-						{
-							if (isDominated(cur->m_solution, i->m_solution))
-							{
-								dominated = true;
-								break;
-							}
-						}
-						if (!dominated)
-						{
-							std::swap(*head, *cur);
-							minDist = curDist;
-						}
-					}
-					++cur;
-				}
-			}
+				return distance(element1.m_solution) < distance(element2.m_solution);
+			});
+			std::swap(*std::begin(solutions), *ret);
 		}
 	}
 
@@ -500,7 +456,7 @@ private:
 
 			if (leaf.m_solutions.size() > MaxLeafSize)
 			{
-				nondominatedset_detail::selectPivoitPoint(leaf.m_solutions);
+				nondominatedset_detail::selectPivotPoint(leaf.m_solutions);
 				const unsigned int numRegions = 1u << NumObjectives;
 				std::array<std::unique_ptr<LeafNode>, numRegions> regions;
 				auto newNode = std::make_unique<Node>(static_cast<unsigned int>(leaf.m_region), std::move(leaf.m_solutions[0]));
