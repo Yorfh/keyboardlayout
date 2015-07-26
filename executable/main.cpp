@@ -177,7 +177,7 @@ int mqap_helper(const std::string filename, float minT, float maxT, int numSteps
 		mQAP<NumLocations> objective(filename, i);
 		objectives.push_back(objective);
 	}
-	Optimizer<NumLocations, NumObjectives> o;
+	Optimizer<NumLocations, NumObjectives, 32> o;
 	o.populationSize(population);
 	o.initialTemperature(maxT, minT, numSteps);
 	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
