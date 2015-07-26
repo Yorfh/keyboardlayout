@@ -120,11 +120,12 @@ public:
 private:
 	struct BaseNode
 	{
-		BaseNode(unsigned int region) : m_region(region), m_referenceValid(1) {}
+		BaseNode(unsigned int region) : m_region(region), m_referenceValid(1), m_size(1) {}
 		std::unique_ptr<BaseNode> m_child;
 		std::unique_ptr<BaseNode> m_nextSibling;
 		unsigned int m_region : 31;
 		unsigned int m_referenceValid : 1;
+		unsigned int m_size;
 	};
 	
 	struct Node : public BaseNode
@@ -200,7 +201,14 @@ public:
 
 	size_t size() const
 	{
-		return getResult().size();
+		if (m_root)
+		{
+			return m_root->m_size;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 
 	const std::vector<float> getIdealPoint() const
@@ -309,6 +317,7 @@ private:
 				if (baseNode->m_referenceValid && isDominated(getNode(baseNode).m_solution.m_solution, solution))
 				{
 					baseNode->m_referenceValid = false;
+					baseNode->m_size--;
 				}
 
 				if (compatible)
@@ -333,7 +342,9 @@ private:
 					{
 						if (baseNode->m_child && baseNode->m_child->m_region <= newRegion)
 						{
+							unsigned int oldChildSize = baseNode->m_child->m_size;
 							insertRes = insertToChild(keyboard, solution, newRegion, newInsertMode, baseNode->m_child);
+							baseNode->m_size += baseNode->m_child->m_size - oldChildSize;
 							if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 							{
 								return insertRes;
@@ -341,10 +352,16 @@ private:
 						}
 						else if (newInsertMode == InsertMode::Both)
 						{
+							unsigned int oldSize = baseNode->m_child ? baseNode->m_child->m_size : 0;
 							auto newNode = std::make_unique<LeafNode>(newRegion);
 							newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
-							newNode->m_nextSibling = std::move(baseNode->m_child);
+							if (baseNode->m_child)
+							{
+								newNode->m_size += baseNode->m_child->m_size;
+								newNode->m_nextSibling = std::move(baseNode->m_child);
+							}
 							baseNode->m_child = std::move(newNode);
+							baseNode->m_size += baseNode->m_child->m_size - oldSize;
 							assert(!baseNode->m_child->m_nextSibling || baseNode->m_child->m_nextSibling->m_region > baseNode->m_child->m_region);
 							insertRes = InsertResult::Inserted;
 						}
@@ -353,11 +370,17 @@ private:
 					{
 						if (newInsertMode == InsertMode::Both && baseNode->m_child->m_nextSibling)
 						{
+							unsigned int oldChildSize = baseNode->m_child->m_nextSibling->m_size;
 							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, baseNode->m_child->m_nextSibling);
+							int diff = baseNode->m_child->m_nextSibling->m_size - oldChildSize;
+							baseNode->m_child->m_size += diff;
+							baseNode->m_size += diff;
 						}
 						else if (baseNode->m_child)
 						{
+							unsigned int oldChildSize = baseNode->m_child->m_size;
 							insertToChild(keyboard, solution, newRegion, InsertMode::Dominating, baseNode->m_child);
+							baseNode->m_size += baseNode->m_child->m_size - oldChildSize;
 						}
 					}
 				}
@@ -367,7 +390,9 @@ private:
 		{
 			if (baseNode->m_nextSibling && baseNode->m_nextSibling->m_region <= region)
 			{
+				unsigned int oldSize = baseNode->m_nextSibling->m_size;
 				insertRes = insertToChild(keyboard, solution, region, mode, baseNode->m_nextSibling);
+				baseNode->m_size += baseNode->m_nextSibling->m_size - oldSize;
 				if (insertRes == InsertResult::Dominated || insertRes == InsertResult::Duplicate)
 				{
 					return insertRes;
@@ -375,10 +400,16 @@ private:
 			}
 			else if (mode == InsertMode::Both && baseNode->m_region < region)
 			{
+				unsigned int oldSize = baseNode->m_nextSibling ? baseNode->m_nextSibling->m_size : 0;
 				auto newNode = std::make_unique<LeafNode>(region);
 				newNode->m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
-				newNode->m_nextSibling = std::move(baseNode->m_nextSibling);
+				if (baseNode->m_nextSibling)
+				{
+					newNode->m_size += baseNode->m_nextSibling->m_size;
+					newNode->m_nextSibling = std::move(baseNode->m_nextSibling);
+				}
 				baseNode->m_nextSibling = std::move(newNode);
+				baseNode->m_size += baseNode->m_nextSibling->m_size - oldSize;
 				assert(baseNode->m_nextSibling->m_region > baseNode->m_region);
 				assert(!baseNode->m_nextSibling->m_nextSibling || baseNode->m_nextSibling->m_nextSibling->m_region > baseNode->m_nextSibling->m_region);
 				insertRes = InsertResult::Inserted;
@@ -388,7 +419,9 @@ private:
 		{
 			if (baseNode->m_nextSibling)
 			{
+				unsigned int oldSize = baseNode->m_nextSibling->m_size;
 				insertToChild(keyboard, solution, region, InsertMode::Dominating, baseNode->m_nextSibling);
+				baseNode->m_size += baseNode->m_nextSibling->m_size - oldSize;
 			}
 		}
 		return insertRes;
@@ -398,6 +431,7 @@ private:
 	InsertResult insertToLeaf(const KeyboardType& keyboard, const SolutionType& solution, InsertMode mode, std::unique_ptr<BaseNode>& node)
 	{
 		LeafNode& leaf = static_cast<LeafNode&>(*node);
+		unsigned int oldOwnSize = static_cast<unsigned int>(leaf.m_solutions.size());
 		bool dominated = false;
 		auto sItr = leaf.m_solutions.begin();
 		auto end = leaf.m_solutions.end();
@@ -454,12 +488,14 @@ private:
 
 			++sItr;
 		}
+		leaf.m_size += static_cast<unsigned int>(leaf.m_solutions.size()) - oldOwnSize;
 
 		if (mode == InsertMode::Both && !dominated)
 		{
 			if (!solutionAssigned)
 			{
 				leaf.m_solutions.emplace_back(keyboard, std::begin(solution), std::end(solution));
+				leaf.m_size++;
 			}
 
 			if (leaf.m_solutions.size() > MaxLeafSize)
@@ -469,6 +505,10 @@ private:
 				std::array<std::unique_ptr<LeafNode>, numRegions> regions;
 				auto newNode = std::make_unique<Node>(static_cast<unsigned int>(leaf.m_region), std::move(leaf.m_solutions[0]));
 				newNode->m_nextSibling = std::move(leaf.m_nextSibling);
+				if (newNode->m_nextSibling)
+				{
+					newNode->m_size += newNode->m_nextSibling->m_size;
+				}
 				for (auto itr = leaf.m_solutions.begin() + 1; itr != leaf.m_solutions.end(); ++itr)
 				{
 					auto& s = *itr;
@@ -485,13 +525,16 @@ private:
 				{
 					if (regions[i])
 					{
+						regions[i]->m_size = static_cast<unsigned int>(regions[i]->m_solutions.size());
 						if (firstChild)
 						{
+							regions[i]->m_size += firstChild->m_size;
 							regions[i]->m_nextSibling = std::move(firstChild);
 						}
 						firstChild = std::move(regions[i]);
 					}
 				}
+				newNode->m_size += firstChild->m_size;
 				newNode->m_child = std::move(firstChild);
 				node = std::move(newNode);
 				return InsertResult::Inserted;
