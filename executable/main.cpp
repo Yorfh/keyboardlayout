@@ -85,7 +85,7 @@ option::ArgStatus required(const option::Option& option, bool msg)
 	return option::ARG_ILLEGAL;
 }
 
-enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED };
+enum  optionIndex { UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, PARETO_MAXT, PARETO_MINT, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED };
 const char* optionNames[] =
 {
 	"",
@@ -96,6 +96,8 @@ const char* optionNames[] =
 	"fast_max_t",
 	"fast_min_t",
 	"fast_steps",
+	"pareto_max_t",
+	"pareto_min_t",
 	"evaluations",
 	"population",
 	"test",
@@ -113,6 +115,8 @@ const option::Descriptor usage[] =
 	{ FAST_MAXT,    0, "" , optionNames[FAST_MAXT],     floatingPoint,     "  --fast_max_t  \tThe fast cooling maximum temperature" },
 	{ FAST_MINT,    0, "" , optionNames[FAST_MINT],     floatingPoint,     "  --fast_min_t  \tThe fast cooling minimum temperature" },
 	{ FAST_NUMSTEPS,0, "" , optionNames[FAST_NUMSTEPS], unsignedInteger,     "  --fast_steps  \tThe number of fast cooling temperature steps" },
+	{ PARETO_MAXT,    0, "" , optionNames[PARETO_MAXT],     floatingPoint,     "  --pareto_max_t  \tThe pareto cooling maximum temperature" },
+	{ PARETO_MINT,    0, "" , optionNames[PARETO_MINT],     floatingPoint,     "  --pareto_min_t  \tThe pareto cooling minimum temperature" },
 	{ NUMEVALUATIONS,0, "" , optionNames[NUMEVALUATIONS], unsignedInteger,     "  --evaluations  \tThe maximum number of evaluations" },
 	{ POPULATION,0, "" , optionNames[POPULATION], unsignedInteger,     "  --population  \tThe population size"},
 	{ TEST,    0, "" , optionNames[TEST],     required,          "  --test  \tThe name of the test to execute" },
@@ -168,7 +172,7 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 }
 
 template<size_t NumLocations, size_t NumObjectives>
-int mqap_helper(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps,
+int mqap_helper(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, float pareto_minT, float pareto_maxT,
 	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
 	std::vector<mQAP<NumLocations>> objectives;
@@ -181,6 +185,7 @@ int mqap_helper(const std::string filename, float minT, float maxT, int numSteps
 	o.populationSize(population);
 	o.initialTemperature(maxT, minT, numSteps);
 	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
+	o.paretoTemperature(pareto_maxT, pareto_minT);
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
 	auto result = solutions.getResult();
 	std::ofstream f(outputFile, std::ios::out | std::ios::trunc);
@@ -197,7 +202,7 @@ int mqap_helper(const std::string filename, float minT, float maxT, int numSteps
 	return 0;
 }
 
-int mqap(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, 
+int mqap(const std::string filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, float pareto_minT, float pareto_maxT,
 	unsigned int numEvaluations, unsigned int population, unsigned int seed, const std::string outputFile)
 {
 	auto regex = std::regex("KC(.*)-(.)fl");
@@ -209,33 +214,33 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 	{
 		if (numObjectives == 2)
 		{
-			return mqap_helper<10, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<10, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 		else if (numObjectives == 3)
 		{
-			return mqap_helper<10, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<10, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 	}
 	else if (numLocations == 20)
 	{
 		if (numObjectives == 2)
 		{
-			return mqap_helper<20, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<20, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 		else if (numObjectives == 3)
 		{
-			return mqap_helper<20, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<20, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 	}
 	else if (numLocations == 30)
 	{
 		if (numObjectives == 2)
 		{
-			return mqap_helper<30, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<30, 2>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 		else if (numObjectives == 3)
 		{
-			return mqap_helper<30, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, population, seed, outputFile);
+			return mqap_helper<30, 3>(filename, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, pareto_minT, pareto_maxT, numEvaluations, population, seed, outputFile);
 		}
 	}
 	return 0;
@@ -277,6 +282,8 @@ int main(int argc, char* argv[])
 	float fast_minT = std::stof(options[FAST_MINT].arg);
 	float fast_maxT = std::stof(options[FAST_MAXT].arg);
 	int fast_steps = std::stol(options[FAST_NUMSTEPS].arg);
+	float pareto_minT = std::stof(options[PARETO_MINT].arg);
+	float pareto_maxT = std::stof(options[PARETO_MAXT].arg);
 	unsigned int evaluations = std::stol(options[NUMEVALUATIONS].arg);
 	unsigned int seed = std::stoul(options[SEED].arg);
 	if (options[TEST])
@@ -294,7 +301,7 @@ int main(int argc, char* argv[])
 				return 1;
 			}
 			unsigned int population = std::stol(options[POPULATION].arg);
-			auto res = mqap(options[TEST].arg, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, population, seed, options[OUTPUT].arg);
+			auto res = mqap(options[TEST].arg, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, pareto_minT, pareto_maxT, evaluations, population, seed, options[OUTPUT].arg);
 			std::cout << res << std::endl;
 		}
 	}

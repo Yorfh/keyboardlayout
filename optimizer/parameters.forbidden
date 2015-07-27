@@ -1,2 +1,3 @@
 max_t < min_t
 fast_max_t < fast_min_t
+pareto_max_t < pareto_min_t

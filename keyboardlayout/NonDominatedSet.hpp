@@ -18,6 +18,18 @@ namespace nondominatedset_detail
 		return maximum - minimum;
 	}
 
+	template<typename P1, typename P2>
+	float distanceBetweenPoints(const P1& p1, const P2& p2)
+	{
+		float dist = 0.0f;
+		for (size_t i = 0; i < p1.size(); i++)
+		{
+			float d = p2[i] - p1[i];
+			dist += d * d;
+		}
+		return std::sqrt(dist);
+	}
+
 	template<typename SolutionArray>
 	void selectPivotPoint(SolutionArray& solutions)
 	{
@@ -172,12 +184,18 @@ public:
 		return m_idealPoint;
 	}
 
+	float getLastParetoDistance() const
+	{
+		return m_distanceToParetoFront;
+	}
+
 	template<typename SolutionType>
 	bool insert(const KeyboardType& keyboard, const SolutionType& solution)
 	{
 		// The algorithm used is based on the two following papers
 		// "Scalable Skyline Computation Using Object-based Space Partitioning"
 		// "BSkyTree: Scalable Skyline Computation Using A Balanced Pivot Selection"
+		m_distanceToParetoFront = 0.0f;
 		if (m_idealPoint.empty())
 		{
 			m_idealPoint.assign(solution.size(), std::numeric_limits<float>::lowest());
@@ -289,6 +307,7 @@ private:
 						{
 							if (isDominated(solution, getNode(baseNode).m_solution.m_solution))
 							{
+								m_distanceToParetoFront = nondominatedset_detail::distanceBetweenPoints(solution, getNode(baseNode).m_solution.m_solution);
 								return InsertResult::Dominated;
 							}
 						}
@@ -423,6 +442,7 @@ private:
 			}
 			else if (checkIsDominated && !solutionAssigned && isDominated(solution, sItr->m_solution))
 			{
+				m_distanceToParetoFront = nondominatedset_detail::distanceBetweenPoints(solution, sItr->m_solution);
 				sItr->m_pruningPower++;
 				unsigned int pruningPower = sItr->m_pruningPower;
 				while (sItr != leaf.m_solutions.begin())
@@ -567,6 +587,7 @@ private:
 		}
 	}
 
+	float m_distanceToParetoFront;
 	std::vector<float> m_idealPoint;
 	std::unique_ptr<BaseNode> m_root;
 };

@@ -24,7 +24,7 @@ library("irace")
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
 test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
-num_evaluations <- 1000000
+num_evaluations <- 150000
 
 dir.create("output", showWarnings = FALSE)
 
@@ -32,7 +32,7 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], candidate$values[["fast_max_t"]], candidate$values[["fast_min_t"]], candidate$values[["fast_steps"]], candidate$values[["population"]], num_evaluations, as.character(instance), test_file, candidate$index) 
+  args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --pareto_max_t %f --pareto_min_t %f --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], candidate$values[["fast_max_t"]], candidate$values[["fast_min_t"]], candidate$values[["fast_steps"]], candidate$values[["pareto_max_t"]], candidate$values[["pareto_min_t"]], candidate$values[["population"]], num_evaluations, as.character(instance), test_file, candidate$index) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
 }
@@ -61,6 +61,8 @@ steps "" i (1, 1000)
 fast_max_t "" r (0, 1000)
 fast_min_t "" r (0, 1000)
 fast_steps "" i (1, 1000)
+pareto_max_t "" r (0, 1000)
+pareto_min_t "" r (0, 1000)
 population "" i (1, 1000)
 '
 
