@@ -24,15 +24,49 @@ library("irace")
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
 test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
-num_evaluations <- 150000
+num_evaluations <- 300000
 
 dir.create("output", showWarnings = FALSE)
 
 instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
+type <- "initial"
+
+max_t <- 0.0
+min_t <- 0.0
+steps <- 0
+fast_max_t <- 0
+fast_min_t <- 0
+fast_steps <- 0
+pareto_min_t <- 0
+pareto_max_t <- 0
+population <- 0
+
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --pareto_max_t %f --pareto_min_t %f --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", candidate$values[["max_t"]], candidate$values[["min_t"]], candidate$values[["steps"]], candidate$values[["fast_max_t"]], candidate$values[["fast_min_t"]], candidate$values[["fast_steps"]], candidate$values[["pareto_max_t"]], candidate$values[["pareto_min_t"]], candidate$values[["population"]], num_evaluations, as.character(instance), test_file, candidate$index) 
+  if (type == "initial")
+  {
+    max_t <- candidate$values[["max_t"]]
+    min_t <- candidate$values[["min_t"]]
+    steps <- as.integer(num_evaluations * 0.1 / candidate$values[["population"]])
+    fast_max_t <- 0.01
+    fast_min_t <- 0.01
+    fast_steps <- 1
+    pareto_min_t <- 0.01
+    pareto_max_t <- 0.0
+    population <- candidate$values[["population"]]
+    evaluations <- population * steps
+  }
+  else
+  {
+    fast_max_t <- candidate$values[["fast_max_t"]]
+    fast_min_t <- candidate$values[["fast_min_t"]]
+    fast_steps <- candidate$values[["fast_steps"]]
+    pareto_max_t <- candidate$values[["pareto_max_t"]]
+    pareto_min_t <- candidate$values[["pareto_min_t"]]
+    evaluations = num_evaluations
+  }
+  args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --pareto_max_t %f --pareto_min_t %f --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", max_t, min_t, steps, fast_max_t, fast_min_t, fast_steps, pareto_max_t, pareto_min_t, population, evaluations, as.character(instance), test_file, candidate$index) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
 }
@@ -57,26 +91,54 @@ hook.evaluate <- function(instance, candidate, num.candidates, extra.params, con
 parameters.table <- '
 max_t "" r (0, 1000)
 min_t "" r (0, 1000)
-steps "" i (1, 1000)
-fast_max_t "" r (0, 1000)
-fast_min_t "" r (0, 1000)
-fast_steps "" i (1, 1000)
-pareto_max_t "" r (0, 1000)
-pareto_min_t "" r (0, 1000)
 population "" i (1, 1000)
 '
 
 
 parameters <- readParameters(text = parameters.table)
 
+experiments <- 1000
+
 result <- irace(tunerConfig = list(
-                  hookRun = hook.run,
-		          hookEvaluate = hook.evaluate,
-				  forbiddenFile = "parameters.forbidden",
-                  instances = instances[1:100],
-                  maxExperiments = 1000,
-				  nbIterations = 8,
-                  logFile = ""),
+                hookRun = hook.run,
+		hookEvaluate = hook.evaluate,
+		forbiddenFile = "parameters_initial.forbidden",
+                instances = instances[1:100],
+                maxExperiments = experiments,
+                logFile = ""),
                 parameters = parameters)
 
+candidates.print(result)
+initial_result <- result
+
+max_t <- as.numeric(result[1, c("max_t")])
+min_t <- as.numeric(result[1, c("min_t")])
+population <- as.integer(result[1, c("population")])
+
+print(max_t)
+print(min_t)
+print(population)
+
+type = "cooling"
+
+parameters.table <- '
+fast_max_t "" r (0, 1000)
+fast_min_t "" r (0, 200)
+fast_steps "" i (1, 1000)
+pareto_max_t "" r (0, 200)
+pareto_min_t "" r (0, 100)
+'
+
+parameters <- readParameters(text = parameters.table)
+result <- irace(tunerConfig = list(
+                hookRun = hook.run,
+		hookEvaluate = hook.evaluate,
+		forbiddenFile = "parameters_cooling.forbidden",
+                instances = instances[1:100],
+                maxExperiments = experiments,
+                logFile = ""),
+                parameters = parameters)
+
+
+candidates.print(initial_result)
 candidates.print(result)
