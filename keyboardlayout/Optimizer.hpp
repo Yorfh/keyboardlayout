@@ -189,10 +189,11 @@ public:
 		m_fastCoolingTSteps = numSteps;
 	}
 
-	void paretoTemperature(float maxT, float minT)
+	void paretoTemperature(float maxT, float minT, float equalMultiplier)
 	{
 		m_paretoMaxT = maxT;
 		m_paretoMinT = minT;
+		m_paretoEqualMultiplier = equalMultiplier;
 	}
 
 	template<typename Solution, typename Itr>
@@ -217,7 +218,7 @@ public:
 		solution.resize(end - begin);
 		m_population.resize(m_populationSize);
 		m_populationSolutions.resize(m_populationSize);
-		m_tempSolution.resize(end - begin);
+		m_currentSolution.resize(end - begin);
 
 		for (auto i = 0; i < m_populationSize; i++)
 		{
@@ -253,25 +254,20 @@ public:
 			m_population[0] = selectedSolution.m_keyboard;
 			m_populationSolutions[0].assign(std::begin(selectedSolution.m_solution), std::end(selectedSolution.m_solution));
 
-			typedef std::vector<float> V;
-			auto objectiveSelector = std::uniform_int<size_t>(0, NumObjectives - 1);
-			auto obj = objectiveSelector(m_randomGenerator);
-			auto directionSelector = std::bernoulli_distribution();
-			auto direction = directionSelector(m_randomGenerator);
-			auto scalarize = [obj, direction] (const V& solution, const V&, const V&)
+			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
+			for (auto&& w : m_weights[0])
 			{
-				if (direction)
-				{
-					return solution[obj];
-				}
-				else
-				{
-					return -solution[obj];
-				}
-			};
+				w = weightGenerator(m_randomGenerator);
+			}
+			auto sum = std::accumulate(m_weights[0].begin(), m_weights[0].end(), 0.0f);
+			for (auto&& w : m_weights[0])
+			{
+				w = w / sum;
+			}
 
+			typedef std::vector<float> V;
 			Keyboard<KeyboardSize> newKeyboard;
-			simulatedAnnealing(0, begin, end, newKeyboard, solution, scalarize, true);
+			simulatedAnnealing(0, begin, end, newKeyboard, solution, detail::evaluateChebycheff<V, V, V>, true);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
 		return m_NonDominatedSet;
@@ -279,45 +275,58 @@ public:
 
 protected:
 	template<typename Itr, typename ScalarizeFunc>
-	void simulatedAnnealing(size_t index, Itr begin, Itr end, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& outSolution, ScalarizeFunc& scalarize, bool paretoDominance)
+	void simulatedAnnealing(size_t index, Itr begin, Itr end, Keyboard<KeyboardSize>& outKeyboard, std::vector<float>& prevSolution, ScalarizeFunc& scalarize, bool paretoDominance)
 	{
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		outKeyboard = m_population[index];
-		outSolution = m_populationSolutions[index];
+		prevSolution = m_populationSolutions[index];
 		float alpha = std::pow(m_minT / m_maxT, 1.0f / m_numTSteps);
 		float paretoAlpha = std::pow(m_paretoMinT / m_paretoMaxT, 1.0f / m_numTSteps);
-		float prevParetoDistance = 0.0f;
-		for (float currentT = m_maxT, paretoCurrentT = m_paretoMinT; currentT >= m_minT; currentT *= alpha, paretoCurrentT *= paretoAlpha)
+		for (float currentT = m_maxT, paretoCurrentT = m_paretoMaxT; currentT >= m_minT; currentT *= alpha, paretoCurrentT *= paretoAlpha)
 		{
 			auto neighbour = mutate(outKeyboard);
-			evaluate(m_tempSolution, neighbour, begin, end);
-			float paretoDistance = 0.0f;
+			evaluate(m_currentSolution, neighbour, begin, end);
 			bool dominating = false;
-			if (!isDominated(m_tempSolution, outSolution))
+			bool paretoFront = false;
+			bool dominated = false;
+			if (!isDominated(m_currentSolution, prevSolution))
 			{
-				m_NonDominatedSet.insert(neighbour, m_tempSolution);
-				paretoDistance = m_NonDominatedSet.getLastParetoDistance();
-				dominating = true;
+				paretoFront = m_NonDominatedSet.insert(neighbour, m_currentSolution);
+				if (!paretoFront)
+				{
+					dominating = isDominated(prevSolution, m_currentSolution);
+				}
 			}
-			if (annealingProbability(outSolution, m_tempSolution, m_weights[index], currentT, scalarize) > probability(m_randomGenerator))
+			else
+			{
+				dominated = true;
+			}
+
+			if (annealingProbability(prevSolution, m_currentSolution, m_weights[index], currentT, scalarize) > probability(m_randomGenerator) || dominating || paretoFront)
 			{
 				bool paretoValid = true;
-				if (paretoDominance && !dominating)
+				if (paretoDominance)
 				{
 					paretoValid = false;
-					float p = std::exp(-((paretoDistance - prevParetoDistance) / paretoCurrentT));
-					p = std::min(1.0f, p);
-					if (p > probability(m_randomGenerator))
+					if (dominating || paretoFront)
 					{
 						paretoValid = true;
+					}
+					else
+					{
+						float energy = dominated ? 1.0f : m_paretoEqualMultiplier;
+						float p = std::exp(-(energy / paretoCurrentT));
+						if (p > probability(m_randomGenerator))
+						{
+							paretoValid = true;
+						}
 					}
 				}
 
 				if (paretoValid)
 				{
-					prevParetoDistance = paretoDistance;
 					outKeyboard = neighbour;
-					outSolution.swap(m_tempSolution);
+					prevSolution.swap(m_currentSolution);
 				}
 			}
 		}
@@ -408,7 +417,7 @@ protected:
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	std::vector<std::vector<float>> m_weights;
-	std::vector<float> m_tempSolution;
+	std::vector<float> m_currentSolution;
 	size_t m_populationSize = 0;
 	float m_initialMaxT = 1.0f;
 	float m_initialMinT = 0.1f;
@@ -418,6 +427,7 @@ protected:
 	size_t m_fastCoolingTSteps = 10;
 	float m_paretoMaxT = 1.0f;
 	float m_paretoMinT = 0.1f;
+	float m_paretoEqualMultiplier = 0.5f;
 
 
 	float m_maxT;
