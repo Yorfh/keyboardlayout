@@ -24,7 +24,12 @@ library("irace")
 EXE <- "../x64/Release/keyboardlayout.exe"
 HYPERVOLUME <- "../x64/Release/wfg.exe"
 test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
+
 num_evaluations <- 300000
+experiments <- 200
+# This can be set to true to test only the fast cooling phase
+# In that case you should probably change the default parameters as well
+fast_cooling_only <- FALSE
 
 dir.create("output", showWarnings = FALSE)
 
@@ -32,15 +37,17 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 type <- "initial"
 
-max_t <- 0.0
-min_t <- 0.0
+# Change these if testing fast cooling only
+max_t <- 540.9103 
+min_t <- 172.5704
+population <- 131
+
 steps <- 0
 fast_max_t <- 0
 fast_min_t <- 0
 fast_steps <- 0
 pareto_min_t <- 0
 pareto_max_t <- 0
-population <- 0
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
@@ -48,7 +55,6 @@ hook.run <- function(instance, candidate, extra.params = NULL, config = list())
   {
     max_t <- candidate$values[["max_t"]]
     min_t <- candidate$values[["min_t"]]
-    steps <- as.integer(num_evaluations * 0.1 / candidate$values[["population"]])
     fast_max_t <- 0.01
     fast_min_t <- 0.01
     fast_steps <- 1
@@ -62,10 +68,9 @@ hook.run <- function(instance, candidate, extra.params = NULL, config = list())
     fast_max_t <- candidate$values[["fast_max_t"]]
     fast_min_t <- candidate$values[["fast_min_t"]]
     fast_steps <- candidate$values[["fast_steps"]]
-    pareto_max_t <- candidate$values[["pareto_max_t"]]
-    pareto_min_t <- candidate$values[["pareto_min_t"]]
     evaluations = num_evaluations
   }
+  steps <- as.integer(num_evaluations * 0.1 / population)
   args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --pareto_max_t %f --pareto_min_t %f --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", max_t, min_t, steps, fast_max_t, fast_min_t, fast_steps, pareto_max_t, pareto_min_t, population, evaluations, as.character(instance), test_file, candidate$index) 
   output <- system2(EXE, args=args, stdout=TRUE, stderr=TRUE)
   return(as.numeric(output[1]))
@@ -94,30 +99,30 @@ min_t "" r (0, 1000)
 population "" i (1, 1000)
 '
 
-
 parameters <- readParameters(text = parameters.table)
 
-experiments <- 1000
 
-result <- irace(tunerConfig = list(
-                hookRun = hook.run,
-		hookEvaluate = hook.evaluate,
-		forbiddenFile = "parameters_initial.forbidden",
-                instances = instances[1:100],
-                maxExperiments = experiments,
-                logFile = ""),
-                parameters = parameters)
+if (!fast_cooling_only)
+{
+  result <- irace(tunerConfig = list(
+                  hookRun = hook.run,
+		  hookEvaluate = hook.evaluate,
+		  forbiddenFile = "parameters_initial.forbidden",
+                  instances = instances[1:100],
+                  maxExperiments = experiments,
+                  logFile = ""),
+                  parameters = parameters)
 
-candidates.print(result)
-initial_result <- result
+  candidates.print(result)
+  initial_result <- result
 
-max_t <- as.numeric(result[1, c("max_t")])
-min_t <- as.numeric(result[1, c("min_t")])
-population <- as.integer(result[1, c("population")])
-
-print(max_t)
-print(min_t)
-print(population)
+  max_t <- as.numeric(result[1, c("max_t")])
+  min_t <- as.numeric(result[1, c("min_t")])
+  population <- as.integer(result[1, c("population")])
+  print(max_t)
+  print(min_t)
+  print(population)
+}
 
 type = "cooling"
 
@@ -125,8 +130,6 @@ parameters.table <- '
 fast_max_t "" r (0, 1000)
 fast_min_t "" r (0, 200)
 fast_steps "" i (1, 1000)
-pareto_max_t "" r (0, 200)
-pareto_min_t "" r (0, 100)
 '
 
 parameters <- readParameters(text = parameters.table)
@@ -140,5 +143,15 @@ result <- irace(tunerConfig = list(
                 parameters = parameters)
 
 
-candidates.print(initial_result)
+if (!fast_cooling_only)
+{
+  candidates.print(initial_result)
+}
 candidates.print(result)
+fast_max_t <- as.numeric(result[1, c("fast_max_t")])
+fast_min_t <- as.numeric(result[1, c("fast_min_t")])
+fast_steps <- as.integer(result[1, c("fast_steps")])
+steps <- as.integer(num_evaluations * 0.1 / population)
+instance <- 1
+args <- sprintf("--max_t %f --min_t %f --steps %i --fast_max_t %f --fast_min_t %f --fast_steps %i --pareto_max_t %f --pareto_min_t %f --population %i --evaluations %i --seed %s --test %s --output output/%i.txt", max_t, min_t, steps, fast_max_t, fast_min_t, fast_steps, pareto_max_t, pareto_min_t, population, num_evaluations, as.character(instance), test_file, 1) 
+print(args)
