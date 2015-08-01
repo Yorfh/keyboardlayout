@@ -255,20 +255,25 @@ public:
 			m_population[0] = selectedSolution.m_keyboard;
 			m_populationSolutions[0].assign(std::begin(selectedSolution.m_solution), std::end(selectedSolution.m_solution));
 
-			auto weightGenerator = std::uniform_real_distribution<float>(0.0, 1.0f);
-			for (auto&& w : m_weights[0])
-			{
-				w = weightGenerator(m_randomGenerator);
-			}
-			auto sum = std::accumulate(m_weights[0].begin(), m_weights[0].end(), 0.0f);
-			for (auto&& w : m_weights[0])
-			{
-				w = w / sum;
-			}
-
 			typedef std::vector<float> V;
+			auto objectiveSelector = std::uniform_int<size_t>(0, NumObjectives - 1);
+			auto obj = objectiveSelector(m_randomGenerator);
+			auto directionSelector = std::bernoulli_distribution();
+			auto direction = directionSelector(m_randomGenerator);
+			auto scalarize = [obj, direction] (const V& solution, const V&, const V&)
+			{
+				if (direction)
+				{
+					return solution[obj];
+				}
+				else
+				{
+					return -solution[obj];
+				}
+			};
+
 			Keyboard<KeyboardSize> newKeyboard;
-			simulatedAnnealing(0, begin, end, newKeyboard, solution, detail::evaluateChebycheff<V, V, V>, true);
+			simulatedAnnealing(0, begin, end, newKeyboard, solution, scalarize, true);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
 		return m_NonDominatedSet;

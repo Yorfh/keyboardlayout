@@ -26,7 +26,7 @@ HYPERVOLUME <- "../x64/Release/wfg.exe"
 test_file <- paste("../tests/mQAPData/", commandArgs(trailingOnly = TRUE)[1], sep="")
 
 num_evaluations <- 300000
-experiments <- 200
+experiments <- 1000
 # This can be set to true to test only the fast cooling phase
 # In that case you should probably change the default parameters as well
 fast_cooling_only <- FALSE
@@ -49,7 +49,6 @@ fast_steps <- 0
 pareto_min_t <- 0
 pareto_max_t <- 0
 pareto_equal_multiplier <- 0.0
-population <- 0
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
