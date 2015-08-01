@@ -146,7 +146,6 @@ namespace detail
 		return -maxElement;
 	}
 
-
 	inline float weightedSum(const std::vector<float>& solution, const std::vector<float>&, const std::vector<float>& weights)
 	{
 		auto weight = std::begin(weights);
@@ -236,6 +235,8 @@ public:
 		{
 			Keyboard<KeyboardSize> newKeyboard;
 			simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::weightedSum, false);
+			m_population[i] = newKeyboard;
+			std::swap(m_populationSolutions[i], solution);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 			if (numEvaluationsLeft < 0)
 				break;
