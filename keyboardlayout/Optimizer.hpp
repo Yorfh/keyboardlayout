@@ -157,6 +157,18 @@ namespace detail
 		}
 		return sum;
 	}
+
+	template<typename P1, typename P2>
+	float squaredDistanceBetweenPoints(const P1& p1, const P2& p2)
+	{
+		float dist = 0.0f;
+		for (size_t i = 0; i < p1.size(); i++)
+		{
+			float d = p2[i] - p1[i];
+			dist += d * d;
+		}
+		return dist;
+	}
 }
 
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
@@ -246,34 +258,59 @@ public:
 		m_maxT = m_fastCoolingMaxT;
 		m_numTSteps = m_fastCoolingTSteps;
 		
-		while(numEvaluationsLeft > 0)
-		{
-			auto selector = std::uniform_int<size_t>(0, m_NonDominatedSet.size() - 1);
-			auto index = selector(m_randomGenerator);
-			const auto& selectedSolution = m_NonDominatedSet[index];
-			m_population[0] = selectedSolution.m_keyboard;
-			m_populationSolutions[0].assign(std::begin(selectedSolution.m_solution), std::end(selectedSolution.m_solution));
+		std::vector<typename NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>::SolutionsVector> groupedFront;
+		groupedFront.resize(m_populationSize);
 
-			typedef std::vector<float> V;
-			auto objectiveSelector = std::uniform_int<size_t>(0, NumObjectives - 1);
-			auto obj = objectiveSelector(m_randomGenerator);
-			auto directionSelector = std::bernoulli_distribution();
-			auto direction = directionSelector(m_randomGenerator);
-			auto scalarize = [obj, direction] (const V& solution, const V&, const V&)
+		while (numEvaluationsLeft > 0)
+		{
+			auto solutions = m_NonDominatedSet.getResult();
+			for (auto&& f : groupedFront)
 			{
-				if (direction)
+				f.clear();
+			}
+			for (auto&& s : solutions)
+			{
+				auto best = m_populationSolutions.begin();
+				float bestDistance = detail::squaredDistanceBetweenPoints(*best, s.m_solution);
+				for (auto i = m_populationSolutions.begin() + 1; i != m_populationSolutions.end(); ++i)
 				{
-					return solution[obj];
+					float distance = detail::squaredDistanceBetweenPoints(*i, s.m_solution);
+					if (distance < bestDistance)
+					{
+						bestDistance = distance;
+						best = i;
+					}
+				}
+				groupedFront[best - m_populationSolutions.begin()].emplace_back(s);
+			}
+			for (size_t i = 0; i < m_populationSize; i++)
+			{
+				if (!groupedFront[i].empty())
+				{
+					auto selector = std::uniform_int<size_t>(0, groupedFront[i].size() - 1);
+					auto index = selector(m_randomGenerator);
+					auto targetIndex = selector(m_randomGenerator);
+					const auto& selectedSolution = groupedFront[i][index];
+					const auto& targetSolution = groupedFront[i][targetIndex];
+					m_population[i] = selectedSolution.m_keyboard;
+					m_populationSolutions[i].assign(std::begin(selectedSolution.m_solution), std::end(selectedSolution.m_solution));
+					detail::solutionToChebycheff(m_NonDominatedSet.getIdealPoint(), targetSolution.m_solution, m_weights[i]);
 				}
 				else
 				{
-					return -solution[obj];
+					detail::solutionToChebycheff(m_NonDominatedSet.getIdealPoint(), m_populationSolutions[i], m_weights[i]);
 				}
-			};
-
-			Keyboard<KeyboardSize> newKeyboard;
-			simulatedAnnealing(0, begin, end, newKeyboard, solution, scalarize, true);
-			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
+				typedef std::vector<float> V;
+				Keyboard<KeyboardSize> newKeyboard;
+				simulatedAnnealing(i, begin, end, newKeyboard, solution, detail::evaluateChebycheff<V, V, V>, false);
+				m_population[i] = newKeyboard;
+				std::swap(m_populationSolutions[i], solution);
+				numEvaluationsLeft -= static_cast<int>(m_numTSteps);
+				if (numEvaluationsLeft <= 0)
+				{
+					break;
+				}
+			}
 		}
 		return m_NonDominatedSet;
 	}
