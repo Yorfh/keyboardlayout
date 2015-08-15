@@ -2,7 +2,7 @@
 #include <algorithm>
 
 template<typename First, typename Second>
-bool isDominated(First first, Second second)
+bool isDominated(const First& first, const Second& second)
 {
 	bool found = false;
 	auto j = std::begin(second);
