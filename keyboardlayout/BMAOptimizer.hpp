@@ -6,7 +6,6 @@
 #include <vector>
 #include <utility>
 #include <numeric>
-#include <boost/math/special_functions/binomial.hpp>
 
 template<size_t KeyboardSize>
 class Objective;
@@ -41,8 +40,10 @@ public:
 	template<typename Itr>
 	const NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
+		size_t triangularNumber = static_cast<size_t>(static_cast<float>(KeyboardSize * (KeyboardSize + 1)) / 2.0f);
+		size_t numIterations = std::max<size_t>(numEvaluations / triangularNumber, 1);
 		generateRandomPopulation(begin, end);
-		shortImprovement(begin, end);
+		shortImprovement(begin, end, numIterations);
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
 	}
@@ -68,12 +69,12 @@ protected:
 	}
 	
 	template<typename Itr>
-	void shortImprovement(Itr begin, Itr end)
+	void shortImprovement(Itr begin, Itr end, size_t maxIterations)
 	{
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
 			//TODO: Hardcoded number of iterations
-			localSearch(i, 5000, begin, end);
+			localSearch(i, std::min<size_t>(maxIterations, 5000), begin, end);
 		}
 	}
 
