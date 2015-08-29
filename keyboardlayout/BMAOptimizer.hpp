@@ -82,22 +82,15 @@ protected:
 
 		Keyboard<KeyboardSize> currentKeyboard = keyboard;
 
-		//type_vector p;                        // current solution
-
-		//type_matrix delta;                    // store move costs
 		typedef std::array<std::array<float, KeyboardSize>, KeyboardSize> DeltaArray;
-
 		DeltaArray delta;
 		std::array<std::array<size_t, KeyboardSize>, KeyboardSize> lastSwapped;
 		std::array<std::array<size_t, KeyboardSize>, KeyboardSize> frequency;
 
-		//int i, j, k, i_retained, j_retained, bit;  // indices
-		size_t iter_without_improvement = 0;
-		size_t iter_last_improvement = 0;
-		//perturb_str = init_ptr*n;
+		size_t iterWithoutImprovement = 0;
+		size_t iterLastImprovement = 0;
 
-		bool perturbed_once = false;
-		long previous_cost = 1;
+		bool pertubedOnce = false;
 		size_t iteration = 0;
 
 		for (size_t i = 0;i < KeyboardSize;i++)
@@ -148,8 +141,8 @@ protected:
 				if (currentCost > solution[0])
 
 				{
-					iter_without_improvement = 0;
-					iter_last_improvement = currentIteration;
+					iterWithoutImprovement = 0;
+					iterLastImprovement = currentIteration;
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 
@@ -162,7 +155,7 @@ protected:
 					}
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
-				perturbed_once = false;
+				pertubedOnce = false;
 			}
 			else
 			{
@@ -188,7 +181,6 @@ protected:
 #endif
 
 			}
-
 		};
 	}
 	
