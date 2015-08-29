@@ -203,7 +203,7 @@ protected:
 
 	template<typename Itr>
 	void perturbe(Keyboard<KeyboardSize>& p, DeltaArray& delta, float& currentCost, 
-		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float& bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
+		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
 	{
 		size_t iRetained = std::numeric_limits<size_t>::max();
 		size_t jRetained = iRetained;
@@ -233,7 +233,6 @@ protected:
 							iRetained = i; 
 							jRetained = j;
 							maxDelta = delta[i][j];
-							//TODO: Doesn't seem to be a good idea, since it doesn't update the keyboard...
 							if ((currentCost + delta[i][j]) > bestBestCost)
 							{
 								bestBestCost = currentCost + delta[i][j];

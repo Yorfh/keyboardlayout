@@ -249,7 +249,7 @@ TEST(BMAOptimizerTSPTests, Burma14)
 	o.populationSize(1);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
 	auto objectives = { salesman };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 30000);
 	// The reverse direction is also a solution
 	EXPECT_THAT(solutions.size(), AnyOf(1, 2));
 	auto result = solutions.getResult()[0].m_keyboard;
