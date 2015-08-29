@@ -157,7 +157,7 @@ protected:
 				{
 					for (size_t j = i + 1;j < KeyboardSize; j++)
 					{
-						delta[i][j] = computeDelta(currentKeyboard, solution[0], i, j, begin, end);
+						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
 					}
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
@@ -232,6 +232,7 @@ protected:
 							iRetained = i; 
 							jRetained = j;
 							maxDelta = delta[i][j];
+							//TODO: Doesn't seem to be a good idea, since it doesn't update the keyboard...
 							if ((currentCost + delta[i][j]) > bestBestCost)
 							{
 								bestBestCost = currentCost + delta[i][j];
@@ -264,7 +265,7 @@ protected:
 				{
 					for (size_t j = i + 1;j < KeyboardSize; j++)
 					{
-						delta[i][j] = computeDelta(p, bestBestCost, i, j, begin, end);
+						delta[i][j] = computeDelta(p, currentCost, i, j, begin, end);
 					}
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
