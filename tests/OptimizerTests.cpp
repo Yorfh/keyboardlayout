@@ -1,4 +1,4 @@
-#include "optimizer.hpp"
+#include "Optimizer.hpp"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include <array>

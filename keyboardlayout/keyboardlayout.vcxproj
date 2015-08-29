@@ -126,6 +126,7 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BMAOptimizer.hpp" />
     <ClInclude Include="Helpers.hpp" />
     <ClInclude Include="Keyboard.hpp" />
     <ClInclude Include="MakeArray.hpp" />
