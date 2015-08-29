@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BMAOptimizer.hpp" />
+    <ClInclude Include="BMAReference.hpp" />
     <ClInclude Include="Helpers.hpp" />
     <ClInclude Include="Keyboard.hpp" />
     <ClInclude Include="MakeArray.hpp" />
