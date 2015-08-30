@@ -93,7 +93,7 @@ protected:
 		size_t iterWithoutImprovement = 0;
 		size_t iterLastImprovement = 0;
 
-		bool escapedLocalMinimum = true;
+		bool hasImproved = true;
 		size_t iteration = 0;
 
 		for (size_t i = 0;i < KeyboardSize;i++)
@@ -112,6 +112,7 @@ protected:
 
 		float currentCost = solution[0];
 		float bestCost = solution[0];
+		Keyboard<KeyboardSize> prevLocalOptimum = keyboard;
 
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
@@ -120,7 +121,6 @@ protected:
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
-			bool foundImprovement = false;
 
 			float maxDelta = std::numeric_limits<float>::lowest();
 			for (size_t i = 0; i < KeyboardSize; i++)
@@ -160,7 +160,7 @@ protected:
 					}
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
-				escapedLocalMinimum = true;
+				hasImproved = true;
 			}
 			else
 			{
@@ -169,7 +169,7 @@ protected:
 					iterWithoutImprovement = 0;
 					perturbStr = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
 				}
-				else if (escapedLocalMinimum == true) // Escaped from the previous local optimum. New local optimum reached
+				else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
 				{
 					iterWithoutImprovement++;					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 				}
@@ -177,13 +177,17 @@ protected:
 				{					perturbStr += 1;
 				}
 
+				if (hasImproved)
+				{
+					prevLocalOptimum = currentKeyboard;
+				}
 				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
 				if (currentCost > solution[0])
 				{
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
-				escapedLocalMinimum = false;
+				hasImproved = false;
 			}
 		};
 	}

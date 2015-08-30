@@ -48,5 +48,10 @@ public:
 		return memcmp(m_keys.data(), rhs.m_keys.data(), Size * sizeof(KeyType)) == 0;
 	}
 
+	bool operator!=(const Keyboard& rhs) const
+	{
+		return !(*this == rhs);
+	}
+
 	std::array<KeyType, Size> m_keys;
 };
