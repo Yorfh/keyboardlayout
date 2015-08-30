@@ -27,6 +27,11 @@ public:
 		m_populationSize = size;
 	}
 
+	void shortImprovementDepth(size_t depth)
+	{
+		m_shortImprovementDepth = depth;
+	}
+
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
@@ -43,6 +48,57 @@ public:
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		generateRandomPopulation(begin, end);
 		shortImprovement(begin, end);
+		updateNonDominatedSet();
+		float resultingCost = m_NonDominatedSet[0].m_solution[0];
+		size_t numMutations = 0;
+		size_t numCounter = 0;
+
+		//std::array<Keyboard<KeyboardSize>, 2> parents;
+		while(m_numEvaluationsLeft > 0)
+		{
+			size_t num_of_parents = 2;
+			auto parents = parentSelection();
+			//parent_selection(n, pop, pop_size, pop_costs, parent_pool, num_of_parents, parents);
+			//crossos_uni(n, child_sol, parent_pool, num_of_parents, &dist);
+			//localSearch(i, 10000, begin, end);
+			//local_search(n, a, b, child_sol, childCost, 10000, time);
+
+			break;
+
+#if 0
+			// Was an improvement
+			if (childCost > resultingCost)
+			{
+				numMutations = 0;
+				numCounter = 0;
+			}
+			else
+			{
+				numMutations++;
+			}
+
+#if 0
+			if (numMutations == pop_size)
+			{
+				int bi = best_index(pop_size, pop_costs);
+				do 
+				{
+					mutate_population(n, pop_size, pop, static_cast<int>(n*(0.5 + static_cast<double>(numCounter) / 10)), bi);
+					short_improvement_of_individuals(n, pop_size, pop, pop_costs, a, b, time);
+				} while (unique_individuals(n, pop, pop_size));
+				best_individual(n, pop, pop_costs, pop_size);
+				numMutations = 0;
+				numCounter++;
+			}
+#endif
+			if (numCounter > 5)
+			{
+				numCounter = 0;
+			}
+
+			replacement_other(n, child_sol, childCost, pop, pop_costs, pop_size);
+#endif
+		}
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
 	}
@@ -74,7 +130,7 @@ protected:
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
 			//TODO: Hardcoded number of iterations
-			localSearch(i, 5000, begin, end);
+			localSearch(i, m_shortImprovementDepth, begin, end);
 		}
 	}
 
@@ -280,6 +336,48 @@ protected:
 			iteration++;
 		}
 	}
+
+	std::pair<size_t, size_t> parentSelection()
+	{
+		const size_t numParents = 2;
+		const size_t tournamentSize = 4;
+		size_t a = 0;
+
+		std::array<size_t, numParents> parents;
+
+		while (a < numParents)
+		{
+			bool insert = true;
+			std::array<size_t, tournamentSize> tournamentPool;
+			std::uniform_int_distribution<size_t> gen(0, m_populationSize - 1);
+			std::generate(tournamentPool.begin(), tournamentPool.end(), [this, &gen]() { return gen(m_randomGenerator); });
+
+			float m = std::numeric_limits<float>::lowest();
+			size_t winner;
+			for (size_t i = 0; i < tournamentSize; i++)
+			{
+				if (m_populationSolutions[tournamentPool[i]][0] > m)
+				{
+					m = m_populationSolutions[tournamentPool[i]][0];
+					winner = tournamentPool[i];
+				}
+			}
+			for (size_t i = 0; i < a; i++)
+			{
+				if (parents[i] == winner)
+				{
+					insert = false;
+				}
+			}
+			if (insert)
+			{
+				parents[a] = winner;
+				a++;
+			} 
+		}
+		return std::make_pair(parents[0], parents[1]);
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -290,6 +388,7 @@ protected:
 	size_t m_minTabuTenureDist = static_cast<size_t>(0.9f * KeyboardSize);
 	size_t m_maxTabuTenureDist = static_cast<size_t>(1.1f * KeyboardSize);
 	float m_minDirectedPerturbation = 0.75f;
+	size_t m_shortImprovementDepth = 5000;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	int m_numEvaluationsLeft;

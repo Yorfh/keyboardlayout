@@ -163,45 +163,46 @@ TEST(OptimizerTSPTests, TestEvaluator)
 	EXPECT_EQ(423710, distance);
 }
 
+std::array<double, 14> burma14Latitudes = {
+	16.47,
+	16.47,
+	20.09,
+	22.39,
+	25.23,
+	22.00,
+	20.47,
+	17.20,
+	16.30,
+	14.05,
+	16.53,
+	21.52,
+	19.41,
+	20.09
+};
+std::array<double, 14> burma14Longitudes = {
+	96.10,
+	94.44,
+	92.54,
+	93.37,
+	97.24,
+	96.05,
+	97.02,
+	96.29,
+	97.38,
+	98.12,
+	97.38,
+	95.59,
+	97.13,
+	94.55
+}; 
+
 TEST(OptimizerTSPTests, Burma14)
 {
-	std::array<double, 14> latitudes = {
-		16.47,
-		16.47,
-		20.09,
-		22.39,
-		25.23,
-		22.00,
-		20.47,
-		17.20,
-		16.30,
-		14.05,
-		16.53,
-		21.52,
-		19.41,
-		20.09
-	};
-	std::array<double, 14> longitudes = {
-		96.10,
-		94.44,
-		92.54,
-		93.37,
-		97.24,
-		96.05,
-		97.02,
-		96.29,
-		97.38,
-		98.12,
-		97.38,
-		95.59,
-		97.13,
-		94.55
-	}; 
 	Optimizer<13, 1> o;
 	o.populationSize(1);
 	o.initialTemperature(591.5637f, 121.418f, 528);
 	o.fastCoolingTemperature(349.3616f, 0.5561f, 393);
-	TravelingSalesman<14> salesman(latitudes, longitudes);
+	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
 	// The reverse direction is also a solution
@@ -213,41 +214,24 @@ TEST(OptimizerTSPTests, Burma14)
 
 TEST(BMAOptimizerTSPTests, Burma14)
 {
-	std::array<double, 14> latitudes = {
-		16.47,
-		16.47,
-		20.09,
-		22.39,
-		25.23,
-		22.00,
-		20.47,
-		17.20,
-		16.30,
-		14.05,
-		16.53,
-		21.52,
-		19.41,
-		20.09
-	};
-	std::array<double, 14> longitudes = {
-		96.10,
-		94.44,
-		92.54,
-		93.37,
-		97.24,
-		96.05,
-		97.02,
-		96.29,
-		97.38,
-		98.12,
-		97.38,
-		95.59,
-		97.13,
-		94.55
-	}; 
 	BMAOptimizer<13, 1> o;
 	o.populationSize(1);
-	TravelingSalesman<14> salesman(latitudes, longitudes);
+	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
+	auto objectives = { salesman };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
+	// The reverse direction is also a solution
+	EXPECT_THAT(solutions.size(), AnyOf(1, 2));
+	auto result = solutions.getResult()[0].m_keyboard;
+	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
+	EXPECT_EQ(3323, resultValue);
+}
+
+TEST(BMAOptimizerTSPTests, Burma14WithPopulation)
+{
+	BMAOptimizer<13, 1> o;
+	o.populationSize(5);
+	o.shortImprovementDepth(25);
+	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);
 	// The reverse direction is also a solution
