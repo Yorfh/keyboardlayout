@@ -37,7 +37,7 @@ TEST(BMAOptimizerTests, IncreasingOrder)
 	BMAOptimizer<3, 1> o; 
 	o.populationSize(1);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 2);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 8);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(0, 1, 2));
 }
@@ -53,7 +53,7 @@ TEST(BMAOptimizerTests, DecreasingOrder)
 	BMAOptimizer<3, 1> o; 
 	o.populationSize(1);
 	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 2);
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 8);
 	ASSERT_EQ(1, solutions.size());
 	EXPECT_THAT(solutions.getResult()[0].m_keyboard.m_keys, ElementsAre(2, 1, 0));
 }

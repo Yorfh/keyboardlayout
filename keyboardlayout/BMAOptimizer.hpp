@@ -40,10 +40,9 @@ public:
 	template<typename Itr>
 	const NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
-		size_t triangularNumber = static_cast<size_t>(static_cast<float>(KeyboardSize * (KeyboardSize + 1)) / 2.0f);
-		size_t numIterations = std::max<size_t>(numEvaluations / triangularNumber, 1);
+		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		generateRandomPopulation(begin, end);
-		shortImprovement(begin, end, numIterations);
+		shortImprovement(begin, end);
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
 	}
@@ -63,18 +62,19 @@ protected:
 			m_population[i].randomize(m_randomGenerator);
 			m_populationSolutions[i].resize(end - begin);
 			Keyboard<KeyboardSize> keyboard = m_population[i];
+			m_numEvaluationsLeft--;
 			evaluate(m_populationSolutions[i], keyboard, begin, end);
 		}
 
 	}
 	
 	template<typename Itr>
-	void shortImprovement(Itr begin, Itr end, size_t maxIterations)
+	void shortImprovement(Itr begin, Itr end)
 	{
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
 			//TODO: Hardcoded number of iterations
-			localSearch(i, std::min<size_t>(maxIterations, 5000), begin, end);
+			localSearch(i, 5000, begin, end);
 		}
 	}
 
@@ -116,7 +116,7 @@ protected:
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
 
-		for (size_t currentIteration = 1; currentIteration <= numIterations; currentIteration++)
+		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0; currentIteration++)
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
@@ -146,13 +146,11 @@ protected:
 				currentCost += delta[iRetained][jRetained];
 
 				if (currentCost > solution[0])
-
 				{
 					iterWithoutImprovement = 0;
 					iterLastImprovement = currentIteration;
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
-
 				}
 				for (size_t i = 0;i < KeyboardSize; i++)
 				{
@@ -180,6 +178,11 @@ protected:
 				}
 
 				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				if (currentCost > solution[0])
+				{
+					solution[0] = currentCost;
+					keyboard = currentKeyboard;
+				}
 				escapedLocalMinimum = false;
 			}
 		};
@@ -190,6 +193,7 @@ protected:
 	{
 		Keyboard<KeyboardSize> k = keyboard;
 		std::swap(k.m_keys[i], k.m_keys[j]);
+		m_numEvaluationsLeft--;
 		return begin->evaluate(k) - solution;
 	}
 
@@ -284,6 +288,7 @@ protected:
 	float m_minDirectedPerturbation = 0.75f;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
+	int m_numEvaluationsLeft;
 };
 
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>
