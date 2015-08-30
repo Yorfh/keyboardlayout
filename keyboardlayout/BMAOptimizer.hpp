@@ -125,7 +125,7 @@ protected:
 			float maxDelta = std::numeric_limits<float>::lowest();
 			for (size_t i = 0; i < KeyboardSize; i++)
 			{
-				for (size_t j = 0;j < KeyboardSize; j++)
+				for (size_t j = i + 1; j < KeyboardSize; j++)
 				{
 					float d = delta[i][j];
 					if (d > maxDelta)
@@ -152,9 +152,9 @@ protected:
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
-				for (size_t i = 0;i < KeyboardSize; i++)
+				for (size_t i = 0; i < KeyboardSize; i++)
 				{
-					for (size_t j = i + 1;j < KeyboardSize; j++)
+					for (size_t j = i + 1; j < KeyboardSize; j++)
 					{
 						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
 					}
@@ -229,9 +229,9 @@ protected:
 			if (bit)
 			{
 				float maxDelta = std::numeric_limits<float>::lowest();
-				for (size_t i = 0;i < KeyboardSize; i++)
+				for (size_t i = 0; i < KeyboardSize; i++)
 				{
-					for (size_t j = i + 1;j < KeyboardSize; j++)
+					for (size_t j = i + 1; j < KeyboardSize; j++)
 					{
 						if (delta[i][j] > maxDelta &&
 							((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost))
