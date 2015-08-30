@@ -230,7 +230,7 @@ TEST(BMAOptimizerTSPTests, Burma14WithPopulation)
 {
 	BMAOptimizer<13, 1> o;
 	o.populationSize(5);
-	o.shortImprovementDepth(25);
+	o.improvementDepth(25, 25);
 	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
 	auto objectives = { salesman };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 20000);

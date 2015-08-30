@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include "Optimizer.hpp"
 
 template<size_t KeyboardSize>
 class Objective;
@@ -27,9 +28,10 @@ public:
 		m_populationSize = size;
 	}
 
-	void shortImprovementDepth(size_t depth)
+	void improvementDepth(size_t shortImprovement, size_t longImprovement)
 	{
-		m_shortImprovementDepth = depth;
+		m_shortImprovementDepth = shortImprovement;
+		m_imporvementDepth = longImprovement;
 	}
 
 	template<typename Solution, typename Itr>
@@ -49,22 +51,18 @@ public:
 		generateRandomPopulation(begin, end);
 		shortImprovement(begin, end);
 		updateNonDominatedSet();
-		float resultingCost = m_NonDominatedSet[0].m_solution[0];
 		size_t numMutations = 0;
 		size_t numCounter = 0;
 
-		//std::array<Keyboard<KeyboardSize>, 2> parents;
+		std::vector<float> solution(NumObjectives);
 		while(m_numEvaluationsLeft > 0)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
-			//parent_selection(n, pop, pop_size, pop_costs, parent_pool, num_of_parents, parents);
-			//crossos_uni(n, child_sol, parent_pool, num_of_parents, &dist);
-			//localSearch(i, 10000, begin, end);
-			//local_search(n, a, b, child_sol, childCost, 10000, time);
-
-			break;
-
+			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
+			evaluate(solution, child, begin, end);
+			localSearch(child, solution, m_imporvementDepth, begin, end);
+			float resultingCost = m_NonDominatedSet[0].m_solution[0];
 #if 0
 			// Was an improvement
 			if (childCost > resultingCost)
@@ -95,9 +93,8 @@ public:
 			{
 				numCounter = 0;
 			}
-
-			replacement_other(n, child_sol, childCost, pop, pop_costs, pop_size);
 #endif
+			replaceSolution(child, solution);
 		}
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
@@ -129,17 +126,15 @@ protected:
 	{
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
-			//TODO: Hardcoded number of iterations
-			localSearch(i, m_shortImprovementDepth, begin, end);
+			auto& keyboard = m_population[i];
+			auto& solution = m_populationSolutions[i];
+			localSearch(keyboard, solution, m_shortImprovementDepth, begin, end);
 		}
 	}
 
 	template<typename Itr>
-	void localSearch(size_t index, size_t numIterations, Itr begin, Itr end)
+	void localSearch(Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution, size_t numIterations, Itr begin, Itr end)
 	{
-		auto& keyboard = m_population[index];
-		auto& solution = m_populationSolutions[index];
-
 		Keyboard<KeyboardSize> currentKeyboard = keyboard;
 
 		DeltaArray delta;
@@ -378,6 +373,36 @@ protected:
 		return std::make_pair(parents[0], parents[1]);
 	}
 
+	Keyboard<KeyboardSize> produceChild(const Keyboard<KeyboardSize>& parent1, const Keyboard<KeyboardSize>& parent2)
+	{
+		auto dist = std::uniform_int_distribution<size_t>(0, parent1.m_keys.size()-1);
+		auto p1 = dist(m_randomGenerator);
+		auto p2 = dist(m_randomGenerator);
+		if (p2 < p1)
+		{
+			std::swap(p1, p2);
+		}
+		return detail::partiallyMatchedCrossover(parent1, parent2, p1, p2);
+	}
+
+	void replaceSolution(const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
+	{
+		if (std::find(m_population.begin(), m_population.end(), keyboard) != m_population.end())
+		{
+			return;
+		}
+
+		auto worst = std::min_element(m_populationSolutions.begin(), m_populationSolutions.end(), [](const auto& lhs, const auto& rhs)
+		{
+			return lhs[0] < rhs[0];
+		});
+
+		m_NonDominatedSet.insert(keyboard, solution);
+		std::swap(*worst, solution);
+		size_t index = worst - m_populationSolutions.begin();
+		m_population[index] = keyboard;
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -389,6 +414,7 @@ protected:
 	size_t m_maxTabuTenureDist = static_cast<size_t>(1.1f * KeyboardSize);
 	float m_minDirectedPerturbation = 0.75f;
 	size_t m_shortImprovementDepth = 5000;
+	size_t m_imporvementDepth = 10000;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	int m_numEvaluationsLeft;
