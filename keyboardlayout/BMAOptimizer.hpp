@@ -51,7 +51,7 @@ public:
 		generateRandomPopulation(begin, end);
 		shortImprovement(begin, end);
 		updateNonDominatedSet();
-		size_t numMutations = 0;
+		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
 		std::vector<float> solution(NumObjectives);
@@ -63,37 +63,36 @@ public:
 			evaluate(solution, child, begin, end);
 			localSearch(child, solution, m_imporvementDepth, begin, end);
 			float resultingCost = m_NonDominatedSet[0].m_solution[0];
-#if 0
-			// Was an improvement
+			float childCost = solution[0];
 			if (childCost > resultingCost)
 			{
-				numMutations = 0;
+				numWithoutImprovement = 0;
 				numCounter = 0;
 			}
 			else
 			{
-				numMutations++;
+				numWithoutImprovement++;
 			}
 
-#if 0
-			if (numMutations == pop_size)
+			if (numWithoutImprovement == m_populationSize)
 			{
-				int bi = best_index(pop_size, pop_costs);
+				// Should get the index of the best in population
+				//size_t bi = std::max_element(m_populationSolutions.begin(), m_populationSolutions.end(), [](const auto& lhs, const auto& rhs) { return lhs < rhs; }) - m_populationSolutions.begin();
 				do 
 				{
-					mutate_population(n, pop_size, pop, static_cast<int>(n*(0.5 + static_cast<double>(numCounter) / 10)), bi);
-					short_improvement_of_individuals(n, pop_size, pop, pop_costs, a, b, time);
-				} while (unique_individuals(n, pop, pop_size));
-				best_individual(n, pop, pop_costs, pop_size);
-				numMutations = 0;
+					size_t mutationStrength = static_cast<size_t>(m_populationSize * (0.5f + numCounter / 10.0f));
+					mutatePopulation(mutationStrength);
+					shortImprovement(begin, end);
+				} while (!populationIsUnique());
+				evaluatePopulation(begin, end);
+				updateNonDominatedSet();
+				numWithoutImprovement = 0;
 				numCounter++;
 			}
-#endif
 			if (numCounter > 5)
 			{
 				numCounter = 0;
 			}
-#endif
 			replaceSolution(child, solution);
 		}
 		updateNonDominatedSet();
@@ -114,11 +113,19 @@ protected:
 		{
 			m_population[i].randomize(m_randomGenerator);
 			m_populationSolutions[i].resize(end - begin);
-			Keyboard<KeyboardSize> keyboard = m_population[i];
 			m_numEvaluationsLeft--;
-			evaluate(m_populationSolutions[i], keyboard, begin, end);
+			evaluate(m_populationSolutions[i], m_population[i], begin, end);
 		}
+	}
 
+	template<typename Itr>
+	void evaluatePopulation(Itr begin, Itr end)
+	{
+		for (auto i = 0; i < m_populationSize; i++)
+		{
+			m_numEvaluationsLeft--;
+			evaluate(m_populationSolutions[i], m_population[i], begin, end);
+		}
 	}
 	
 	template<typename Itr>
@@ -401,6 +408,46 @@ protected:
 		std::swap(*worst, solution);
 		size_t index = worst - m_populationSolutions.begin();
 		m_population[index] = keyboard;
+	}
+
+	bool populationIsUnique()
+	{
+		for (auto i = m_population.begin(); i != m_population.end(); ++i)
+		{
+			for (auto j = m_population.begin(); j != m_population.end(); ++j)
+			{
+				if (i != j)
+				{
+					if (*i == *j)
+					{
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	void mutatePopulation(size_t mutationStrength)
+	{
+		std::array<bool, KeyboardSize> mutated;
+		std::uniform_int_distribution<size_t> dist(0, KeyboardSize - 1);
+
+		for (int i = 0; i < m_populationSize; i++)
+		{
+			mutated.fill(false);
+			size_t r1 = dist(m_randomGenerator);
+			mutated[r1] = true;
+			for (int j = 0; j < mutationStrength; j++)
+			{
+				size_t r2 = dist(m_randomGenerator);
+				while (r1 == r2 && mutated[r2])
+					r2 = dist(m_randomGenerator);
+				std::swap(m_population[i].m_keys[r1], m_population[i].m_keys[r2]);
+				r1 = r2;
+				mutated[r2] = true;
+			}
+		}
 	}
 
 	std::vector<Keyboard<KeyboardSize>> m_population;
