@@ -133,6 +133,7 @@
     <ClCompile Include="NonDominatedSetTests.cpp" />
     <ClCompile Include="OptimizerTests.cpp" />
     <ClCompile Include="OptimizerTSPTests.cpp" />
+    <ClCompile Include="QAPTests.cpp" />
     <ClCompile Include="TestMain.cpp" />
     <ClCompile Include="TestPrinter.cpp" />
   </ItemGroup>
