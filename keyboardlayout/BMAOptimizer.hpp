@@ -76,6 +76,7 @@ public:
 
 			if (numWithoutImprovement == m_populationSize)
 			{
+				size_t i = 0;
 				do 
 				{
 					size_t mutationStrength = static_cast<size_t>(m_populationSize * (0.5f + numCounter / 10.0f));
@@ -83,7 +84,8 @@ public:
 					evaluatePopulation(begin, end);
 					updateNonDominatedSet();
 					shortImprovement(begin, end);
-				} while (!populationIsUnique());
+					i++;
+				} while (!populationIsUnique() && i <= 5);
 				updateNonDominatedSet();
 				numWithoutImprovement = 0;
 				numCounter++;
