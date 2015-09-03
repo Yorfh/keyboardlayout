@@ -76,15 +76,14 @@ public:
 
 			if (numWithoutImprovement == m_populationSize)
 			{
-				// Should get the index of the best in population
-				//size_t bi = std::max_element(m_populationSolutions.begin(), m_populationSolutions.end(), [](const auto& lhs, const auto& rhs) { return lhs < rhs; }) - m_populationSolutions.begin();
 				do 
 				{
 					size_t mutationStrength = static_cast<size_t>(m_populationSize * (0.5f + numCounter / 10.0f));
 					mutatePopulation(mutationStrength);
+					evaluatePopulation(begin, end);
+					updateNonDominatedSet();
 					shortImprovement(begin, end);
 				} while (!populationIsUnique());
-				evaluatePopulation(begin, end);
 				updateNonDominatedSet();
 				numWithoutImprovement = 0;
 				numCounter++;
