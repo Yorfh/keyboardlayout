@@ -90,7 +90,8 @@ option::ArgStatus required(const option::Option& option, bool msg)
 enum  optionIndex {
 	UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, PARETO_MAXT,
 	PARETO_MINT, PARETO_EQUALMULT, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED,
-	SHORT_IMPROVEMENT, LONG_IMPROVEMENT,
+	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
+	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION,
 };
 
 const option::Descriptor usage[] =
@@ -113,6 +114,13 @@ const option::Descriptor usage[] =
 	{ SEED,			0, "", "seed",			unsignedInteger,	"  --seed  \tThe random seed" },
 	{ SHORT_IMPROVEMENT, 0, "", "short_improvement", unsignedInteger,	"  --short_improvement  \tShort improvement iterations for BMA" },
 	{ LONG_IMPROVEMENT,	0, "", "long_improvement", unsignedInteger,	"  --long_improvement  \tLong improvement iterations for BMA" },
+	{ STAGNATION_ITERATIONS,	0, "", "stagnation_iterations", unsignedInteger,	"  --stagnation_iterations  \tThe number of iterations before stagnation for for BMA" },
+	{ STAGNATION_MIN,	0, "", "stagnation_min", floatingPoint,	"  --stagnation_min  \tThe minimum stagnation magnitude for BMA" },
+	{ STAGNATION_MAX,	0, "", "stagnation_max", floatingPoint,	"  --stagnation_max  \tThe maximum stagnation magnitude for BMA" },
+	{ TENURE_MIN,	0, "", "tenure_min", floatingPoint,	"  --tenure_min  \tThe minimum tenure for BMA" },
+	{ TENURE_MAX,	0, "", "tenure_max", floatingPoint,	"  --tenure_max  \tThe maximum tenure for BMA" },
+	{ JUMP_MAGNITUDE,	0, "", "jump_magnitude", floatingPoint,	"  --jump_magnitude  \tThe jump magnitude for BMA" },
+	{ DIRECTED_PERTUBATION,	0, "", "min_directed_pertubation", floatingPoint,	"  --min_directed_pertubation  \tThe minimum percentage of directed pertubation for BMA" },
 	{ 0,0,0,0,0,0 }
 };
 
@@ -237,13 +245,17 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 	return 0;
 }
 
-int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t evaluations, unsigned int seed)
+int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters, float stagnationMinMag, float stagnationMaxMag, 
+	float jumpMagnitude, float minDirectedPertubation, size_t evaluations, unsigned int seed)
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
 	BMAOptimizer<12, 1> o(seed);
 	o.populationSize(population);
 	o.improvementDepth(shortDepth, longDepth);
+	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);
+	o.jumpMagnitude(jumpMagnitude);
+	o.minDirectedPertubation(minDirectedPertubation);
 	auto objectives = { objective };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), evaluations);
 	auto result = solutions.getResult()[0].m_keyboard;
@@ -385,7 +397,12 @@ int main(int argc, char* argv[])
 				size_t population = getArgument<size_t>(options, POPULATION);
 				size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
 				size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
-				auto res = qap_bma(test, population, shortDepth, longDepth, evaluations, seed);
+				size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
+				float stagnationMin = getArgument<float>(options, STAGNATION_MAX);
+				float stagnationMax = getArgument<float>(options, STAGNATION_MIN);
+				float jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
+				float directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
+				auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, directedPertubation, evaluations, seed);
 				std::cout << res << std::endl;
 
 			}

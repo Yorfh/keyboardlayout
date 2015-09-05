@@ -35,9 +35,6 @@ instances <- floor(runif(200, min=0, max=4294967295 + 1))
 
 hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 {
-  population <- candidate$values[["population"]]
-  fast_min_t <- candidate$values[["short_improvement"]]
-  fast_steps <- candidate$values[["long_improvement"]]
   evaluations = num_evaluations
   cmdLine <- buildCommandLine(candidate$values, candidate$labels)
   args <- sprintf("%s --evaluations %i --seed %s --test %s", cmdLine, num_evaluations, as.character(instance), test_file)
@@ -54,6 +51,13 @@ parameters.table <- '
 population "--population " i (2, 10)
 short_improvement "--short_improvement " i (1, 5000)
 long_impovement "--long_improvement " i (1, 5000)
+stagnation_iterations "--stagnation_iterations " i (1, 1000)
+stagnation_min "--stagnation_min " r (0.0, 1.0)
+stagnation_max "--stagnation_max " r (0.0, 1.0)
+tenure_min "--tenure_min " r (0.5, 1.5)
+tenure_max "--tenure_max " r (0.5, 1.5)
+jump_magnitude "--jump_magnitude " r (0.0, 1.0)
+min_directed_pertubation "--min_directed_pertubation " r (0.0, 1.0)
 '
 
 parameters <- readParameters(text = parameters.table)

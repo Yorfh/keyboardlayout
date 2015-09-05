@@ -34,6 +34,29 @@ public:
 		m_imporvementDepth = longImprovement;
 	}
 
+	void stagnation(size_t iterations, float minMagnitude, float maxMagnitude)
+	{
+		m_stagnationAfter = iterations;
+		m_minStagnationMagnitude = minMagnitude;
+		m_maxStagnationMagnitude = maxMagnitude;
+	}
+
+	void tabuTenure(float minTenure, float maxTenure)
+	{
+		m_minTabuTenureDist = static_cast<size_t>(minTenure * KeyboardSize);
+		m_maxTabuTenureDist = static_cast<size_t>(maxTenure * KeyboardSize);
+	}
+
+	void jumpMagnitude(float magnitude)
+	{
+		m_jumpMagnitude = magnitude;
+	}
+
+	void minDirectedPertubation(float v)
+	{
+		m_minDirectedPerturbation = v;
+	}
+
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
