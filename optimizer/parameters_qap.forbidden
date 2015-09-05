@@ -1,0 +1,4 @@
+short_improvement >= long_improvement
+stagnation_min >= stagnation_max
+tenure_min >= tenure_max
+jump_magnitude >= stagnation_min

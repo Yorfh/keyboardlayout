@@ -50,7 +50,7 @@ hook.run <- function(instance, candidate, extra.params = NULL, config = list())
 parameters.table <- '
 population "--population " i (2, 10)
 short_improvement "--short_improvement " i (1, 5000)
-long_impovement "--long_improvement " i (1, 5000)
+long_improvement "--long_improvement " i (1, 5000)
 stagnation_iterations "--stagnation_iterations " i (1, 1000)
 stagnation_min "--stagnation_min " r (0.0, 1.0)
 stagnation_max "--stagnation_max " r (0.0, 1.0)
@@ -67,6 +67,7 @@ result <- irace(tunerConfig = list(
 	  hookRun = hook.run,
 	  instances = instances[1:100],
 	  maxExperiments = experiments,
+		forbiddenFile = "parameters_qap.forbidden",
 	  logFile = ""),
 	  parameters = parameters)
 
