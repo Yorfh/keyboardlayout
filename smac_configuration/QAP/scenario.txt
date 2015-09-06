@@ -1,4 +1,4 @@
-numberOfRunsLimit = 100
+numberOfRunsLimit = 1000
 runObj = QUALITY
 instance-file = instances.txt
 test-instance-file = instances.txt
