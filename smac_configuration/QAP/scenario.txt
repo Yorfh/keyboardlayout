@@ -1,4 +1,6 @@
 numberOfRunsLimit = 100
 runObj = QUALITY
-pcs-file = params.txt
-algo-exec = ../../x64/release/keyboardlayout.exe
+instance-file = instances.txt
+test-instance-file = instances.txt
+pcs-file = parameters.txt
+algo-exec = ../x64/release/keyboardlayout.exe
