@@ -1,1 +1,1 @@
-../../tests/QAPData/chr12a.dat
+../tests/QAPData/chr12a.dat

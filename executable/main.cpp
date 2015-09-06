@@ -91,7 +91,8 @@ enum  optionIndex {
 	UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, PARETO_MAXT,
 	PARETO_MINT, PARETO_EQUALMULT, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED,
 	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
-	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION,
+	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
+	CUTOFF_TIME, CUTOFF_LENGTH, 
 };
 
 const option::Descriptor usage[] =
@@ -121,6 +122,10 @@ const option::Descriptor usage[] =
 	{ TENURE_MAX,	0, "", "tenure_max", floatingPoint,	"  --tenure_max  \tThe maximum tenure for BMA" },
 	{ JUMP_MAGNITUDE,	0, "", "jump_magnitude", floatingPoint,	"  --jump_magnitude  \tThe jump magnitude for BMA" },
 	{ DIRECTED_PERTUBATION,	0, "", "min_directed_pertubation", floatingPoint,	"  --min_directed_pertubation  \tThe minimum percentage of directed pertubation for BMA" },
+	{ SMAC,	0, "", "smac", option::Arg::None,	"  --smac  \tThe output should be in SMAC format" },
+	{ INSTANCE_INFO,	0, "", "instance_info", required,	"  --instance_info  \tThe smac instance information" },
+	{ CUTOFF_TIME,	0, "", "cutoff_time", unsignedInteger,	"  --cutoff_time  \tThe smac instance cutoff time" },
+	{ CUTOFF_LENGTH,	0, "", "cutoff_length", unsignedInteger,	"  --cutoff_length  \tThe smac instance cutoff length" },
 	{ 0,0,0,0,0,0 }
 };
 
@@ -332,6 +337,25 @@ T getArgument(const std::vector<option::Option>& options, size_t index)
 	return GetArgumentHelper<T>()(options[index].arg);
 }
 
+template<typename T>
+void outputResult(T result, size_t seed, bool smac, bool minimize)
+{
+	if (smac)
+	{
+		std::cout << "Result of this algorithm run: ";
+		std::cout << "SAT, ";
+		size_t runTime = 1;
+		size_t runLenght = 1;
+		std::cout << runTime << ", " << runLenght << ", ";
+		std::cout << (minimize ? result : -result) << ", ";
+		std::cout << seed << ", 0" << std::endl;
+	}
+	else
+	{
+		std::cout << (minimize ? -result : result) << std::endl;
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	argc -= (argc > 0); argv += (argc > 0); // skip program name argv[0] if present
@@ -339,7 +363,7 @@ int main(int argc, char* argv[])
 
 	std::vector<option::Option> options(stats.options_max);
 	std::vector<option::Option> buffer(stats.buffer_max);
-	option::Parser parse(usage, argc, argv, options.data(), buffer.data());
+	option::Parser parse(usage, argc, argv, options.data(), buffer.data(), 0, true);
 
 	if (parse.error())
 	{
@@ -352,6 +376,26 @@ int main(int argc, char* argv[])
 		option::printUsage(std::cout, usage);
 		return 1;
 	}
+	std::cout << "Raw options" << std::endl;
+	for (size_t i = 0;i < argc;i++)
+	{
+		std::cout << argv[i] << " ";
+	}
+	std::cout << std::endl;
+
+	std::cout << "Options:" << std::endl;
+	for (size_t i = 0;i < stats.options_max;i++)
+	{
+		if (options[i] && options[i].arg)
+		{
+			std::cout << options[i].name << " " << options[i].arg << std::endl;
+		}
+		else if (options[i])
+		{
+			std::cout << options[i].name << std::endl;
+		}
+	}
+	std::cout << "end of options" << std::endl;
 
 	try
 	{
@@ -378,7 +422,7 @@ int main(int argc, char* argv[])
 				if (isBurma)
 				{
 					auto res = burma14(minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
-					std::cout << res << std::endl;
+					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 				else
 				{
@@ -389,7 +433,7 @@ int main(int argc, char* argv[])
 					}
 					unsigned int population = getArgument<unsigned int>(options, POPULATION);
 					auto res = mqap(test, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, pareto_minT, pareto_maxT, pareto_equalMultiplier, evaluations, population, seed, options[OUTPUT].arg);
-					std::cout << res << std::endl;
+					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}
 			else if (test.find("qap") != -1)
@@ -398,13 +442,12 @@ int main(int argc, char* argv[])
 				size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
 				size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
 				size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
-				float stagnationMin = getArgument<float>(options, STAGNATION_MAX);
-				float stagnationMax = getArgument<float>(options, STAGNATION_MIN);
+				float stagnationMin = getArgument<float>(options, STAGNATION_MIN);
+				float stagnationMax = getArgument<float>(options, STAGNATION_MAX);
 				float jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
 				float directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
 				auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, directedPertubation, evaluations, seed);
-				std::cout << res << std::endl;
-
+				outputResult(res, seed, options[SMAC] != nullptr, true);
 			}
 		}
 	}
