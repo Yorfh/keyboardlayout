@@ -1,0 +1,4 @@
+numberOfRunsLimit = 100
+runObj = QUALITY
+pcs-file = params.txt
+algo-exec = ../../x64/release/keyboardlayout.exe
