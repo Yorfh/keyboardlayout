@@ -190,5 +190,5 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 boost_1_58_0/
-optimizer/output/
+irace_configuration/output/
 *.swp

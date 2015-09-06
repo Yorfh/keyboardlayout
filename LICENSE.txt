@@ -60,7 +60,7 @@ SOFTWARE.
 
 *******************************************************************************
 The following projects and files are licencsed as GPLV2 as stated below
-* The optimizer scripts in the optimizer subdirectory.
+* The irace configuration scripts in the irace_configuration subdirectory.
 * WFG_1.10
 
                     GNU GENERAL PUBLIC LICENSE

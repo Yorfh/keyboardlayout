@@ -253,10 +253,12 @@ protected:
 				}
 				else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
 				{
-					iterWithoutImprovement++;					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
+					iterWithoutImprovement++;
+					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 				}
 				else
-				{					perturbStr += 1;
+				{
+					perturbStr += 1;
 				}
 
 				if (hasImproved)
