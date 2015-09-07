@@ -34,6 +34,11 @@ public:
 		m_imporvementDepth = longImprovement;
 	}
 
+	void jumpMagnitude(float magnitude)
+	{
+		m_jumpMagnitude = magnitude;
+	}
+
 	void stagnation(size_t iterations, float minMagnitude, float maxMagnitude)
 	{
 		m_stagnationAfter = iterations;
@@ -47,14 +52,21 @@ public:
 		m_maxTabuTenureDist = static_cast<size_t>(maxTenure * KeyboardSize);
 	}
 
-	void jumpMagnitude(float magnitude)
-	{
-		m_jumpMagnitude = magnitude;
-	}
-
 	void minDirectedPertubation(float v)
 	{
 		m_minDirectedPerturbation = v;
+	}
+
+	void tournamentPool(size_t poolSize)
+	{
+		m_tournamentSize = poolSize;
+	}
+
+	void mutation(size_t frequency, float mutationStrengthMin, size_t mutationStrengthGrowth)
+	{
+		m_mutationFrequency = frequency;
+		m_mutationStrenghtMin = mutationStrengthMin;
+		m_mutationStrenghtGrowth = mutationStrengthGrowth;
 	}
 
 	template<typename Solution, typename Itr>
@@ -97,12 +109,15 @@ public:
 				numWithoutImprovement++;
 			}
 
-			if (numWithoutImprovement == m_populationSize)
+			if (numWithoutImprovement == m_mutationFrequency)
 			{
 				size_t i = 0;
 				do 
 				{
-					size_t mutationStrength = static_cast<size_t>(m_populationSize * (0.5f + numCounter / 10.0f));
+					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
+					const float tMax = 1.0f - m_mutationStrenghtMin;
+					t *= tMax;
+					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
 					mutatePopulation(mutationStrength);
 					evaluatePopulation(begin, end);
 					updateNonDominatedSet();
@@ -113,7 +128,7 @@ public:
 				numWithoutImprovement = 0;
 				numCounter++;
 			}
-			if (numCounter > 5)
+			if (numCounter > m_mutationStrenghtGrowth)
 			{
 				numCounter = 0;
 			}
@@ -368,7 +383,8 @@ protected:
 	std::pair<size_t, size_t> parentSelection()
 	{
 		const size_t numParents = 2;
-		const size_t tournamentSize = 4;
+		const size_t tournamentSize = m_tournamentSize;
+		const size_t maxTournamentSize = 32;
 		size_t a = 0;
 
 		std::array<size_t, numParents> parents;
@@ -376,9 +392,9 @@ protected:
 		while (a < numParents)
 		{
 			bool insert = true;
-			std::array<size_t, tournamentSize> tournamentPool;
+			std::array<size_t, maxTournamentSize> tournamentPool;
 			std::uniform_int_distribution<size_t> gen(0, m_populationSize - 1);
-			std::generate(tournamentPool.begin(), tournamentPool.end(), [this, &gen]() { return gen(m_randomGenerator); });
+			std::generate_n(tournamentPool.begin(), tournamentSize, [this, &gen]() { return gen(m_randomGenerator); });
 
 			float m = std::numeric_limits<float>::lowest();
 			size_t winner;
@@ -488,6 +504,10 @@ protected:
 	float m_minDirectedPerturbation = 0.75f;
 	size_t m_shortImprovementDepth = 5000;
 	size_t m_imporvementDepth = 10000;
+	size_t m_tournamentSize = 4;
+	size_t m_mutationFrequency = 5;
+	float m_mutationStrenghtMin = 0.5f;
+	size_t m_mutationStrenghtGrowth = 5;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	int m_numEvaluationsLeft;
