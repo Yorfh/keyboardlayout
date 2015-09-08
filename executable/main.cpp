@@ -93,6 +93,7 @@ enum  optionIndex {
 	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
+	ALGO_TYPE,
 };
 
 const option::Descriptor usage[] =
@@ -130,8 +131,24 @@ const option::Descriptor usage[] =
 	{ INSTANCE_INFO,	0, "", "instance_info", required,	"  --instance_info  \tThe smac instance information" },
 	{ CUTOFF_TIME,	0, "", "cutoff_time", unsignedInteger,	"  --cutoff_time  \tThe smac instance cutoff time" },
 	{ CUTOFF_LENGTH,	0, "", "cutoff_length", unsignedInteger,	"  --cutoff_length  \tThe smac instance cutoff length" },
+	{ ALGO_TYPE,	0, "", "algo_type", required,	"  --algotype annealing|bma \tThe algorithm type" },
 	{ 0,0,0,0,0,0 }
 };
+
+template<size_t KeyboardSize, typename Objective>
+int oneDimensionalAnnealing(Objective& objective, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, int numEvaluations, unsigned int seed)
+{
+	Optimizer<KeyboardSize, 1> o(seed);
+	o.populationSize(1);
+	o.initialTemperature(maxT, minT, numSteps);
+	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
+	auto objectives = { objective };
+	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
+	auto result = solutions.getResult()[0].m_keyboard;
+	int resultValue = static_cast<int>(-std::round(objective.evaluate(result)));
+	return resultValue;
+
+}
 
 int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, int fast_numSteps, int numEvaluations, unsigned int seed)
 {
@@ -167,16 +184,8 @@ int burma14(float minT, float maxT, int numSteps, float fast_minT, float fast_ma
 		97.13,
 		94.55
 	};
-	Optimizer<13, 1> o(seed);
-	o.populationSize(1);
-	o.initialTemperature(maxT, minT, numSteps);
-	o.fastCoolingTemperature(fast_maxT, fast_minT, fast_numSteps);
 	TravelingSalesman<14> salesman(latitudes, longitudes);
-	auto objectives = { salesman };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), numEvaluations);
-	auto result = solutions.getResult()[0].m_keyboard;
-	int resultValue = static_cast<int>(-std::round(salesman.evaluate(result)));
-	return resultValue;
+	return oneDimensionalAnnealing<13>(salesman, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, seed);
 }
 
 template<size_t NumLocations, size_t NumObjectives>
@@ -276,6 +285,13 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	return resultValue;
 }
 
+int qap_annealing(const std::string& filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, 
+	int fast_numSteps, int numEvaluations, unsigned int seed)
+{
+	QAP<12> objective(filename);
+	return oneDimensionalAnnealing<12>(objective, minT, maxT, numSteps, fast_minT, fast_maxT, fast_numSteps, numEvaluations, seed);
+}
+
 template<typename T, bool IsSigned = std::is_signed<T>::value, size_t NumBytes = sizeof(T)>
 struct GetArgumentHelper
 {
@@ -343,6 +359,16 @@ T getArgument(const std::vector<option::Option>& options, size_t index)
 		throw std::invalid_argument(usage[index].longopt);
 	}
 	return GetArgumentHelper<T>()(options[index].arg);
+}
+
+template<>
+std::string getArgument<std::string>(const std::vector<option::Option>& options, size_t index)
+{
+	if (!options[index])
+	{
+		throw std::invalid_argument(usage[index].longopt);
+	}
+	return options[index].arg;
 }
 
 template<typename T>
@@ -424,9 +450,6 @@ int main(int argc, char* argv[])
 				float fast_minT = getArgument<float>(options, FAST_MINT);
 				float fast_maxT = getArgument<float>(options, FAST_MAXT);
 				int fast_steps = getArgument<int>(options, FAST_NUMSTEPS);
-				float pareto_minT = getArgument<float>(options, PARETO_MINT);
-				float pareto_maxT = getArgument<float>(options, PARETO_MAXT);
-				float pareto_equalMultiplier = getArgument<float>(options, PARETO_EQUALMULT);
 				if (isBurma)
 				{
 					auto res = burma14(minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
@@ -434,6 +457,9 @@ int main(int argc, char* argv[])
 				}
 				else
 				{
+					float pareto_minT = getArgument<float>(options, PARETO_MINT);
+					float pareto_maxT = getArgument<float>(options, PARETO_MAXT);
+					float pareto_equalMultiplier = getArgument<float>(options, PARETO_EQUALMULT);
 					if (!options[OUTPUT])
 					{
 						std::cout << "An output file is required" << std::endl;
@@ -446,22 +472,39 @@ int main(int argc, char* argv[])
 			}
 			else if (test.find("qap") != -1)
 			{
-				size_t population = getArgument<size_t>(options, POPULATION);
-				size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
-				size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
-				size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
-				float stagnationMin = getArgument<float>(options, STAGNATION_MIN);
-				float stagnationMax = getArgument<float>(options, STAGNATION_MAX);
-				float jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
-				float directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
-				size_t tournamentPoolSize = getArgument<size_t>(options, TOUR_POOLSIZE);
-				size_t tournamentMutationFrequency = getArgument<size_t>(options, TOUR_MUT_FREQ);
-				float tournamentMutationStrength = getArgument<float>(options, TOUR_MUT_STR);
-				size_t tournamentMutGrowth = getArgument<size_t>(options, TOUR_MUT_GRO);
-				auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
-					directedPertubation, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-					evaluations, seed);
-				outputResult(res, seed, options[SMAC] != nullptr, true);
+				std::string algoType = getArgument<std::string>(options, ALGO_TYPE);
+				bool useAnnealing = algoType == "annealing";
+				if (useAnnealing)
+				{
+					float minT = getArgument<float>(options, MINT);
+					float maxT = getArgument<float>(options, MAXT);
+					int steps = getArgument<int>(options, NUMSTEPS);
+					float fast_minT = getArgument<float>(options, FAST_MINT);
+					float fast_maxT = getArgument<float>(options, FAST_MAXT);
+					int fast_steps = getArgument<int>(options, FAST_NUMSTEPS);
+					auto res = qap_annealing(test, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
+					outputResult(res, seed, options[SMAC] != nullptr, true);
+
+				}
+				else
+				{
+					size_t population = getArgument<size_t>(options, POPULATION);
+					size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
+					size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
+					size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
+					float stagnationMin = getArgument<float>(options, STAGNATION_MIN);
+					float stagnationMax = getArgument<float>(options, STAGNATION_MAX);
+					float jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
+					float directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
+					size_t tournamentPoolSize = getArgument<size_t>(options, TOUR_POOLSIZE);
+					size_t tournamentMutationFrequency = getArgument<size_t>(options, TOUR_MUT_FREQ);
+					float tournamentMutationStrength = getArgument<float>(options, TOUR_MUT_STR);
+					size_t tournamentMutGrowth = getArgument<size_t>(options, TOUR_MUT_GRO);
+					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
+						directedPertubation, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
+						evaluations, seed);
+					outputResult(res, seed, options[SMAC] != nullptr, true);
+				}
 			}
 		}
 	}

@@ -1,4 +1,5 @@
 numberOfRunsLimit = 5000
+initialChallenge = 8
 runObj = QUALITY
 instance-file = instances.txt
 test-instance-file = instances.txt

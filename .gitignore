@@ -192,4 +192,5 @@ ModelManifest.xml
 boost_1_58_0/
 irace_configuration/output/
 smac_configuration/output/
+smac_configuration/log-*
 *.swp

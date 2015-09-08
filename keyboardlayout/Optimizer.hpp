@@ -193,6 +193,7 @@ public:
 		m_paretoMaxT = maxT;
 		m_paretoMinT = minT;
 		m_paretoEqualMultiplier = equalMultiplier;
+		m_useParetoDominance = true;
 	}
 
 	template<typename Solution, typename Itr>
@@ -273,7 +274,7 @@ public:
 			};
 
 			Keyboard<KeyboardSize> newKeyboard;
-			simulatedAnnealing(0, begin, end, newKeyboard, solution, scalarize, true);
+			simulatedAnnealing(0, begin, end, newKeyboard, solution, scalarize, m_useParetoDominance);
 			numEvaluationsLeft -= static_cast<int>(m_numTSteps);
 		}
 		return m_NonDominatedSet;
@@ -434,6 +435,7 @@ protected:
 	float m_paretoMaxT = 1.0f;
 	float m_paretoMinT = 0.1f;
 	float m_paretoEqualMultiplier = 0.5f;
+	bool m_useParetoDominance = false;
 
 
 	float m_maxT;
