@@ -36,6 +36,84 @@ namespace detail
 		return child;
 	}
 
+	template<size_t Size, typename RandomGenerator>
+	Keyboard<Size> uniformCrossover(const Keyboard<Size>& parent1, const Keyboard<Size>& parent2, RandomGenerator& generator)
+	{
+		std::array<bool, Size> unassigned;
+		std::array<bool, Size> unassignedChildPos;
+		unassigned.fill(true);
+		unassignedChildPos.fill(true);
+		std::bernoulli_distribution dist;
+		Keyboard<Size> ret;
+		bool assigned = true;
+
+		for (size_t i = 0; i < Size; i++)
+		{
+			auto p1 = parent1.m_keys[i];
+			auto p2 = parent2.m_keys[i];
+			auto s = p1;
+			if (p1 == p2)
+			{
+				s = p1;
+			}
+			else if (unassigned[p1] && unassigned[p2])
+			{
+				if (dist(generator))
+				{
+					s = p1;
+				}
+				else
+				{
+					s = p2;
+				}
+			}
+			else if (unassigned[p1])
+			{
+				s = p1;
+			}
+			else if (unassigned[p2])
+			{
+				s = p2;
+			}
+			else
+			{
+				assigned = false;
+			}
+
+			if (assigned)
+			{
+				unassigned[s] = false;
+				unassignedChildPos[i] = false;
+				ret.m_keys[i] = s;
+			}
+		}
+
+		using KeyType = typename Keyboard<Size>::KeyType;
+		std::array<KeyType, Size> keysleft;
+		auto itr = keysleft.begin();
+
+		for (KeyType i = 0; i < Size; i++)
+		{
+			if (unassigned[i])
+			{
+				*itr = i;
+				++itr;
+			}
+		}
+
+		std::shuffle(keysleft.begin(), itr, generator);
+		itr = keysleft.begin();
+		for (size_t i = 0; i < Size; i++)
+		{
+			if (unassignedChildPos[i])
+			{
+				ret.m_keys[i] = *itr;
+				++itr;
+			}
+		}
+		return ret;
+	}
+
 	template<typename T>
 	void generateWeightVectorsHelper(T& output, size_t k, size_t maxDimension, size_t currentK, size_t currentDimension, size_t sum, std::vector<size_t>& current)
 	{

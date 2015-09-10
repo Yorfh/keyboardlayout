@@ -168,6 +168,24 @@ TEST(CrossOverTests, PartiallyMatchedCrossover3)
 	EXPECT_THAT(child.m_keys, ElementsAre(3, 4, 1, 7, 6, 2, 5, 0));
 }
 
+TEST(CrossOverTests, UniformCrossover)
+{
+	std::random_device d;
+	std::mt19937 rd2(d());
+	for (unsigned int i = 0; i < 20; i++)
+	{
+		Keyboard<8> parent1;
+		Keyboard<8> parent2;
+		unsigned int seed = rd2() + i;
+		SCOPED_TRACE(seed);
+		std::mt19937 rd(seed);
+		parent1.randomize(rd);
+		parent2.randomize(rd);
+		auto child = detail::uniformCrossover(parent1, parent2, rd);
+		EXPECT_THAT(child.m_keys, UnorderedElementsAre(0, 1, 2, 3, 4, 5, 6, 7));
+	}
+}
+
 TEST(WeightVectorTests, GenerateOneDimensionalOneValueVector)
 {
 	std::vector<std::vector<float>> output;
