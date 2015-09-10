@@ -15,6 +15,7 @@ tournament_pool_size integer [1, 10] [4]
 tournament_mutation_frequency integer [1, 30] [5]
 tournament_min_mutation_strength real [0.0, 1.0] [0.5]
 tournament_mutation_growth integer [1, 20] [5]
+crossover_type categorical {uniform, partially_matched} [uniform]
 
 population | algo_type in {bma}  
 short_improvement | algo_type in {bma}   
@@ -30,6 +31,7 @@ tournament_pool_size | algo_type in {bma}
 tournament_mutation_frequency | algo_type in {bma}  
 tournament_min_mutation_strength | algo_type in {bma}  
 tournament_mutation_growth | algo_type in {bma}  
+crossover_type | algo_type in {bma}
 
 {short_improvement >= long_improvement}
 {stagnation_min >= stagnation_max}

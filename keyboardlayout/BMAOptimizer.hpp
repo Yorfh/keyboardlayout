@@ -13,11 +13,19 @@ class Objective;
 
 // The algorithm is based on "Memetic search for the quadratic assignment problem" (Una Benlic and Jin-Kao Hao)
 
+enum class CrossoverType
+{
+	Uniform,
+	PartiallyMatched,
+};
+
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
 class BMAOptimizer
 {
 	static std::random_device rd;
 public:
+
+
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
 	{
 		m_randomGenerator.seed(seed);
@@ -67,6 +75,11 @@ public:
 		m_mutationFrequency = frequency;
 		m_mutationStrenghtMin = mutationStrengthMin;
 		m_mutationStrenghtGrowth = mutationStrengthGrowth;
+	}
+
+	void crossover(CrossoverType t)
+	{
+		m_crossoverType = t;
 	}
 
 	template<typename Solution, typename Itr>
@@ -424,14 +437,21 @@ protected:
 
 	Keyboard<KeyboardSize> produceChild(const Keyboard<KeyboardSize>& parent1, const Keyboard<KeyboardSize>& parent2)
 	{
-		auto dist = std::uniform_int_distribution<size_t>(0, parent1.m_keys.size()-1);
-		auto p1 = dist(m_randomGenerator);
-		auto p2 = dist(m_randomGenerator);
-		if (p2 < p1)
+		if (m_crossoverType == CrossoverType::PartiallyMatched)
 		{
-			std::swap(p1, p2);
+			auto dist = std::uniform_int_distribution<size_t>(0, parent1.m_keys.size() - 1);
+			auto p1 = dist(m_randomGenerator);
+			auto p2 = dist(m_randomGenerator);
+			if (p2 < p1)
+			{
+				std::swap(p1, p2);
+			}
+			return detail::partiallyMatchedCrossover(parent1, parent2, p1, p2);
 		}
-		return detail::partiallyMatchedCrossover(parent1, parent2, p1, p2);
+		else
+		{
+			return detail::uniformCrossover(parent1, parent2, m_randomGenerator);
+		}
 	}
 
 	void replaceSolution(const Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution)
@@ -508,6 +528,7 @@ protected:
 	size_t m_mutationFrequency = 5;
 	float m_mutationStrenghtMin = 0.5f;
 	size_t m_mutationStrenghtGrowth = 5;
+	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	int m_numEvaluationsLeft;
