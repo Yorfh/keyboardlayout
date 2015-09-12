@@ -351,10 +351,6 @@ protected:
 							iRetained = i; 
 							jRetained = j;
 							maxDelta = delta[i][j];
-							if ((currentCost + delta[i][j]) > bestBestCost)
-							{
-								bestBestCost = currentCost + delta[i][j];
-							}
 						}
 					}
 				}
@@ -386,6 +382,12 @@ protected:
 					{
 						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
 					}
+				}
+				if (currentCost > bestBestCost)
+				{
+					bestBestCost = currentCost;
+					iteration++;
+					break;
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
