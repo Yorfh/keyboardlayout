@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--  BUILT IN LOGBACK.XML FILE THAT OUTPUTS TO CONSOLE -->
+<configuration debug="false" >
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>[%-5level] %msg%n</pattern>
+    </encoder>
+    
+  </appender>
+  
+  <root level="${LOGLEVEL}">
+    <appender-ref ref="STDOUT" />
+  </root>
+    
+</configuration>

@@ -4,25 +4,33 @@
     <path id="classpath">
         <fileset dir="lib" includes="**/*.jar"/>
     </path>
-	
-	
+		
     <target name="clean">
       <delete dir="build"/>
     </target>	
 	
 	<target name="compile_aeatk">
         <mkdir dir="build/classes/aeatk"/>
-        <javac srcdir="src/aeatk/" destdir="build/classes/aeatk" classpathref="classpath" includeAntRuntime="false"/>
+        <javac srcdir="src/aeatk/" destdir="build/classes/aeatk" classpathref="classpath" includeAntRuntime="false">
+	       <compilerarg value="-processorpath" />
+	       <compilerarg value="lib/spi-0.2.4.jar"/>
+        </javac>
 	</target>
 	
     <target name="jar_aeatk" depends="compile_aeatk">
         <jar destfile="lib/aeatk.jar" basedir="build/classes/aeatk">
+            <fileset dir="src/aeatk/">
+            	<include name="**/*.xml"/>
+            </fileset>
         </jar>
     </target>
 	
 	<target name="compile" depends="jar_aeatk">
         <mkdir dir="build/classes/smac"/>
-        <javac srcdir="src/smac/" destdir="build/classes/smac" classpathref="classpath" includeAntRuntime="false"/>
+        <javac srcdir="src/smac/" destdir="build/classes/smac" classpathref="classpath" includeAntRuntime="false">
+	       <compilerarg value="-processorpath" />
+	       <compilerarg value="lib/spi-0.2.4.jar"/>
+     	</javac>
     </target>
 
     <target name="jar" depends="compile">
