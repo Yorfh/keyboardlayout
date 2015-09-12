@@ -243,7 +243,7 @@ public class ProblemInstanceHelper {
 		String line = "";
 		
 		
-		int instID=cachedProblemInstances.size(); 
+		int instID=cachedProblemInstances.size() + 1; 
 		
 		
 		/*
