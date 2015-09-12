@@ -28,5 +28,5 @@ with open(filename) as f:
     for instance in sorted(instances.iteritems()):
         best = min(chain(*(e for e in instance[1].itervalues())))
         print "Instance %s - best %f" % (instance[0], best)
-        for e in instance[1].iteritems():
+        for e in sorted(instance[1].iteritems()):
             print "Evaluations %i - %i/%i" % (e[0], e[1].count(best), len(e[1]))

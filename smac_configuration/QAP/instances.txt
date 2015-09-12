@@ -1,1 +1,1 @@
-"../tests/QAPData/chr12a.dat --evaluations 80000"
+"../tests/QAPData/chr12a.dat --evaluations 120000"
