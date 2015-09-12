@@ -325,19 +325,21 @@ protected:
 	void perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost, 
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
 	{
-		size_t iRetained = std::numeric_limits<size_t>::max();
-		size_t jRetained = iRetained;
-		bool bit = false;
-		float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
-		float e = std::exp(-d);
-		e = std::max(m_minDirectedPerturbation, e);
 		std::uniform_real_distribution<float> dist(0.0f, std::nextafter(1.0f, 2.0f));
 		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
-
-		if (e > dist(m_randomGenerator))
-			bit = true;
+		std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
+		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		for (size_t k = 0; k < perturbStr; k++)
 		{
+			size_t iRetained = std::numeric_limits<size_t>::max();
+			size_t jRetained = iRetained;
+			bool bit = false;
+			float e = std::exp(-d);
+			e = std::max(m_minDirectedPerturbation, e);
+
+			if (e > dist(m_randomGenerator))
+				bit = true;
+
 			if (bit)
 			{
 				float maxDelta = std::numeric_limits<float>::lowest();
@@ -357,7 +359,6 @@ protected:
 			}
 			else
 			{
-				std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
 				iRetained = keyDist(m_randomGenerator);
 				jRetained = keyDist(m_randomGenerator);
 				if (iRetained > jRetained)
