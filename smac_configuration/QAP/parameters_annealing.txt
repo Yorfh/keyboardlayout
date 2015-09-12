@@ -1,5 +1,4 @@
 algo_type categorical {annealing} [annealing]
-evaluations ordinal {120000} [120000]
 
 min_t real [0, 1000] [1]
 max_t real [0, 1000] [500]

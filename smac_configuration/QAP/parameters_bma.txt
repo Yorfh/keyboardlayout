@@ -1,5 +1,4 @@
 algo_type categorical {bma} [bma]
-evaluations ordinal {120000} [120000]
 
 population integer [2, 20] [5]
 short_improvement integer [1, 5000] [1000]
