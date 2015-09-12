@@ -24,6 +24,7 @@ class BMAOptimizer
 {
 	static std::random_device rd;
 public:
+	typedef std::vector<std::pair<NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>, size_t>> SnapshotArray;
 
 
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
@@ -82,6 +83,11 @@ public:
 		m_crossoverType = t;
 	}
 
+	void snapshots(size_t snapshotEvery)
+	{
+		m_snapshotEvery = snapshotEvery;
+	}
+
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
@@ -96,6 +102,7 @@ public:
 	const NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
+		m_totalEvaluations = numEvaluations;
 		generateRandomPopulation(begin, end);
 		shortImprovement(begin, end);
 		updateNonDominatedSet();
@@ -149,6 +156,11 @@ public:
 		}
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
+	}
+
+	const SnapshotArray& getSnapshots()
+	{
+		return m_snapshots;
 	}
 
 protected:
@@ -310,6 +322,23 @@ protected:
 		Keyboard<KeyboardSize> k = keyboard;
 		std::swap(k.m_keys[i], k.m_keys[j]);
 		m_numEvaluationsLeft--;
+		if (m_snapshotEvery != 0)
+		{
+			size_t evaluations = m_totalEvaluations - m_numEvaluationsLeft;
+			if (m_snapshots.empty())
+			{
+				if (evaluations >= m_snapshotEvery)
+				{
+					updateNonDominatedSet();
+					m_snapshots.emplace_back(std::make_pair(m_NonDominatedSet, evaluations));
+				}
+			}
+			else if(evaluations - m_snapshots.back().second >= m_snapshotEvery)
+			{
+				updateNonDominatedSet();
+				m_snapshots.emplace_back(std::make_pair(m_NonDominatedSet, evaluations));
+			}
+		}
 		return begin->evaluate(k) - solution;
 	}
 
@@ -531,10 +560,13 @@ protected:
 	size_t m_mutationFrequency = 5;
 	float m_mutationStrenghtMin = 0.5f;
 	size_t m_mutationStrenghtGrowth = 5;
+	size_t m_snapshotEvery = 0;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
+	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
+	size_t m_totalEvaluations;
 };
 
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>

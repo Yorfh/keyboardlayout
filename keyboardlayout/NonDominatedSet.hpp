@@ -135,35 +135,28 @@ public:
 	}
 
 	NonDominatedSet(const NonDominatedSet& rhs)
-		:
-		m_keyboards(rhs.m_keyboards),
-		m_solutions(rhs.m_solutions),
-		m_indices(rhs.m_indices)
 	{
-		m_firstFree = m_firstFree + (rhs.m_firstFree - rhs.m_indices.begin());
+		auto solutions = rhs.getResult();
+		for (auto&& s : solutions)
+		{
+			insert(s.m_keyboard, s.m_solution);
+		}
 	}
 
 	NonDominatedSet(NonDominatedSet&& rhs)
-		:
-		m_keyboards(std::move(rhs.m_keyboards)),
-		m_solutions(std::move(rhs.m_solutions)),
-		m_indices(std::move(rhs.m_indices)),
-		m_firstFree(std::move(rhs.m_firstFree))
+		: m_root(std::move(rhs.m_root))
+		, m_distanceToParetoFront(rhs.m_distanceToParetoFront)
+		, m_idealPoint(std::move(rhs.m_idealPoint))
 	{
 	}
 
-	NonDominatedSet& operator=(const NonDominatedSet& rhs)
-	{
-		m_keyboards = rhs.m_keyboards;
-		m_solutions = rhs.m_solutions;
-		m_indices = rhs.m_indices;
-		m_firstFree = m_firstFree + (rhs.m_firstFree - rhs.m_indices.begin());
-		return *this;
-	}
+	NonDominatedSet& operator=(const NonDominatedSet& rhs) = delete;
 
 	NonDominatedSet& operator=(NonDominatedSet&& rhs)
 	{
 		m_root = std::move(rhs.m_root);
+		m_distanceToParetoFront = rhs.m_distanceToParetoFront;
+		m_idealPoint = std::move(rhs.m_idealPoint);
 		return *this;
 	}
 

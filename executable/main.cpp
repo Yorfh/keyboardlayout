@@ -93,7 +93,7 @@ enum  optionIndex {
 	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
-	ALGO_TYPE, CROSSOVER_TYPE,
+	ALGO_TYPE, CROSSOVER_TYPE, ANYTIME,
 };
 
 const option::Descriptor usage[] =
@@ -133,6 +133,7 @@ const option::Descriptor usage[] =
 	{ CUTOFF_TIME,	0, "", "cutoff_time", unsignedInteger,	"  --cutoff_time  \tThe smac instance cutoff time" },
 	{ CUTOFF_LENGTH,	0, "", "cutoff_length", unsignedInteger,	"  --cutoff_length  \tThe smac instance cutoff length" },
 	{ ALGO_TYPE,	0, "", "algo_type", required,	"  --algotype annealing|bma \tThe algorithm type" },
+	{ ANYTIME,	0, "", "anytime", unsignedInteger,	"  --anytime snapshot_delay \tTake snapshots regularly to optimize for any time" },
 	{ 0,0,0,0,0,0 }
 };
 
@@ -267,7 +268,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, 
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, size_t evaluations, unsigned int seed)
+	CrossoverType crossoverType, size_t evaluations, size_t anytime, unsigned int seed)
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
@@ -280,10 +281,32 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	o.tournamentPool(tournamentPoolSize);
 	o.mutation(mutationFreuency, minMutationStrength, mutationStrengthGrowth);
 	o.crossover(crossoverType);
+	if (anytime != 0)
+	{
+		o.snapshots(anytime);
+	}
 	auto objectives = { objective };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), evaluations);
-	auto result = solutions.getResult()[0].m_keyboard;
-	int resultValue = static_cast<int>(-std::round(objective.evaluate(result)));
+	int resultValue = 0;
+	if (anytime == 0)
+	{
+		auto result = solutions.getResult()[0].m_keyboard;
+		resultValue = static_cast<int>(-std::round(objective.evaluate(result)));
+	}
+	else
+	{
+		auto& snapshots = o.getSnapshots();
+		float result = solutions.getResult()[0].m_solution[0];
+		float multiplierSum = 1.0f;
+		for (auto&& s: snapshots)
+		{ 
+			float multiplier = static_cast<float>(s.second) / static_cast<float>(evaluations);
+			result += multiplier * s.first[0].m_solution[0];
+			multiplierSum += multiplier;
+		}
+		resultValue = static_cast<int>(-std::round(result / multiplierSum));
+
+	}
 	return resultValue;
 }
 
@@ -503,6 +526,11 @@ int main(int argc, char* argv[])
 					float tournamentMutationStrength = getArgument<float>(options, TOUR_MUT_STR);
 					size_t tournamentMutGrowth = getArgument<size_t>(options, TOUR_MUT_GRO);
 					std::string crossoverType = getArgument<std::string>(options, CROSSOVER_TYPE);
+					size_t anytime = 0;
+					if (options[ANYTIME])
+					{
+						anytime = getArgument<size_t>(options, ANYTIME);
+					}
 					CrossoverType ct;
 					if (crossoverType == "uniform")
 					{
@@ -519,7 +547,7 @@ int main(int argc, char* argv[])
 					}
 					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, evaluations, seed);
+						ct, evaluations, anytime, seed);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}
