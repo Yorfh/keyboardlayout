@@ -454,7 +454,107 @@ protected:
 	void annealed_perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost,
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
 	{
+		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
+		auto probability = std::uniform_real_distribution<float>(0, 1.0);
+		float min_t = 0.0001f;
+		float max_t = 1.0f;
+		float t_steps = 10;
+		float alpha = std::pow(min_t / max_t, 1.0f / t_steps);
+		for (float currentT = max_t; currentT >= min_t; currentT *= alpha)
+		{
+			size_t iRetained = std::numeric_limits<size_t>::max();
+			size_t jRetained = iRetained;
+			float maxDelta = std::numeric_limits<float>::lowest();
+			float minDelta = std::numeric_limits<float>::max();
+			for (size_t i = 0; i < KeyboardSize; i++)
+			{
+				for (size_t j = i + 1; j < KeyboardSize; j++)
+				{
+					if (currentCost + delta[i][j] > bestBestCost)
+					{
+						iRetained = i;
+						jRetained = j;
+						break;
+					}
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration)
+					{
+						if (delta[i][j] > maxDelta)
+						{
+							maxDelta = delta[i][j];
+						}
+						else if (delta[i][j] < minDelta)
+						{
+							minDelta = delta[i][j];
+						}
+					}
+				}
+				if (iRetained != std::numeric_limits<size_t>::max())
+				{
+					break;
+				}
+			}
+			if (iRetained == std::numeric_limits<size_t>::max())
+			{
+				std::array<size_t, KeyboardSize> a;
+				std::array<size_t, KeyboardSize> b;
+				std::iota(a.begin(), a.end(), 0);
+				std::iota(b.begin(), b.end(), 0);
+				std::shuffle(a.begin(), a.end(), m_randomGenerator);
+				std::shuffle(b.begin(), b.end(), m_randomGenerator);
+				for (size_t i = 0; i < KeyboardSize; i++)
+				{
+					for (size_t j = 0; j < KeyboardSize; j++)
+					{
+						auto ai = a[i];
+						auto bj = b[j];
+						if (bj > ai)
+						{
+							float d = delta[ai][bj];
 
+							if (((lastSwapped[ai][bj] + tabuTenureDist(m_randomGenerator)) < iteration))
+							{
+								float sFirst =  0.0f;
+								float sSecond = (d - minDelta) / (maxDelta - minDelta);
+								float p = std::exp(-((sFirst - sSecond) / currentT));
+								p = std::min(1.0f, p);
+								if (p > probability(m_randomGenerator))
+								{
+									iRetained = ai;
+									jRetained = bj;
+									break;
+								}
+							}
+						}
+					}
+					if (iRetained != std::numeric_limits<size_t>::max())
+					{
+						break;
+					}
+				}
+			}
+			if (iRetained != std::numeric_limits<size_t>::max())
+			{
+				lastSwapped[iRetained][jRetained] = iteration;
+				frequency[iRetained][jRetained] = frequency[iRetained][jRetained] + 1;
+				std::swap(currentKeyboard.m_keys[iRetained], currentKeyboard.m_keys[jRetained]);
+				currentCost = currentCost + delta[iRetained][jRetained];
+				for (size_t i = 0;i < KeyboardSize; i++)
+				{
+					for (size_t j = i + 1;j < KeyboardSize; j++)
+					{
+						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
+					}
+				}
+				if (currentCost > bestBestCost)
+				{
+					bestBestCost = currentCost;
+					iteration++;
+					break;
+				}
+				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
+			}
+			iteration++;
+		}
 	}
 
 	std::pair<size_t, size_t> parentSelection()

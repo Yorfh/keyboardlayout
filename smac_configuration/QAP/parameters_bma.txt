@@ -15,7 +15,7 @@ tournament_mutation_frequency integer [1, 30] [5]
 tournament_min_mutation_strength real [0.0, 1.0] [0.5]
 tournament_mutation_growth integer [1, 20] [5]
 crossover_type categorical {uniform, partially_matched} [uniform]
-perturb_type categorical {normal, annealed, disabled} [normal]
+perturb_type categorical {normal, annealed, disabled} [annealed]
 
 population | algo_type in {bma}  
 short_improvement | algo_type in {bma}   
@@ -40,4 +40,4 @@ perturb_type | algo_type in {bma}
 {jump_magnitude >= stagnation_min}
 
 # To enable only normal perturb
-#{perturb_type == disabled || perturb_type == annealed}
+{perturb_type == disabled || perturb_type == normal}
