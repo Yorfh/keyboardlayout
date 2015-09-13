@@ -567,7 +567,7 @@ int main(int argc, char* argv[])
 					else if (perturbTypeStr == "normal")
 					{
 						perturbType = PerturbType::Normal;
-						size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
+						stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
 						stagnationMin = getArgument<float>(options, STAGNATION_MIN);
 						stagnationMax = getArgument<float>(options, STAGNATION_MAX);
 						jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
