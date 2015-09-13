@@ -20,13 +20,13 @@ perturb_type categorical {normal, annealed, disabled} [normal]
 population | algo_type in {bma}  
 short_improvement | algo_type in {bma}   
 long_improvement | algo_type in {bma}  
-stagnation_iterations | algo_type in {bma}  
-stagnation_min | algo_type in {bma}  
-stagnation_max | algo_type in {bma}  
-tenure_min | algo_type in {bma}  
-tenure_max | algo_type in {bma}  
-jump_magnitude | algo_type in {bma}  
-min_directed_pertubation | algo_type in {bma}  
+stagnation_iterations | algo_type in {bma} && perturb_type in {normal, annealed}
+stagnation_min | algo_type in {bma} && perturb_type in {normal, annealed}
+stagnation_max | algo_type in {bma} && perturb_type in {normal, annealed}
+tenure_min | algo_type in {bma} && perturb_type in {normal, annealed}
+tenure_max | algo_type in {bma} && perturb_type in {normal, annealed}
+jump_magnitude | algo_type in {bma} && perturb_type in {normal, annealed}
+min_directed_pertubation | algo_type in {bma} && perturb_type in {normal, annealed}
 tournament_pool_size | algo_type in {bma}  
 tournament_mutation_frequency | algo_type in {bma}  
 tournament_min_mutation_strength | algo_type in {bma}  
@@ -38,3 +38,6 @@ perturb_type | algo_type in {bma}
 {stagnation_min >= stagnation_max}
 {tenure_min >= tenure_max}
 {jump_magnitude >= stagnation_min}
+
+# To enable only normal perturb
+#{perturb_type == disabled || perturb_type == annealed}

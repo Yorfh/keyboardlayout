@@ -267,7 +267,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 }
 
 int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters,
-	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, 
+	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
 	CrossoverType crossoverType, PerturbType perturbType, size_t evaluations, size_t anytime, unsigned int seed)
 {
@@ -282,6 +282,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	o.tournamentPool(tournamentPoolSize);
 	o.mutation(mutationFreuency, minMutationStrength, mutationStrengthGrowth);
 	o.crossover(crossoverType);
+	o.tabuTenure(tenureMin, tenureMax);
 	o.perturbType(perturbType);
 	if (anytime != 0)
 	{
@@ -518,11 +519,6 @@ int main(int argc, char* argv[])
 					size_t population = getArgument<size_t>(options, POPULATION);
 					size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
 					size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
-					size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
-					float stagnationMin = getArgument<float>(options, STAGNATION_MIN);
-					float stagnationMax = getArgument<float>(options, STAGNATION_MAX);
-					float jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
-					float directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
 					size_t tournamentPoolSize = getArgument<size_t>(options, TOUR_POOLSIZE);
 					size_t tournamentMutationFrequency = getArgument<size_t>(options, TOUR_MUT_FREQ);
 					float tournamentMutationStrength = getArgument<float>(options, TOUR_MUT_STR);
@@ -547,16 +543,37 @@ int main(int argc, char* argv[])
 						std::cout << "Invalid crossover type " << crossoverType;
 						return 1;
 					}
+
 					std::string perturbTypeStr = getArgument<std::string>(options, PERTURB_TYPE);
 					PerturbType perturbType = PerturbType::Normal;
+					size_t stagnationIters = 0;
+					float stagnationMin = 0.0f;
+					float stagnationMax = 0.0f;
+					float jumpMagnitude = 0.0f;
+					float directedPertubation = 0.0f;
+					float tenureMin = 0.0f;
+					float tenureMax = 0.0f;
 					if (perturbTypeStr == "annealed")
 					{
 						perturbType = PerturbType::Annealed;
-
+						stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
+						stagnationMin = getArgument<float>(options, STAGNATION_MIN);
+						stagnationMax = getArgument<float>(options, STAGNATION_MAX);
+						jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
+						directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
+						tenureMin = getArgument<float>(options, TENURE_MIN);
+						tenureMax = getArgument<float>(options, TENURE_MAX);
 					}
 					else if (perturbTypeStr == "normal")
 					{
 						perturbType = PerturbType::Normal;
+						size_t stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
+						stagnationMin = getArgument<float>(options, STAGNATION_MIN);
+						stagnationMax = getArgument<float>(options, STAGNATION_MAX);
+						jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
+						directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
+						tenureMin = getArgument<float>(options, TENURE_MIN);
+						tenureMax = getArgument<float>(options, TENURE_MAX);
 					}
 					else if (perturbTypeStr == "disabled")
 					{
@@ -569,7 +586,7 @@ int main(int argc, char* argv[])
 					}
 
 					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
-						directedPertubation, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
+						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
 						ct, perturbType, evaluations, anytime, seed);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
