@@ -19,6 +19,13 @@ enum class CrossoverType
 	PartiallyMatched,
 };
 
+enum class PerturbType
+{
+	Disabled,
+	Normal,
+	Annealed,
+};
+
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
 class BMAOptimizer
 {
@@ -81,6 +88,11 @@ public:
 	void crossover(CrossoverType t)
 	{
 		m_crossoverType = t;
+	}
+
+	void perturbType(PerturbType perturb)
+	{
+		m_perturbType = perturb;
 	}
 
 	void snapshots(size_t snapshotEvery)
@@ -284,7 +296,7 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 				hasImproved = true;
 			}
-			else
+			else if(m_perturbType != PerturbType::Disabled)
 			{
 				if (iterWithoutImprovement > m_stagnationAfter)
 				{
@@ -306,13 +318,25 @@ protected:
 				{
 					prevLocalOptimum = currentKeyboard;
 				}
-				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				if (m_perturbType == PerturbType::Annealed)
+				{
+					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				}
+				else if(m_perturbType == PerturbType::Normal)
+				{
+					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				}
+			
 				if (currentCost > solution[0])
 				{
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
 				hasImproved = false;
+			}
+			else
+			{
+				break;
 			}
 		};
 	}
@@ -424,6 +448,13 @@ protected:
 			}
 			iteration++;
 		}
+	}
+
+	template<typename Itr>
+	void annealed_perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost,
+		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
+	{
+
 	}
 
 	std::pair<size_t, size_t> parentSelection()
@@ -563,6 +594,7 @@ protected:
 	size_t m_mutationStrenghtGrowth = 5;
 	size_t m_snapshotEvery = 0;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
+	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;
 	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
 	SnapshotArray m_snapshots;

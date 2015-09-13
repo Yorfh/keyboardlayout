@@ -93,7 +93,7 @@ enum  optionIndex {
 	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
-	ALGO_TYPE, CROSSOVER_TYPE, ANYTIME,
+	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME,
 };
 
 const option::Descriptor usage[] =
@@ -128,6 +128,7 @@ const option::Descriptor usage[] =
 	{ TOUR_MUT_STR,	0, "", "tournament_min_mutation_strength", floatingPoint,	"  --tournament_min_mutation_strength  \tThe tournament mutation strength for BMA" },
 	{ TOUR_MUT_GRO,	0, "", "tournament_mutation_growth", unsignedInteger,	"  --tournament_mutation_growth  \tThe tournament mutation growth for BMA" },
 	{ CROSSOVER_TYPE,	0, "", "crossover_type", required,	"  --crossover_type uniform|partially_matched \tThe crossover type for BMA" },
+	{ PERTURB_TYPE,	0, "", "perturb_type", required,	"  --perturb_type normal|annealed|disabled \tThe perturb type for BMA" },
 	{ SMAC,	0, "", "smac", option::Arg::None,	"  --smac  \tThe output should be in SMAC format" },
 	{ INSTANCE_INFO,	0, "", "instance_info", required,	"  --instance_info  \tThe smac instance information" },
 	{ CUTOFF_TIME,	0, "", "cutoff_time", unsignedInteger,	"  --cutoff_time  \tThe smac instance cutoff time" },
@@ -268,7 +269,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, 
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, size_t evaluations, size_t anytime, unsigned int seed)
+	CrossoverType crossoverType, PerturbType perturbType, size_t evaluations, size_t anytime, unsigned int seed)
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
@@ -281,6 +282,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	o.tournamentPool(tournamentPoolSize);
 	o.mutation(mutationFreuency, minMutationStrength, mutationStrengthGrowth);
 	o.crossover(crossoverType);
+	o.perturbType(perturbType);
 	if (anytime != 0)
 	{
 		o.snapshots(anytime);
@@ -545,9 +547,30 @@ int main(int argc, char* argv[])
 						std::cout << "Invalid crossover type " << crossoverType;
 						return 1;
 					}
+					std::string perturbTypeStr = getArgument<std::string>(options, PERTURB_TYPE);
+					PerturbType perturbType = PerturbType::Normal;
+					if (perturbTypeStr == "annealed")
+					{
+						perturbType = PerturbType::Annealed;
+
+					}
+					else if (perturbTypeStr == "normal")
+					{
+						perturbType = PerturbType::Normal;
+					}
+					else if (perturbTypeStr == "disabled")
+					{
+						perturbType = PerturbType::Disabled;
+					}
+					else
+					{
+						std::cout << "Invalid perturb type " << perturbTypeStr;
+						return 1;
+					}
+
 					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, evaluations, anytime, seed);
+						ct, perturbType, evaluations, anytime, seed);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}
