@@ -296,7 +296,7 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 				hasImproved = true;
 			}
-			else if(m_perturbType != PerturbType::Disabled)
+			else if(m_perturbType == PerturbType::Normal)
 			{
 				if (iterWithoutImprovement > m_stagnationAfter)
 				{
@@ -318,14 +318,32 @@ protected:
 				{
 					prevLocalOptimum = currentKeyboard;
 				}
-				if (m_perturbType == PerturbType::Annealed)
+				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+			
+				if (currentCost > solution[0])
 				{
-					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+					solution[0] = currentCost;
+					keyboard = currentKeyboard;
 				}
-				else if(m_perturbType == PerturbType::Normal)
+				hasImproved = false;
+			}
+			else if (m_perturbType == PerturbType::Annealed)
+			{
+				if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
 				{
-					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+					iterWithoutImprovement++;
+					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 				}
+				else
+				{
+					perturbStr += 1;
+				}
+
+				if (hasImproved)
+				{
+					prevLocalOptimum = currentKeyboard;
+				}
+				annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
 			
 				if (currentCost > solution[0])
 				{
@@ -455,10 +473,13 @@ protected:
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
 	{
 		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
+		std::array<std::array<bool, KeyboardSize>, KeyboardSize> valid;
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		float min_t = 0.0001f;
-		float max_t = 1.0f;
-		float t_steps = 10;
+		float min_t = m_minStagnationMagnitude;
+		//KLUDGE using completely unrelated parameters
+		float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
+		float max_t = m_maxStagnationMagnitude * d;
+		float t_steps =  static_cast<float>(perturbStr) * d >= 1.0f ? d : 1.0f;
 		float alpha = std::pow(min_t / max_t, 1.0f / t_steps);
 		for (float currentT = max_t; currentT >= min_t; currentT *= alpha)
 		{
@@ -470,6 +491,7 @@ protected:
 			{
 				for (size_t j = i + 1; j < KeyboardSize; j++)
 				{
+					valid[i][j] = false;
 					if (currentCost + delta[i][j] > bestBestCost)
 					{
 						iRetained = i;
@@ -486,6 +508,7 @@ protected:
 						{
 							minDelta = delta[i][j];
 						}
+						valid[i][j] = true;
 					}
 				}
 				if (iRetained != std::numeric_limits<size_t>::max())
@@ -511,7 +534,7 @@ protected:
 						{
 							float d = delta[ai][bj];
 
-							if (((lastSwapped[ai][bj] + tabuTenureDist(m_randomGenerator)) < iteration))
+							if (valid[ai][bj])
 							{
 								float sFirst =  0.0f;
 								float sSecond = (d - minDelta) / (maxDelta - minDelta);

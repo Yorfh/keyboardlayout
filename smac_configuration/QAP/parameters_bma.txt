@@ -35,9 +35,9 @@ crossover_type | algo_type in {bma}
 perturb_type | algo_type in {bma}
 
 {short_improvement >= long_improvement}
-{stagnation_min >= stagnation_max}
+#{stagnation_min >= stagnation_max}
 {tenure_min >= tenure_max}
-{jump_magnitude >= stagnation_min}
+#{jump_magnitude >= stagnation_min}
 
 # To enable only normal perturb
 {perturb_type == disabled || perturb_type == normal}
