@@ -478,10 +478,13 @@ protected:
 		float min_t = m_minStagnationMagnitude;
 		//KLUDGE using completely unrelated parameters
 		float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
-		float max_t = m_maxStagnationMagnitude * d;
-		float t_steps =  static_cast<float>(perturbStr) * d >= 1.0f ? d : 1.0f;
+		const float fiftyPercent = 1.0f / std::log(2.0f);
+		float max_t = m_minStagnationMagnitude + (fiftyPercent - m_minStagnationMagnitude) * d;
+		float tMult = d > 1.0f ? d : 1.0f;
+		float t_steps = static_cast<float>(perturbStr) * tMult;
 		float alpha = std::pow(min_t / max_t, 1.0f / t_steps);
-		for (float currentT = max_t; currentT >= min_t; currentT *= alpha)
+		float currentT = max_t;
+		for (size_t s = 0; s < static_cast<size_t>(t_steps); s++)
 		{
 			size_t iRetained = std::numeric_limits<size_t>::max();
 			size_t jRetained = iRetained;
@@ -524,6 +527,14 @@ protected:
 				std::iota(b.begin(), b.end(), 0);
 				std::shuffle(a.begin(), a.end(), m_randomGenerator);
 				std::shuffle(b.begin(), b.end(), m_randomGenerator);
+
+				float p = probability(m_randomGenerator);
+				float m = std::numeric_limits<float>::max();
+				if (p > 0.0 && p <= 1.0f)
+				{
+					m = currentT * std::log(1.0f / p);
+				}
+
 				for (size_t i = 0; i < KeyboardSize; i++)
 				{
 					for (size_t j = 0; j < KeyboardSize; j++)
@@ -536,11 +547,8 @@ protected:
 
 							if (valid[ai][bj])
 							{
-								float sFirst =  0.0f;
-								float sSecond = (d - minDelta) / (maxDelta - minDelta);
-								float p = std::exp(-((sFirst - sSecond) / currentT));
-								p = std::min(1.0f, p);
-								if (p > probability(m_randomGenerator))
+								float v = (maxDelta - d) / (maxDelta - minDelta);
+								if (v < m)
 								{
 									iRetained = ai;
 									jRetained = bj;
@@ -577,6 +585,7 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
 			iteration++;
+			currentT *= alpha;
 		}
 	}
 
