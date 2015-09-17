@@ -450,22 +450,12 @@ protected:
 
 			if (iRetained != std::numeric_limits<size_t>::max())
 			{
-				lastSwapped[iRetained][jRetained] = iteration;
-				frequency[iRetained][jRetained] = frequency[iRetained][jRetained] + 1;
-				std::swap(currentKeyboard.m_keys[iRetained], currentKeyboard.m_keys[jRetained]);
-				currentCost = currentCost + delta[iRetained][jRetained];
-				for (size_t i = 0;i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1;j < KeyboardSize; j++)
-					{
-						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
-					}
-				}
+				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, begin, end);
 				if (currentCost > bestBestCost)
 				{
 					bestBestCost = currentCost;
 					iteration++;
-					break;
+					return;
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
@@ -569,28 +559,35 @@ protected:
 			}
 			if (iRetained != std::numeric_limits<size_t>::max())
 			{
-				lastSwapped[iRetained][jRetained] = iteration;
-				frequency[iRetained][jRetained] = frequency[iRetained][jRetained] + 1;
-				std::swap(currentKeyboard.m_keys[iRetained], currentKeyboard.m_keys[jRetained]);
-				currentCost = currentCost + delta[iRetained][jRetained];
-				for (size_t i = 0;i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1;j < KeyboardSize; j++)
-					{
-						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
-					}
-				}
+				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, begin, end);
 				if (currentCost > bestBestCost)
 				{
 					bestBestCost = currentCost;
 					iteration++;
-					break;
+					return;
 				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
 			iteration++;
 			currentT *= alpha;
 		}
+	}
+
+	template<typename Itr>
+	float swapKeys(size_t from, size_t to, Keyboard<KeyboardSize> &currentKeyboard, float currentCost, DeltaArray& delta, size_t iteration, IndexArray& lastSwapped, IndexArray& frequency, Itr begin, Itr end)
+	{
+		lastSwapped[from][to] = iteration;
+		frequency[from][to] = frequency[from][to] + 1;
+		std::swap(currentKeyboard.m_keys[from], currentKeyboard.m_keys[to]);
+		float newCost = currentCost + delta[from][to];
+		for (size_t i = 0;i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1;j < KeyboardSize; j++)
+			{
+				delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
+			}
+		}
+		return newCost;
 	}
 
 	std::pair<size_t, size_t> parentSelection()
