@@ -349,7 +349,7 @@ protected:
 					prevLocalOptimum = currentKeyboard;
 				}
 				annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
-			
+
 				if (currentCost > solution[0])
 				{
 					solution[0] = currentCost;
@@ -363,7 +363,7 @@ protected:
 			}
 		};
 	}
-	
+
 	template<typename Itr>
 	float computeDelta(const Keyboard<KeyboardSize>& keyboard, float solution, size_t i, size_t j, Itr begin, Itr end)
 	{
@@ -381,7 +381,7 @@ protected:
 					m_snapshots.emplace_back(std::make_pair(m_NonDominatedSet, evaluations));
 				}
 			}
-			else if(evaluations - m_snapshots.back().second >= m_snapshotEvery)
+			else if (evaluations - m_snapshots.back().second >= m_snapshotEvery)
 			{
 				updateNonDominatedSet();
 				m_snapshots.emplace_back(std::make_pair(m_NonDominatedSet, evaluations));
@@ -399,7 +399,7 @@ protected:
 	}
 
 	template<typename Itr>
-	void perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost, 
+	void perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost,
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Itr begin, Itr end)
 	{
 		std::uniform_real_distribution<float> dist(0.0f, std::nextafter(1.0f, 2.0f));
@@ -424,12 +424,15 @@ protected:
 				{
 					for (size_t j = i + 1; j < KeyboardSize; j++)
 					{
-						if (delta[i][j] > maxDelta &&
-							((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost))
+						float d = delta[i][j];
+						if (d > maxDelta)
 						{
-							iRetained = i; 
-							jRetained = j;
-							maxDelta = delta[i][j];
+							if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
+							{
+								iRetained = i; 
+								jRetained = j;
+								maxDelta = delta[i][j];
+							}
 						}
 					}
 				}
@@ -584,7 +587,7 @@ protected:
 		{
 			for (size_t j = i + 1;j < KeyboardSize; j++)
 			{
-				delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
+				delta[i][j] = computeDelta(currentKeyboard, newCost, i, j, begin, end);
 			}
 		}
 		return newCost;
