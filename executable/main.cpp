@@ -269,7 +269,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, size_t evaluations, size_t anytime, unsigned int seed)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed)
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
@@ -284,6 +284,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	o.crossover(crossoverType);
 	o.tabuTenure(tenureMin, tenureMax);
 	o.perturbType(perturbType);
+	o.annealing(min_t);
 	if (anytime != 0)
 	{
 		o.snapshots(anytime);
@@ -553,16 +554,15 @@ int main(int argc, char* argv[])
 					float directedPertubation = 0.0f;
 					float tenureMin = 0.0f;
 					float tenureMax = 0.0f;
+					float minT = 0.0f;
 					if (perturbTypeStr == "annealed")
 					{
 						perturbType = PerturbType::Annealed;
 						stagnationIters = getArgument<size_t>(options, STAGNATION_ITERATIONS);
-						stagnationMin = getArgument<float>(options, STAGNATION_MIN);
-						stagnationMax = getArgument<float>(options, STAGNATION_MAX);
 						jumpMagnitude = getArgument<float>(options, JUMP_MAGNITUDE);
-						directedPertubation = getArgument<float>(options, DIRECTED_PERTUBATION);
 						tenureMin = getArgument<float>(options, TENURE_MIN);
 						tenureMax = getArgument<float>(options, TENURE_MAX);
+						minT = getArgument<float>(options, MINT);
 					}
 					else if (perturbTypeStr == "normal")
 					{
@@ -587,7 +587,7 @@ int main(int argc, char* argv[])
 
 					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, perturbType, evaluations, anytime, seed);
+						ct, perturbType, minT, evaluations, anytime, seed);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}

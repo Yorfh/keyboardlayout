@@ -4,17 +4,17 @@ population integer [2, 20] [5]
 short_improvement integer [1, 5000] [1000]
 long_improvement integer [1, 5000] [2000]
 stagnation_iterations integer [1, 1000] [250]
-stagnation_min real [0.0, 0.1] [0.05]
-stagnation_max categorical {1.0} [1.0]
+stagnation_min real [0.0, 10.0] [0.2]
+stagnation_max real [0.0, 10.0] [0.4]
 tenure_min real [0.5, 1.5] [0.9]
 tenure_max real [0.5, 1.5] [1.1]
 jump_magnitude real [0.0, 1.0] [0.15]
-#min_directed_pertubation real [0.0, 1.0] [0.75]
-min_directed_pertubation categorical {1.0} [1.0]
+min_directed_pertubation real [0.0, 1.0] [0.75]
 tournament_pool_size integer [1, 10] [4]
 tournament_mutation_frequency integer [1, 30] [5]
 tournament_min_mutation_strength real [0.0, 1.0] [0.5]
 tournament_mutation_growth integer [1, 20] [5]
+min_t [0.0, 1.0] [0.1]
 crossover_type categorical {uniform, partially_matched} [uniform]
 perturb_type categorical {normal, annealed, disabled} [annealed]
 
@@ -22,23 +22,24 @@ population | algo_type in {bma}
 short_improvement | algo_type in {bma}   
 long_improvement | algo_type in {bma}  
 stagnation_iterations | algo_type in {bma} && perturb_type in {normal, annealed}
-stagnation_min | algo_type in {bma} && perturb_type in {normal, annealed}
-stagnation_max | algo_type in {bma} && perturb_type in {normal, annealed}
+stagnation_min | algo_type in {bma} && perturb_type in {normal}
+stagnation_max | algo_type in {bma} && perturb_type in {normal}
 tenure_min | algo_type in {bma} && perturb_type in {normal, annealed}
 tenure_max | algo_type in {bma} && perturb_type in {normal, annealed}
 jump_magnitude | algo_type in {bma} && perturb_type in {normal, annealed}
-min_directed_pertubation | algo_type in {bma} && perturb_type in {normal, annealed}
+min_directed_pertubation | algo_type in {bma} && perturb_type in {normal}
 tournament_pool_size | algo_type in {bma}  
 tournament_mutation_frequency | algo_type in {bma}  
 tournament_min_mutation_strength | algo_type in {bma}  
 tournament_mutation_growth | algo_type in {bma}  
+min_t | algo_type in {bma} && perturb_type in {annealed}
 crossover_type | algo_type in {bma}
 perturb_type | algo_type in {bma}
 
 {short_improvement >= long_improvement}
-#{stagnation_min >= stagnation_max}
+{stagnation_min >= stagnation_max}
 {tenure_min >= tenure_max}
-#{jump_magnitude >= stagnation_min}
+{jump_magnitude >= stagnation_min}
 
 # To enable only normal perturb
-{perturb_type == disabled || perturb_type == normal}
+{perturb_type == disabled}

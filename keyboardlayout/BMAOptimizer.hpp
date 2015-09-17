@@ -100,6 +100,11 @@ public:
 		m_snapshotEvery = snapshotEvery;
 	}
 
+	void annealing(float min_t)
+	{
+		m_minT = min_t;
+	}
+
 	template<typename Solution, typename Itr>
 	void evaluate(Solution& solution, Keyboard<KeyboardSize>& keyboard, Itr begin, Itr end)
 	{
@@ -475,11 +480,10 @@ protected:
 		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::array<std::array<bool, KeyboardSize>, KeyboardSize> valid;
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		float min_t = m_minStagnationMagnitude;
-		//KLUDGE using completely unrelated parameters
+		float min_t = m_minT;
 		float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		const float fiftyPercent = 1.0f / std::log(2.0f);
-		float max_t = m_minStagnationMagnitude + (fiftyPercent - m_minStagnationMagnitude) * d;
+		float max_t = min_t + fiftyPercent * d;
 		float tMult = d > 1.0f ? d : 1.0f;
 		float t_steps = static_cast<float>(perturbStr) * tMult;
 		float alpha = std::pow(min_t / max_t, 1.0f / t_steps);
@@ -725,6 +729,7 @@ protected:
 	float m_mutationStrenghtMin = 0.5f;
 	size_t m_mutationStrenghtGrowth = 5;
 	size_t m_snapshotEvery = 0;
+	float m_minT = 0.1f;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;

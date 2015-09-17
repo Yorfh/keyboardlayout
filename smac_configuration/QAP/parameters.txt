@@ -14,23 +14,25 @@ tournament_pool_size integer [1, 10] [4]
 tournament_mutation_frequency integer [1, 30] [5]
 tournament_min_mutation_strength real [0.0, 1.0] [0.5]
 tournament_mutation_growth integer [1, 20] [5]
+min_t [0.0, 1.0] [0.1]
 crossover_type categorical {uniform, partially_matched} [uniform]
-perturb_type categorical {normal, annealed, disabled} [normal]
+perturb_type categorical {normal, annealed, disabled} [annealed]
 
 population | algo_type in {bma}  
 short_improvement | algo_type in {bma}   
 long_improvement | algo_type in {bma}  
 stagnation_iterations | algo_type in {bma}  
-stagnation_min | algo_type in {bma}  
-stagnation_max | algo_type in {bma}  
-tenure_min | algo_type in {bma}  
-tenure_max | algo_type in {bma}  
-jump_magnitude | algo_type in {bma}  
-min_directed_pertubation | algo_type in {bma}  
+stagnation_min | algo_type in {bma} && perturb_type in {normal}
+stagnation_max | algo_type in {bma} && perturb_type in {normal}
+tenure_min | algo_type in {bma} && perturb_type in {normal, annealed}
+tenure_max | algo_type in {bma} && perturb_type in {normal, annealed}
+jump_magnitude | algo_type in {bma} && perturb_type in {normal, annealed}
+min_directed_pertubation | algo_type in {bma} && perturb_type in {normal}
 tournament_pool_size | algo_type in {bma}  
 tournament_mutation_frequency | algo_type in {bma}  
 tournament_min_mutation_strength | algo_type in {bma}  
 tournament_mutation_growth | algo_type in {bma}  
+min_t | algo_type in {bma} && perturb_type in {annealed}
 crossover_type | algo_type in {bma}
 perturb_type | algo_type in {bma}
 
