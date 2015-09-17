@@ -121,7 +121,7 @@ public:
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_totalEvaluations = numEvaluations;
 		generateRandomPopulation(begin, end);
-		shortImprovement(begin, end);
+		shortImprovement(true, begin, end);
 		updateNonDominatedSet();
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
@@ -133,7 +133,7 @@ public:
 			auto parents = parentSelection();
 			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
 			evaluate(solution, child, begin, end);
-			localSearch(child, solution, m_imporvementDepth, begin, end);
+			localSearch(child, solution, m_imporvementDepth, true, begin, end);
 			float resultingCost = m_NonDominatedSet[0].m_solution[0];
 			float childCost = solution[0];
 			if (childCost > resultingCost)
@@ -146,24 +146,43 @@ public:
 				numWithoutImprovement++;
 			}
 
-			if (numWithoutImprovement == m_mutationFrequency)
+			if (numWithoutImprovement >= m_mutationFrequency)
 			{
-				size_t i = 0;
-				do 
+				if (numCounter == m_mutationStrenghtGrowth)
 				{
-					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
-					const float tMax = 1.0f - m_mutationStrenghtMin;
-					t *= tMax;
-					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
-					mutatePopulation(mutationStrength);
-					evaluatePopulation(begin, end);
+					// TODO possibly use the best found instead of current
+					// break out as soon as a better solution is found
+					// always start with the best
+					shortImprovement(false, begin, end);
+					if (solution[0] <= resultingCost)
+					{
+						numWithoutImprovement++;
+					}
+					else
+					{
+						numWithoutImprovement = 0;
+					}
+					numCounter = 0;
+				}
+				else
+				{
+					size_t i = 0;
+					do 
+					{
+						float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
+						const float tMax = 1.0f - m_mutationStrenghtMin;
+						t *= tMax;
+						size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+						mutatePopulation(mutationStrength);
+						evaluatePopulation(begin, end);
+						updateNonDominatedSet();
+						shortImprovement(true, begin, end);
+						i++;
+					} while (!populationIsUnique() && i <= 5);
 					updateNonDominatedSet();
-					shortImprovement(begin, end);
-					i++;
-				} while (!populationIsUnique() && i <= 5);
-				updateNonDominatedSet();
-				numWithoutImprovement = 0;
-				numCounter++;
+					numWithoutImprovement = 0;
+					numCounter++;
+				}
 			}
 			if (numCounter > m_mutationStrenghtGrowth)
 			{
@@ -210,18 +229,18 @@ protected:
 	}
 	
 	template<typename Itr>
-	void shortImprovement(Itr begin, Itr end)
+	void shortImprovement(bool steepestAscentOnly, Itr begin, Itr end)
 	{
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
-			localSearch(keyboard, solution, m_shortImprovementDepth, begin, end);
+			localSearch(keyboard, solution, m_shortImprovementDepth, steepestAscentOnly, begin, end);
 		}
 	}
 
 	template<typename Itr>
-	void localSearch(Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution, size_t numIterations, Itr begin, Itr end)
+	void localSearch(Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution, size_t numIterations, bool steepestAscentOnly, Itr begin, Itr end)
 	{
 		Keyboard<KeyboardSize> currentKeyboard = keyboard;
 
@@ -301,61 +320,64 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 				hasImproved = true;
 			}
-			else if(m_perturbType == PerturbType::Normal)
+			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled)
 			{
-				if (iterWithoutImprovement > m_stagnationAfter)
+				if(m_perturbType == PerturbType::Normal)
 				{
-					iterWithoutImprovement = 0;
-					auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
-					perturbStr = std::max(str, perturbStr);
-				}
-				else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
-				{
-					iterWithoutImprovement++;
-					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-				}
-				else
-				{
-					perturbStr += 1;
-				}
+					if (iterWithoutImprovement > m_stagnationAfter)
+					{
+						iterWithoutImprovement = 0;
+						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
+						perturbStr = std::max(str, perturbStr);
+					}
+					else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
+					{
+						iterWithoutImprovement++;
+						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
+					}
+					else
+					{
+						perturbStr += 1;
+					}
 
-				if (hasImproved)
-				{
-					prevLocalOptimum = currentKeyboard;
+					if (hasImproved)
+					{
+						prevLocalOptimum = currentKeyboard;
+					}
+					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				
+					if (currentCost > solution[0])
+					{
+						solution[0] = currentCost;
+						keyboard = currentKeyboard;
+					}
+					hasImproved = false;
 				}
-				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
-			
-				if (currentCost > solution[0])
+				else if (m_perturbType == PerturbType::Annealed)
 				{
-					solution[0] = currentCost;
-					keyboard = currentKeyboard;
-				}
-				hasImproved = false;
-			}
-			else if (m_perturbType == PerturbType::Annealed)
-			{
-				if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
-				{
-					iterWithoutImprovement++;
-					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-				}
-				else
-				{
-					perturbStr += 1;
-				}
+					if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
+					{
+						iterWithoutImprovement++;
+						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
+					}
+					else
+					{
+						perturbStr += 1;
+					}
 
-				if (hasImproved)
-				{
-					prevLocalOptimum = currentKeyboard;
-				}
-				annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+					if (hasImproved)
+					{
+						prevLocalOptimum = currentKeyboard;
+					}
+					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
 
-				if (currentCost > solution[0])
-				{
-					solution[0] = currentCost;
-					keyboard = currentKeyboard;
+					if (currentCost > solution[0])
+					{
+						solution[0] = currentCost;
+						keyboard = currentKeyboard;
+					}
+					hasImproved = false;
 				}
-				hasImproved = false;
 			}
 			else
 			{
