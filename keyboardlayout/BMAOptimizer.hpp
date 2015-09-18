@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include <set>
 #include "Optimizer.hpp"
 
 template<size_t KeyboardSize>
@@ -123,6 +124,7 @@ public:
 		generateRandomPopulation(begin, end);
 		shortImprovement(true, begin, end);
 		updateNonDominatedSet();
+		updateEliteArchive();
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
@@ -145,6 +147,8 @@ public:
 			{
 				numWithoutImprovement++;
 			}
+			replaceSolution(child, solution);
+			updateEliteArchive(child, solution[0]);
 
 			if (numWithoutImprovement >= m_mutationFrequency)
 			{
@@ -178,15 +182,15 @@ public:
 						i++;
 					} while (!populationIsUnique() && i <= 5);
 					updateNonDominatedSet();
+					updateEliteArchive();
 					numWithoutImprovement = 0;
 					numCounter++;
 				}
+				if (numCounter > m_mutationStrenghtGrowth)
+				{
+					numCounter = 0;
+				}
 			}
-			if (numCounter > m_mutationStrenghtGrowth)
-			{
-				numCounter = 0;
-			}
-			replaceSolution(child, solution);
 		}
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
@@ -240,26 +244,31 @@ protected:
 	template<typename Itr>
 	bool tryToImproveAny(Itr begin, Itr end)
 	{
-		//TODO sort
-
-		std::vector<size_t> order(m_population.size());
-		std::iota(order.begin(), order.end(), 0);
-		std::sort(order.begin(), order.end(), [this](size_t lhs, size_t rhs)
-		{
-			return m_populationSolutions[lhs] > m_populationSolutions[rhs];
-		});
-
+		std::vector<float> solution(1);
 		float best = m_NonDominatedSet[0].m_solution[0];
-		for (size_t i = 0; i < m_populationSize; i++)
+		size_t i = 0;
+
+		for (auto&& e : m_eliteSoFar)
 		{
-			auto& keyboard = m_population[order[i]];
-			auto& solution = m_populationSolutions[order[i]];
-			localSearch(keyboard, solution, m_shortImprovementDepth, true, begin, end);
-			if (solution[0] > best)
+			if (e.m_improved == false)
 			{
-				return true;
+				e.m_improved = true;
+				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
+				solution[0] = e.m_solution;
+				localSearch(keyboard, solution, m_shortImprovementDepth, true, begin, end);
+				if (solution[0] > best)
+				{
+					replaceSolution(keyboard, solution);
+					return true;
+				}
+			}
+			i++;
+			if (i >= m_populationSize)
+			{
+				return false;
 			}
 		}
+
 		return false;
 	}
 
@@ -758,6 +767,25 @@ protected:
 		}
 	}
 
+	void updateEliteArchive()
+	{
+		for (size_t i = 0; i < m_population.size(); i++)
+		{
+			auto& keyboard = m_population[i];
+			float solution = m_populationSolutions[i][0];
+			updateEliteArchive(keyboard, solution);
+		}
+	}
+
+	void updateEliteArchive(const Keyboard<KeyboardSize>& keyboard, float solution)
+	{
+		Elite e(keyboard, solution);
+		if (m_eliteSoFar.find(e) == m_eliteSoFar.end())
+		{
+			m_eliteSoFar.insert(e);
+		}
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -783,6 +811,36 @@ protected:
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
+	
+	struct Elite
+	{
+		Elite(const Keyboard<KeyboardSize>& keyboard, float solution) :
+			m_keyboard(keyboard),
+			m_solution(solution),
+			m_improved(false)
+		{
+		}
+		Keyboard<KeyboardSize> m_keyboard;
+		float m_solution;
+		mutable bool m_improved;
+	};
+
+	struct CompareElite
+	{
+		bool operator()(const Elite& lhs, const Elite& rhs) const
+		{
+			if (lhs.m_solution == rhs.m_solution)
+			{
+				return lhs.m_keyboard.m_keys < rhs.m_keyboard.m_keys;
+			}
+			else
+			{
+				return lhs.m_solution < rhs.m_solution;
+			}
+		}
+	};
+
+	std::set<Elite, CompareElite> m_eliteSoFar;
 };
 
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>
