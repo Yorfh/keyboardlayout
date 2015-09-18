@@ -151,16 +151,14 @@ public:
 				if (numCounter == m_mutationStrenghtGrowth)
 				{
 					// TODO possibly use the best found instead of current
-					// break out as soon as a better solution is found
-					// always start with the best
-					shortImprovement(false, begin, end);
-					if (solution[0] <= resultingCost)
+					bool improved = tryToImproveAny(begin, end);
+					if (improved)
 					{
-						numWithoutImprovement++;
+						numWithoutImprovement = 0;
 					}
 					else
 					{
-						numWithoutImprovement = 0;
+						numWithoutImprovement++;
 					}
 					numCounter = 0;
 				}
@@ -237,6 +235,32 @@ protected:
 			auto& solution = m_populationSolutions[i];
 			localSearch(keyboard, solution, m_shortImprovementDepth, steepestAscentOnly, begin, end);
 		}
+	}
+
+	template<typename Itr>
+	bool tryToImproveAny(Itr begin, Itr end)
+	{
+		//TODO sort
+
+		std::vector<size_t> order(m_population.size());
+		std::iota(order.begin(), order.end(), 0);
+		std::sort(order.begin(), order.end(), [this](size_t lhs, size_t rhs)
+		{
+			return m_populationSolutions[lhs] > m_populationSolutions[rhs];
+		});
+
+		float best = m_NonDominatedSet[0].m_solution[0];
+		for (size_t i = 0; i < m_populationSize; i++)
+		{
+			auto& keyboard = m_population[order[i]];
+			auto& solution = m_populationSolutions[order[i]];
+			localSearch(keyboard, solution, m_shortImprovementDepth, true, begin, end);
+			if (solution[0] > best)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	template<typename Itr>
@@ -320,7 +344,7 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 				hasImproved = true;
 			}
-			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled)
+			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution[0] <= bestCost)
 			{
 				if(m_perturbType == PerturbType::Normal)
 				{
