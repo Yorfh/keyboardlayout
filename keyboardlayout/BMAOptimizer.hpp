@@ -154,7 +154,6 @@ public:
 			{
 				if (numCounter == m_mutationStrenghtGrowth)
 				{
-					// TODO possibly use the best found instead of current
 					bool improved = tryToImproveAny(begin, end);
 					if (improved)
 					{
@@ -293,13 +292,7 @@ protected:
 			frequency[i].fill(0);
 		}
 
-		for (size_t i = 0;i < KeyboardSize; i++)
-		{
-			for (size_t j = i + 1;j < KeyboardSize; j++)
-			{
-				delta[i][j] = computeDelta(currentKeyboard, solution[0], i, j, begin, end);
-			}
-		}
+		computeAllDeltas(currentKeyboard, solution[0], begin, end, delta);
 
 		float currentCost = solution[0];
 		float bestCost = solution[0];
@@ -312,8 +305,9 @@ protected:
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
+			float maxDelta;
 
-			float maxDelta = steepestAscent(delta, iRetained, jRetained);
+			std::tie(iRetained, jRetained, maxDelta) = steepestAscent(delta);
 
 			if ((currentCost + maxDelta) > currentCost)
 			{
@@ -325,7 +319,6 @@ protected:
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 				iteration++;
 				hasImproved = true;
 			}
@@ -396,6 +389,18 @@ protected:
 	}
 
 	template<typename Itr>
+	void computeAllDeltas(const Keyboard<KeyboardSize> keyboard, float solution, Itr begin, Itr end, DeltaArray& delta)
+	{
+		for (size_t i = 0;i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1;j < KeyboardSize; j++)
+			{
+				delta[i][j] = computeDelta(keyboard, solution, i, j, begin, end);
+			}
+		}
+	}
+
+	template<typename Itr>
 	float computeDelta(const Keyboard<KeyboardSize>& keyboard, float solution, size_t i, size_t j, Itr begin, Itr end)
 	{
 		Keyboard<KeyboardSize> k = keyboard;
@@ -439,8 +444,6 @@ protected:
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		for (size_t k = 0; k < perturbStr; k++)
 		{
-			size_t iRetained = std::numeric_limits<size_t>::max();
-			size_t jRetained = iRetained;
 			bool useTabu = false;
 			float e = std::exp(-d);
 			e = std::max(m_minDirectedPerturbation, e);
@@ -448,13 +451,15 @@ protected:
 			if (e > dist(m_randomGenerator))
 				useTabu = true;
 
+			size_t iRetained;
+			size_t jRetained;
 			if (useTabu)
 			{
-				tabuPerturbe(delta, lastSwapped, tabuTenureDist, iteration, currentCost, bestBestCost, iRetained, jRetained);
+				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tabuTenureDist, iteration, currentCost, bestBestCost);
 			}
 			else
 			{
-				randomPerturbe(iRetained, jRetained, keyDist);
+				std::tie(iRetained, jRetained) = randomPerturbe(keyDist);
 			}
 
 			if (iRetained != std::numeric_limits<size_t>::max())
@@ -466,14 +471,15 @@ protected:
 					iteration++;
 					return;
 				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
 			iteration++;
 		}
 	}
 
-	float steepestAscent(const DeltaArray delta, size_t &iRetained, size_t &jRetained)
+	std::tuple<size_t, size_t, float> steepestAscent(const DeltaArray delta)
 	{
+		size_t iRetained = std::numeric_limits<size_t>::max();
+		size_t jRetained = iRetained;
 		float maxDelta = std::numeric_limits<float>::lowest();
 		for (size_t i = 0; i < KeyboardSize; i++)
 		{
@@ -488,11 +494,13 @@ protected:
 				}
 			}
 		}
-		return maxDelta;
+		return std::make_tuple(iRetained, jRetained, maxDelta);
 	}
 
-	void tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_int_distribution<size_t>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost, size_t& iRetained, size_t& jRetained)
+	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_int_distribution<size_t>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
 	{
+		size_t iRetained = std::numeric_limits<size_t>::max();
+		size_t jRetained = iRetained;
 		float maxDelta = std::numeric_limits<float>::lowest();
 		for (size_t i = 0; i < KeyboardSize; i++)
 		{
@@ -510,12 +518,13 @@ protected:
 				}
 			}
 		}
+		return std::make_tuple(iRetained, jRetained);
 	}
 
-	void randomPerturbe(size_t &iRetained, size_t &jRetained, std::uniform_int_distribution<int>& keyDist)
+	std::tuple<size_t, size_t> randomPerturbe(std::uniform_int_distribution<int>& keyDist)
 	{
-		iRetained = keyDist(m_randomGenerator);
-		jRetained = keyDist(m_randomGenerator);
+		size_t iRetained = keyDist(m_randomGenerator);
+		size_t jRetained = keyDist(m_randomGenerator);
 		if (iRetained > jRetained)
 			std::swap(iRetained, jRetained);
 		while (iRetained == jRetained)
@@ -524,6 +533,7 @@ protected:
 			if (iRetained > jRetained)
 				std::swap(iRetained, jRetained);
 		}
+		return std::make_tuple(iRetained, jRetained);
 	}
 
 	template<typename Itr>
@@ -643,13 +653,7 @@ protected:
 		frequency[from][to]++;
 		std::swap(currentKeyboard.m_keys[from], currentKeyboard.m_keys[to]);
 		float newCost = currentCost + delta[from][to];
-		for (size_t i = 0;i < KeyboardSize; i++)
-		{
-			for (size_t j = i + 1;j < KeyboardSize; j++)
-			{
-				delta[i][j] = computeDelta(currentKeyboard, newCost, i, j, begin, end);
-			}
-		}
+		computeAllDeltas(currentKeyboard, newCost, begin, end, delta);
 		return newCost;
 	}
 
