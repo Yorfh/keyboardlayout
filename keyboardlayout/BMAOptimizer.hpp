@@ -313,29 +313,11 @@ protected:
 			size_t iRetained = 0;
 			size_t jRetained = 0;
 
-			float maxDelta = std::numeric_limits<float>::lowest();
-			for (size_t i = 0; i < KeyboardSize; i++)
-			{
-				for (size_t j = i + 1; j < KeyboardSize; j++)
-				{
-					float d = delta[i][j];
-					if (d > maxDelta)
-					{
-						maxDelta = d;
-						iRetained = i;
-						jRetained = j;
-					}
-				}
-			}
+			float maxDelta = steepestAscent(delta, iRetained, jRetained);
 
 			if ((currentCost + maxDelta) > currentCost)
 			{
-				std::swap(currentKeyboard.m_keys[iRetained], currentKeyboard.m_keys[jRetained]);
-				lastSwapped[iRetained][jRetained] = iteration;
-				frequency[iRetained][jRetained]++;
-				iteration++;
-				currentCost += delta[iRetained][jRetained];
-
+				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, begin, end);
 				if (currentCost > solution[0])
 				{
 					iterWithoutImprovement = 0;
@@ -343,14 +325,8 @@ protected:
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
-				for (size_t i = 0; i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1; j < KeyboardSize; j++)
-					{
-						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
-					}
-				}
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
+				iteration++;
 				hasImproved = true;
 			}
 			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution[0] <= bestCost)
@@ -465,45 +441,20 @@ protected:
 		{
 			size_t iRetained = std::numeric_limits<size_t>::max();
 			size_t jRetained = iRetained;
-			bool bit = false;
+			bool useTabu = false;
 			float e = std::exp(-d);
 			e = std::max(m_minDirectedPerturbation, e);
 
 			if (e > dist(m_randomGenerator))
-				bit = true;
+				useTabu = true;
 
-			if (bit)
+			if (useTabu)
 			{
-				float maxDelta = std::numeric_limits<float>::lowest();
-				for (size_t i = 0; i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1; j < KeyboardSize; j++)
-					{
-						float d = delta[i][j];
-						if (d > maxDelta)
-						{
-							if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
-							{
-								iRetained = i; 
-								jRetained = j;
-								maxDelta = delta[i][j];
-							}
-						}
-					}
-				}
+				tabuPerturbe(delta, lastSwapped, tabuTenureDist, iteration, currentCost, bestBestCost, iRetained, jRetained);
 			}
 			else
 			{
-				iRetained = keyDist(m_randomGenerator);
-				jRetained = keyDist(m_randomGenerator);
-				if (iRetained > jRetained)
-					std::swap(iRetained, jRetained);
-				while (iRetained == jRetained)
-				{
-					jRetained = keyDist(m_randomGenerator);
-					if (iRetained > jRetained)
-						std::swap(iRetained, jRetained);
-				}
+				randomPerturbe(iRetained, jRetained, keyDist);
 			}
 
 			if (iRetained != std::numeric_limits<size_t>::max())
@@ -518,6 +469,60 @@ protected:
 				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
 			iteration++;
+		}
+	}
+
+	float steepestAscent(const DeltaArray delta, size_t &iRetained, size_t &jRetained)
+	{
+		float maxDelta = std::numeric_limits<float>::lowest();
+		for (size_t i = 0; i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1; j < KeyboardSize; j++)
+			{
+				float d = delta[i][j];
+				if (d > maxDelta)
+				{
+					maxDelta = d;
+					iRetained = i;
+					jRetained = j;
+				}
+			}
+		}
+		return maxDelta;
+	}
+
+	void tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_int_distribution<size_t>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost, size_t& iRetained, size_t& jRetained)
+	{
+		float maxDelta = std::numeric_limits<float>::lowest();
+		for (size_t i = 0; i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1; j < KeyboardSize; j++)
+			{
+				float d = delta[i][j];
+				if (d > maxDelta)
+				{
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
+					{
+						iRetained = i;
+						jRetained = j;
+						maxDelta = delta[i][j];
+					}
+				}
+			}
+		}
+	}
+
+	void randomPerturbe(size_t &iRetained, size_t &jRetained, std::uniform_int_distribution<int>& keyDist)
+	{
+		iRetained = keyDist(m_randomGenerator);
+		jRetained = keyDist(m_randomGenerator);
+		if (iRetained > jRetained)
+			std::swap(iRetained, jRetained);
+		while (iRetained == jRetained)
+		{
+			jRetained = keyDist(m_randomGenerator);
+			if (iRetained > jRetained)
+				std::swap(iRetained, jRetained);
 		}
 	}
 
@@ -635,7 +640,7 @@ protected:
 	float swapKeys(size_t from, size_t to, Keyboard<KeyboardSize> &currentKeyboard, float currentCost, DeltaArray& delta, size_t iteration, IndexArray& lastSwapped, IndexArray& frequency, Itr begin, Itr end)
 	{
 		lastSwapped[from][to] = iteration;
-		frequency[from][to] = frequency[from][to] + 1;
+		frequency[from][to]++;
 		std::swap(currentKeyboard.m_keys[from], currentKeyboard.m_keys[to]);
 		float newCost = currentCost + delta[from][to];
 		for (size_t i = 0;i < KeyboardSize; i++)
