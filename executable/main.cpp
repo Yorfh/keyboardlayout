@@ -273,7 +273,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
-	BMAOptimizer<12, 1> o(seed);
+	BMAOptimizer<12> o(seed);
 	o.populationSize(population);
 	o.improvementDepth(shortDepth, longDepth);
 	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);
@@ -289,23 +289,21 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	{
 		o.snapshots(anytime);
 	}
-	auto objectives = { objective };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), evaluations);
+	auto& solution = o.optimize(objective, evaluations);
 	int resultValue = 0;
 	if (anytime == 0)
 	{
-		auto result = solutions.getResult()[0].m_keyboard;
-		resultValue = static_cast<int>(-std::round(objective.evaluate(result)));
+		resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 	}
 	else
 	{
 		auto& snapshots = o.getSnapshots();
-		float result = solutions.getResult()[0].m_solution[0];
+		float result = std::get<0>(solution);
 		float multiplierSum = 1.0f;
 		for (auto&& s: snapshots)
 		{ 
 			float multiplier = static_cast<float>(s.second) / static_cast<float>(evaluations);
-			result += multiplier * s.first[0].m_solution[0];
+			result += multiplier * std::get<0>(s.first);
 			multiplierSum += multiplier;
 		}
 		resultValue = static_cast<int>(-std::round(result / multiplierSum));
