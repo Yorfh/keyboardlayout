@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <numeric>
+#include <set>
 #include "Optimizer.hpp"
 
 template<size_t KeyboardSize>
@@ -121,8 +122,9 @@ public:
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_totalEvaluations = numEvaluations;
 		generateRandomPopulation(begin, end);
-		shortImprovement(begin, end);
+		shortImprovement(true, begin, end);
 		updateNonDominatedSet();
+		updateEliteArchive();
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
@@ -133,7 +135,7 @@ public:
 			auto parents = parentSelection();
 			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
 			evaluate(solution, child, begin, end);
-			localSearch(child, solution, m_imporvementDepth, begin, end);
+			localSearch(child, solution, m_imporvementDepth, true, begin, end);
 			float resultingCost = m_NonDominatedSet[0].m_solution[0];
 			float childCost = solution[0];
 			if (childCost > resultingCost)
@@ -145,31 +147,49 @@ public:
 			{
 				numWithoutImprovement++;
 			}
-
-			if (numWithoutImprovement == m_mutationFrequency)
-			{
-				size_t i = 0;
-				do 
-				{
-					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
-					const float tMax = 1.0f - m_mutationStrenghtMin;
-					t *= tMax;
-					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
-					mutatePopulation(mutationStrength);
-					evaluatePopulation(begin, end);
-					updateNonDominatedSet();
-					shortImprovement(begin, end);
-					i++;
-				} while (!populationIsUnique() && i <= 5);
-				updateNonDominatedSet();
-				numWithoutImprovement = 0;
-				numCounter++;
-			}
-			if (numCounter > m_mutationStrenghtGrowth)
-			{
-				numCounter = 0;
-			}
 			replaceSolution(child, solution);
+			updateEliteArchive(child, solution[0]);
+
+			if (numWithoutImprovement >= m_mutationFrequency)
+			{
+				if (numCounter == m_mutationStrenghtGrowth)
+				{
+					bool improved = tryToImproveAny(begin, end);
+					if (improved)
+					{
+						numWithoutImprovement = 0;
+					}
+					else
+					{
+						numWithoutImprovement++;
+					}
+					numCounter = 0;
+				}
+				else
+				{
+					size_t i = 0;
+					do 
+					{
+						float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
+						const float tMax = 1.0f - m_mutationStrenghtMin;
+						t *= tMax;
+						size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+						mutatePopulation(mutationStrength);
+						evaluatePopulation(begin, end);
+						updateNonDominatedSet();
+						shortImprovement(true, begin, end);
+						i++;
+					} while (!populationIsUnique() && i <= 5);
+					updateNonDominatedSet();
+					updateEliteArchive();
+					numWithoutImprovement = 0;
+					numCounter++;
+				}
+				if (numCounter > m_mutationStrenghtGrowth)
+				{
+					numCounter = 0;
+				}
+			}
 		}
 		updateNonDominatedSet();
 		return m_NonDominatedSet;
@@ -210,18 +230,49 @@ protected:
 	}
 	
 	template<typename Itr>
-	void shortImprovement(Itr begin, Itr end)
+	void shortImprovement(bool steepestAscentOnly, Itr begin, Itr end)
 	{
 		for (size_t i = 0; i < m_populationSize; i++)
 		{
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
-			localSearch(keyboard, solution, m_shortImprovementDepth, begin, end);
+			localSearch(keyboard, solution, m_shortImprovementDepth, steepestAscentOnly, begin, end);
 		}
 	}
 
 	template<typename Itr>
-	void localSearch(Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution, size_t numIterations, Itr begin, Itr end)
+	bool tryToImproveAny(Itr begin, Itr end)
+	{
+		std::vector<float> solution(1);
+		float best = m_NonDominatedSet[0].m_solution[0];
+		size_t i = 0;
+
+		for (auto&& e : m_eliteSoFar)
+		{
+			if (e.m_improved == false)
+			{
+				e.m_improved = true;
+				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
+				solution[0] = e.m_solution;
+				localSearch(keyboard, solution, m_shortImprovementDepth, true, begin, end);
+				if (solution[0] > best)
+				{
+					replaceSolution(keyboard, solution);
+					return true;
+				}
+			}
+			i++;
+			if (i >= m_populationSize)
+			{
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	template<typename Itr>
+	void localSearch(Keyboard<KeyboardSize>& keyboard, std::vector<float>& solution, size_t numIterations, bool steepestAscentOnly, Itr begin, Itr end)
 	{
 		Keyboard<KeyboardSize> currentKeyboard = keyboard;
 
@@ -241,13 +292,7 @@ protected:
 			frequency[i].fill(0);
 		}
 
-		for (size_t i = 0;i < KeyboardSize; i++)
-		{
-			for (size_t j = i + 1;j < KeyboardSize; j++)
-			{
-				delta[i][j] = computeDelta(currentKeyboard, solution[0], i, j, begin, end);
-			}
-		}
+		computeAllDeltas(currentKeyboard, solution[0], begin, end, delta);
 
 		float currentCost = solution[0];
 		float bestCost = solution[0];
@@ -260,30 +305,13 @@ protected:
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
+			float maxDelta;
 
-			float maxDelta = std::numeric_limits<float>::lowest();
-			for (size_t i = 0; i < KeyboardSize; i++)
-			{
-				for (size_t j = i + 1; j < KeyboardSize; j++)
-				{
-					float d = delta[i][j];
-					if (d > maxDelta)
-					{
-						maxDelta = d;
-						iRetained = i;
-						jRetained = j;
-					}
-				}
-			}
+			std::tie(iRetained, jRetained, maxDelta) = steepestAscent(delta);
 
 			if ((currentCost + maxDelta) > currentCost)
 			{
-				std::swap(currentKeyboard.m_keys[iRetained], currentKeyboard.m_keys[jRetained]);
-				lastSwapped[iRetained][jRetained] = iteration;
-				frequency[iRetained][jRetained]++;
-				iteration++;
-				currentCost += delta[iRetained][jRetained];
-
+				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, begin, end);
 				if (currentCost > solution[0])
 				{
 					iterWithoutImprovement = 0;
@@ -291,77 +319,85 @@ protected:
 					solution[0] = currentCost;
 					keyboard = currentKeyboard;
 				}
-				for (size_t i = 0; i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1; j < KeyboardSize; j++)
-					{
-						delta[i][j] = computeDelta(currentKeyboard, currentCost, i, j, begin, end);
-					}
-				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
+				iteration++;
 				hasImproved = true;
 			}
-			else if(m_perturbType == PerturbType::Normal)
+			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution[0] <= bestCost)
 			{
-				if (iterWithoutImprovement > m_stagnationAfter)
+				if(m_perturbType == PerturbType::Normal)
 				{
-					iterWithoutImprovement = 0;
-					auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
-					perturbStr = std::max(str, perturbStr);
-				}
-				else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
-				{
-					iterWithoutImprovement++;
-					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-				}
-				else
-				{
-					perturbStr += 1;
-				}
+					if (iterWithoutImprovement > m_stagnationAfter)
+					{
+						iterWithoutImprovement = 0;
+						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
+						perturbStr = std::max(str, perturbStr);
+					}
+					else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
+					{
+						iterWithoutImprovement++;
+						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
+					}
+					else
+					{
+						perturbStr += 1;
+					}
 
-				if (hasImproved)
-				{
-					prevLocalOptimum = currentKeyboard;
+					if (hasImproved)
+					{
+						prevLocalOptimum = currentKeyboard;
+					}
+					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+				
+					if (currentCost > solution[0])
+					{
+						solution[0] = currentCost;
+						keyboard = currentKeyboard;
+					}
+					hasImproved = false;
 				}
-				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
-			
-				if (currentCost > solution[0])
+				else if (m_perturbType == PerturbType::Annealed)
 				{
-					solution[0] = currentCost;
-					keyboard = currentKeyboard;
-				}
-				hasImproved = false;
-			}
-			else if (m_perturbType == PerturbType::Annealed)
-			{
-				if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
-				{
-					iterWithoutImprovement++;
-					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-				}
-				else
-				{
-					perturbStr += 1;
-				}
+					if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
+					{
+						iterWithoutImprovement++;
+						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
+					}
+					else
+					{
+						perturbStr += 1;
+					}
 
-				if (hasImproved)
-				{
-					prevLocalOptimum = currentKeyboard;
-				}
-				annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
+					if (hasImproved)
+					{
+						prevLocalOptimum = currentKeyboard;
+					}
+					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution[0], perturbStr, iteration, begin, end);
 
-				if (currentCost > solution[0])
-				{
-					solution[0] = currentCost;
-					keyboard = currentKeyboard;
+					if (currentCost > solution[0])
+					{
+						solution[0] = currentCost;
+						keyboard = currentKeyboard;
+					}
+					hasImproved = false;
 				}
-				hasImproved = false;
 			}
 			else
 			{
 				break;
 			}
 		};
+	}
+
+	template<typename Itr>
+	void computeAllDeltas(const Keyboard<KeyboardSize> keyboard, float solution, Itr begin, Itr end, DeltaArray& delta)
+	{
+		for (size_t i = 0;i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1;j < KeyboardSize; j++)
+			{
+				delta[i][j] = computeDelta(keyboard, solution, i, j, begin, end);
+			}
+		}
 	}
 
 	template<typename Itr>
@@ -408,47 +444,22 @@ protected:
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		for (size_t k = 0; k < perturbStr; k++)
 		{
-			size_t iRetained = std::numeric_limits<size_t>::max();
-			size_t jRetained = iRetained;
-			bool bit = false;
+			bool useTabu = false;
 			float e = std::exp(-d);
 			e = std::max(m_minDirectedPerturbation, e);
 
 			if (e > dist(m_randomGenerator))
-				bit = true;
+				useTabu = true;
 
-			if (bit)
+			size_t iRetained;
+			size_t jRetained;
+			if (useTabu)
 			{
-				float maxDelta = std::numeric_limits<float>::lowest();
-				for (size_t i = 0; i < KeyboardSize; i++)
-				{
-					for (size_t j = i + 1; j < KeyboardSize; j++)
-					{
-						float d = delta[i][j];
-						if (d > maxDelta)
-						{
-							if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
-							{
-								iRetained = i; 
-								jRetained = j;
-								maxDelta = delta[i][j];
-							}
-						}
-					}
-				}
+				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tabuTenureDist, iteration, currentCost, bestBestCost);
 			}
 			else
 			{
-				iRetained = keyDist(m_randomGenerator);
-				jRetained = keyDist(m_randomGenerator);
-				if (iRetained > jRetained)
-					std::swap(iRetained, jRetained);
-				while (iRetained == jRetained)
-				{
-					jRetained = keyDist(m_randomGenerator);
-					if (iRetained > jRetained)
-						std::swap(iRetained, jRetained);
-				}
+				std::tie(iRetained, jRetained) = randomPerturbe(keyDist);
 			}
 
 			if (iRetained != std::numeric_limits<size_t>::max())
@@ -460,10 +471,69 @@ protected:
 					iteration++;
 					return;
 				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
 			}
 			iteration++;
 		}
+	}
+
+	std::tuple<size_t, size_t, float> steepestAscent(const DeltaArray delta)
+	{
+		size_t iRetained = std::numeric_limits<size_t>::max();
+		size_t jRetained = iRetained;
+		float maxDelta = std::numeric_limits<float>::lowest();
+		for (size_t i = 0; i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1; j < KeyboardSize; j++)
+			{
+				float d = delta[i][j];
+				if (d > maxDelta)
+				{
+					maxDelta = d;
+					iRetained = i;
+					jRetained = j;
+				}
+			}
+		}
+		return std::make_tuple(iRetained, jRetained, maxDelta);
+	}
+
+	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_int_distribution<size_t>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
+	{
+		size_t iRetained = std::numeric_limits<size_t>::max();
+		size_t jRetained = iRetained;
+		float maxDelta = std::numeric_limits<float>::lowest();
+		for (size_t i = 0; i < KeyboardSize; i++)
+		{
+			for (size_t j = i + 1; j < KeyboardSize; j++)
+			{
+				float d = delta[i][j];
+				if (d > maxDelta)
+				{
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
+					{
+						iRetained = i;
+						jRetained = j;
+						maxDelta = delta[i][j];
+					}
+				}
+			}
+		}
+		return std::make_tuple(iRetained, jRetained);
+	}
+
+	std::tuple<size_t, size_t> randomPerturbe(std::uniform_int_distribution<int>& keyDist)
+	{
+		size_t iRetained = keyDist(m_randomGenerator);
+		size_t jRetained = keyDist(m_randomGenerator);
+		if (iRetained > jRetained)
+			std::swap(iRetained, jRetained);
+		while (iRetained == jRetained)
+		{
+			jRetained = keyDist(m_randomGenerator);
+			if (iRetained > jRetained)
+				std::swap(iRetained, jRetained);
+		}
+		return std::make_tuple(iRetained, jRetained);
 	}
 
 	template<typename Itr>
@@ -580,16 +650,10 @@ protected:
 	float swapKeys(size_t from, size_t to, Keyboard<KeyboardSize> &currentKeyboard, float currentCost, DeltaArray& delta, size_t iteration, IndexArray& lastSwapped, IndexArray& frequency, Itr begin, Itr end)
 	{
 		lastSwapped[from][to] = iteration;
-		frequency[from][to] = frequency[from][to] + 1;
+		frequency[from][to]++;
 		std::swap(currentKeyboard.m_keys[from], currentKeyboard.m_keys[to]);
 		float newCost = currentCost + delta[from][to];
-		for (size_t i = 0;i < KeyboardSize; i++)
-		{
-			for (size_t j = i + 1;j < KeyboardSize; j++)
-			{
-				delta[i][j] = computeDelta(currentKeyboard, newCost, i, j, begin, end);
-			}
-		}
+		computeAllDeltas(currentKeyboard, newCost, begin, end, delta);
 		return newCost;
 	}
 
@@ -712,6 +776,25 @@ protected:
 		}
 	}
 
+	void updateEliteArchive()
+	{
+		for (size_t i = 0; i < m_population.size(); i++)
+		{
+			auto& keyboard = m_population[i];
+			float solution = m_populationSolutions[i][0];
+			updateEliteArchive(keyboard, solution);
+		}
+	}
+
+	void updateEliteArchive(const Keyboard<KeyboardSize>& keyboard, float solution)
+	{
+		Elite e(keyboard, solution);
+		if (m_eliteSoFar.find(e) == m_eliteSoFar.end())
+		{
+			m_eliteSoFar.insert(e);
+		}
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<std::vector<float>> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -737,6 +820,36 @@ protected:
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
+	
+	struct Elite
+	{
+		Elite(const Keyboard<KeyboardSize>& keyboard, float solution) :
+			m_keyboard(keyboard),
+			m_solution(solution),
+			m_improved(false)
+		{
+		}
+		Keyboard<KeyboardSize> m_keyboard;
+		float m_solution;
+		mutable bool m_improved;
+	};
+
+	struct CompareElite
+	{
+		bool operator()(const Elite& lhs, const Elite& rhs) const
+		{
+			if (lhs.m_solution == rhs.m_solution)
+			{
+				return lhs.m_keyboard.m_keys < rhs.m_keyboard.m_keys;
+			}
+			else
+			{
+				return lhs.m_solution < rhs.m_solution;
+			}
+		}
+	};
+
+	std::set<Elite, CompareElite> m_eliteSoFar;
 };
 
 template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>
