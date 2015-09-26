@@ -135,7 +135,7 @@ public:
 			localSearch(child, solution, m_imporvementDepth, true, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
 			float childCost = solution;
-			if (childCost > resultingCost)
+			if (childCost > resultingCost + tolerance)
 			{
 				numWithoutImprovement = 0;
 				numCounter = 0;
@@ -250,7 +250,7 @@ protected:
 				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
 				float solution = e.m_solution;
 				localSearch(keyboard, solution, m_shortImprovementDepth, true, objective);
-				if (solution > best)
+				if (solution > best + tolerance)
 				{
 					replaceSolution(keyboard, solution);
 					return true;
@@ -304,10 +304,10 @@ protected:
 
 			std::tie(iRetained, jRetained, maxDelta) = steepestAscent(delta);
 
-			if ((currentCost + maxDelta) > currentCost)
+			if (maxDelta > 0.0f)
 			{
 				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, objective);
-				if (currentCost > solution)
+				if (currentCost > solution + tolerance)
 				{
 					iterWithoutImprovement = 0;
 					iterLastImprovement = currentIteration;
@@ -343,12 +343,6 @@ protected:
 					}
 					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
 				
-					if (currentCost > solution)
-					{
-						solution = currentCost;
-						keyboard = currentKeyboard;
-					}
-					hasImproved = false;
 				}
 				else if (m_perturbType == PerturbType::Annealed)
 				{
@@ -368,11 +362,16 @@ protected:
 					}
 					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
 
-					if (currentCost > solution)
-					{
-						solution = currentCost;
-						keyboard = currentKeyboard;
-					}
+				}
+
+				if (currentCost > solution + tolerance)
+				{
+					solution = currentCost;
+					keyboard = currentKeyboard;
+					hasImproved = true;
+				}
+				else
+				{
 					hasImproved = false;
 				}
 			}
@@ -449,7 +448,7 @@ protected:
 			if (iRetained != std::numeric_limits<size_t>::max())
 			{
 				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, objective);
-				if (currentCost > bestBestCost)
+				if (currentCost > bestBestCost + tolerance)
 				{
 					bestBestCost = currentCost;
 					iteration++;
@@ -807,6 +806,8 @@ protected:
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
+
+	static const float tolerance;
 	
 	struct Elite
 	{
@@ -841,3 +842,6 @@ protected:
 
 template<size_t KeyboardSize>
 std::random_device BMAOptimizer<KeyboardSize>::rd;
+
+template<size_t KeyboardSize>
+const float BMAOptimizer<KeyboardSize>::tolerance = 0.0000001f;
