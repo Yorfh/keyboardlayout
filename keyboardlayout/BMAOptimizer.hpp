@@ -131,6 +131,7 @@ public:
 			auto parents = parentSelection();
 			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
 			solution = evaluate(child, objective);
+			m_numEvaluationsLeft--;
 			localSearch(child, solution, m_imporvementDepth, true, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
 			float childCost = solution;
