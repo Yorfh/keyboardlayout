@@ -383,23 +383,10 @@ protected:
 	}
 
 	template<typename Objective>
-	void computeAllDeltas(const Keyboard<KeyboardSize> keyboard, float solution, Objective& objective, DeltaArray& delta)
+	void computeAllDeltas(const Keyboard<KeyboardSize> keyboard, float solution, Objective& objective, DeltaArray& delta, size_t from = Objective::NoSwap, size_t to = Objective::NoSwap)
 	{
-		for (size_t i = 0;i < KeyboardSize; i++)
-		{
-			for (size_t j = i + 1;j < KeyboardSize; j++)
-			{
-				delta[i][j] = computeDelta(keyboard, solution, i, j, objective);
-			}
-		}
-	}
-
-	template<typename Objective>
-	float computeDelta(const Keyboard<KeyboardSize>& keyboard, float solution, size_t i, size_t j, Objective& objectve)
-	{
-		Keyboard<KeyboardSize> k = keyboard;
-		std::swap(k.m_keys[i], k.m_keys[j]);
-		m_numEvaluationsLeft--;
+		objective.evaluateNeighbourhood(keyboard, solution, from, to, delta);
+		m_numEvaluationsLeft-= KeyboardSize * KeyboardSize / 2;
 		if (m_snapshotEvery != 0)
 		{
 			size_t evaluations = m_totalEvaluations - m_numEvaluationsLeft;
@@ -417,7 +404,6 @@ protected:
 				m_snapshots.emplace_back(std::make_pair(m_bestSolution, evaluations));
 			}
 		}
-		return objectve.evaluate(k) - solution;
 	}
 
 	void updateBestSolution()
@@ -650,7 +636,7 @@ protected:
 		frequency[from][to]++;
 		std::swap(currentKeyboard.m_keys[from], currentKeyboard.m_keys[to]);
 		float newCost = currentCost + delta[from][to];
-		computeAllDeltas(currentKeyboard, newCost, objective, delta);
+		computeAllDeltas(currentKeyboard, newCost, objective, delta, from, to);
 		return newCost;
 	}
 

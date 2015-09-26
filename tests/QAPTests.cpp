@@ -16,6 +16,59 @@ TEST(QAPTests, ObjectiveFunctionWorksCorrectly)
 	EXPECT_EQ(-9552, objective.evaluate(keyboard));
 }
 
+TEST(QAPTests, NeighbourhoodFunctionWorksCorrectly)
+{
+	std::string filename = "../../tests/QAPData/chr12a.dat";
+	QAP<12> objective(filename);
+	Keyboard<12> keyboard;
+	keyboard.m_keys = { 6, 4, 11, 1, 0, 2, 8, 10, 9, 5, 7, 3 };
+	std::array<std::array<float, 12>, 12> delta;
+	float startValue = objective.evaluate(keyboard);
+	objective.evaluateFirstNeighbourhood(keyboard, startValue, delta);
+	for (size_t i = 0; i < 12; i++)
+	{
+		for (size_t j = i + 1; j < 12; j++)
+		{
+			Keyboard<12> k2 = keyboard;
+			std::swap(k2.m_keys[i], k2.m_keys[j]);
+			float v = objective.evaluate(k2);
+			SCOPED_TRACE(i);
+			SCOPED_TRACE(j);
+			SCOPED_TRACE(startValue);
+			SCOPED_TRACE(delta[i][j]);
+			EXPECT_EQ(v, startValue + delta[i][j]);
+		}
+	}
+}
+
+TEST(QAPTests, SwappedNeighbourhoodFunctionWorksCorrectly)
+{
+	std::string filename = "../../tests/QAPData/chr12a.dat";
+	QAP<12> objective(filename);
+	Keyboard<12> keyboard;
+	keyboard.m_keys = { 6, 4, 11, 1, 0, 2, 8, 10, 9, 5, 7, 3 };
+	std::array<std::array<float, 12>, 12> delta;
+	float startValue = objective.evaluate(keyboard);
+	objective.evaluateFirstNeighbourhood(keyboard, startValue, delta);
+	std::swap(keyboard.m_keys[5], keyboard.m_keys[7]);
+	startValue = objective.evaluate(keyboard);
+	objective.evaluateNeighbourhood(keyboard, startValue, 5, 7, delta);
+	for (size_t i = 0; i < 12; i++)
+	{
+		for (size_t j = i + 1; j < 12; j++)
+		{
+			Keyboard<12> k2 = keyboard;
+			std::swap(k2.m_keys[i], k2.m_keys[j]);
+			float v = objective.evaluate(k2);
+			SCOPED_TRACE(i);
+			SCOPED_TRACE(j);
+			SCOPED_TRACE(startValue);
+			SCOPED_TRACE(delta[i][j]);
+			EXPECT_EQ(v, startValue + delta[i][j]);
+		}
+	}
+}
+
 TEST(QAPTests, QAPchr12a)
 {
 	std::string filename = "../../tests/QAPData/chr12a.dat";
