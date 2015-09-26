@@ -273,7 +273,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 {
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
-	BMAOptimizer<12, 1> o(seed);
+	BMAOptimizer<12> o(seed);
 	o.populationSize(population);
 	o.improvementDepth(shortDepth, longDepth);
 	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);

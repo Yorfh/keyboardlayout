@@ -34,7 +34,7 @@ TEST(BMAOptimizerTests, IncreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 1000.0f;
 	};
-	BMAOptimizer<3, 1> o; 
+	BMAOptimizer<3> o; 
 	o.populationSize(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 8);
@@ -50,7 +50,7 @@ TEST(BMAOptimizerTests, DecreasingOrder)
 			keyboard.m_keys[1] * 100.0f +
 			keyboard.m_keys[2] * 10.0f;
 	};
-	BMAOptimizer<3, 1> o; 
+	BMAOptimizer<3> o; 
 	o.populationSize(1);
 	auto objectives = { TestObjective<3>(evaluate) };
 	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 8);

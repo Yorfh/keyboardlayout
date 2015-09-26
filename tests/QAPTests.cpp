@@ -21,7 +21,7 @@ TEST(QAPTests, QAPchr12a)
 	std::string filename = "../../tests/QAPData/chr12a.dat";
 	QAP<12> objective(filename);
 	Keyboard<12> keyboard;
-	BMAOptimizer<12, 1> o; 
+	BMAOptimizer<12> o; 
 	o.crossover(CrossoverType::Uniform);
 	o.jumpMagnitude(0.05337941137576252f);
 	o.improvementDepth(4613, 4644);

@@ -27,12 +27,12 @@ enum class PerturbType
 	Annealed,
 };
 
-template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize = std::numeric_limits<size_t>::max()>
+template<size_t KeyboardSize>
 class BMAOptimizer
 {
 	static std::random_device rd;
 public:
-	typedef std::vector<std::pair<NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>, size_t>> SnapshotArray;
+	typedef std::vector<std::pair<NonDominatedSet<KeyboardSize, 1, 1>, size_t>> SnapshotArray;
 
 
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
@@ -117,7 +117,7 @@ public:
 	}
 
 	template<typename Itr>
-	const NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize>& optimize(Itr begin, Itr end, size_t numEvaluations)
+	const NonDominatedSet<KeyboardSize, 1, 1>& optimize(Itr begin, Itr end, size_t numEvaluations)
 	{
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_totalEvaluations = numEvaluations;
@@ -128,7 +128,7 @@ public:
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
-		std::vector<float> solution(NumObjectives);
+		std::vector<float> solution(1);
 		while(m_numEvaluationsLeft > 0)
 		{
 			size_t num_of_parents = 2;
@@ -816,7 +816,7 @@ protected:
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;
-	NonDominatedSet<KeyboardSize, NumObjectives, MaxLeafSize> m_NonDominatedSet;
+	NonDominatedSet<KeyboardSize, 1, 1> m_NonDominatedSet;
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
@@ -852,5 +852,5 @@ protected:
 	std::set<Elite, CompareElite> m_eliteSoFar;
 };
 
-template<size_t KeyboardSize, size_t NumObjectives, size_t MaxLeafSize>
-std::random_device BMAOptimizer<KeyboardSize, NumObjectives, MaxLeafSize>::rd;
+template<size_t KeyboardSize>
+std::random_device BMAOptimizer<KeyboardSize>::rd;
