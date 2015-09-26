@@ -33,9 +33,8 @@ TEST(QAPTests, QAPchr12a)
 	o.mutation(25, 0.887375951372175f, 10);
 	o.tournamentPool(4);
 	auto objectives = { objective };
-	auto& solutions = o.optimize(std::begin(objectives), std::end(objectives), 200000);
+	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), 200000);
 	// The reverse direction is also a solution
-	auto result = solutions.getResult()[0].m_keyboard;
-	int resultValue = static_cast<int>(-std::round(objective.evaluate(result)));
+	int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 	EXPECT_EQ(9552, resultValue);
 }
