@@ -217,8 +217,7 @@ TEST(BMAOptimizerTSPTests, Burma14)
 	BMAOptimizer<13> o;
 	o.populationSize(1);
 	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
-	auto objectives = { salesman };
-	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), 20000);
+	auto& solution = o.optimize(salesman, 20000);
 	// The reverse direction is also a solution
 	int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 	EXPECT_EQ(3323, resultValue);
@@ -230,8 +229,7 @@ TEST(BMAOptimizerTSPTests, Burma14WithPopulation)
 	o.populationSize(5);
 	o.improvementDepth(25, 25);
 	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
-	auto objectives = { salesman };
-	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), 20000);
+	auto& solution = o.optimize(salesman, 20000);
 	// The reverse direction is also a solution
 	int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 	EXPECT_EQ(3323, resultValue);

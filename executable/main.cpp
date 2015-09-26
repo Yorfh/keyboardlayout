@@ -289,8 +289,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	{
 		o.snapshots(anytime);
 	}
-	auto objectives = { objective };
-	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), evaluations);
+	auto& solution = o.optimize(objective, evaluations);
 	int resultValue = 0;
 	if (anytime == 0)
 	{

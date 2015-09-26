@@ -36,8 +36,8 @@ TEST(BMAOptimizerTests, IncreasingOrder)
 	};
 	BMAOptimizer<3> o; 
 	o.populationSize(1);
-	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), 8);
+	auto objective = TestObjective<3>(evaluate);
+	auto& solution = o.optimize(objective, 8);
 	EXPECT_THAT(std::get<1>(solution).m_keys, ElementsAre(0, 1, 2));
 }
 
@@ -51,7 +51,7 @@ TEST(BMAOptimizerTests, DecreasingOrder)
 	};
 	BMAOptimizer<3> o; 
 	o.populationSize(1);
-	auto objectives = { TestObjective<3>(evaluate) };
-	auto& solution = o.optimize(std::begin(objectives), std::end(objectives), 8);
+	auto objective = TestObjective<3>(evaluate);
+	auto& solution = o.optimize(objective, 8);
 	EXPECT_THAT(std::get<1>(solution).m_keys, ElementsAre(2, 1, 0));
 }
