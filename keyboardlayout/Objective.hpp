@@ -7,8 +7,16 @@ template<size_t KeyboardSize>
 class Objective
 {
 public:
+	static const size_t NoSwap = std::numeric_limits<size_t>::max();
+
 	virtual float evaluate(const Keyboard<KeyboardSize>& keyboard) const = 0;
-	virtual void evaluateNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta) const
+
+	void evaluateFirstNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta)
+	{
+		evaluateNeighbourhood(keyboard, v, NoSwap, NoSwap, delta);
+	}
+
+	virtual void evaluateNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, size_t lastSwapI, size_t lastSwapJ, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta) const
 	{
 		for (size_t i = 0;i < KeyboardSize; i++)
 		{
