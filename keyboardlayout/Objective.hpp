@@ -8,7 +8,7 @@ class Objective
 {
 public:
 	virtual float evaluate(const Keyboard<KeyboardSize>& keyboard) const = 0;
-	virtual void evaluateNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta)
+	virtual void evaluateNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta) const
 	{
 		for (size_t i = 0;i < KeyboardSize; i++)
 		{
