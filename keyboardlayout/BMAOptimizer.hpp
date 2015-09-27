@@ -65,8 +65,8 @@ public:
 
 	void tabuTenure(float minTenure, float maxTenure)
 	{
-		m_minTabuTenureDist = static_cast<size_t>(minTenure * KeyboardSize);
-		m_maxTabuTenureDist = static_cast<size_t>(maxTenure * KeyboardSize);
+		m_minTabuTenureDist = minTenure;
+		m_maxTabuTenureDist = maxTenure;
 	}
 
 	void minDirectedPertubation(float v)
@@ -422,7 +422,7 @@ protected:
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Objective& objective)
 	{
 		std::uniform_real_distribution<float> dist(0.0f, std::nextafter(1.0f, 2.0f));
-		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
+		std::uniform_real_distribution<float> tenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		for (size_t k = 0; k < perturbStr; k++)
@@ -438,7 +438,7 @@ protected:
 			size_t jRetained;
 			if (useTabu)
 			{
-				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tabuTenureDist, iteration, currentCost, bestBestCost);
+				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tenureDist, iteration, currentCost, bestBestCost);
 			}
 			else
 			{
@@ -480,7 +480,7 @@ protected:
 		return std::make_tuple(iRetained, jRetained, maxDelta);
 	}
 
-	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_int_distribution<size_t>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
+	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_real_distribution<float>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
 	{
 		size_t iRetained = std::numeric_limits<size_t>::max();
 		size_t jRetained = iRetained;
@@ -492,7 +492,7 @@ protected:
 				float d = delta[i][j];
 				if (d > maxDelta)
 				{
-					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
+					if ((lastSwapped[i][j] + std::pow(tabuTenureDist(m_randomGenerator), 3.0f) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
 						jRetained = j;
@@ -521,7 +521,7 @@ protected:
 	void annealed_perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost,
 		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Objective& objective)
 	{
-		std::uniform_int_distribution<size_t> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
+		std::uniform_real_distribution<float> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::array<std::array<bool, KeyboardSize>, KeyboardSize> valid;
 		auto probability = std::uniform_real_distribution<float>(0, 1.0);
 		float min_t = m_minT;
@@ -549,7 +549,7 @@ protected:
 						jRetained = j;
 						break;
 					}
-					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration)
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator) * KeyboardSize) < iteration)
 					{
 						if (delta[i][j] > maxDelta)
 						{
@@ -786,8 +786,8 @@ protected:
 	size_t m_stagnationAfter = 250;
 	float m_minStagnationMagnitude = 0.2f;
 	float m_maxStagnationMagnitude = 0.4f;
-	size_t m_minTabuTenureDist = static_cast<size_t>(0.9f * KeyboardSize);
-	size_t m_maxTabuTenureDist = static_cast<size_t>(1.1f * KeyboardSize);
+	float m_minTabuTenureDist = 0.9f * KeyboardSize;
+	float m_maxTabuTenureDist = 1.1f * KeyboardSize;
 	float m_minDirectedPerturbation = 0.75f;
 	size_t m_shortImprovementDepth = 5000;
 	size_t m_imporvementDepth = 10000;
