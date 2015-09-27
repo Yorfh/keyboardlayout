@@ -1,0 +1,6 @@
+"../tests/QAPData/chr12c.dat --evaluations 60000"
+"../tests/QAPData/chr12c.dat --evaluations 80000"
+"../tests/QAPData/chr12c.dat --evaluations 100000"
+"../tests/QAPData/chr12c.dat --evaluations 120000"
+"../tests/QAPData/chr12c.dat --evaluations 140000"
+"../tests/QAPData/chr12c.dat --evaluations 160000"

@@ -1,0 +1,1 @@
+"../tests/QAPData/chr12b.dat --evaluations 160000 --anytime 20000"
