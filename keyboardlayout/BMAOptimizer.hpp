@@ -45,9 +45,8 @@ public:
 		m_populationSize = size;
 	}
 
-	void improvementDepth(size_t shortImprovement, size_t longImprovement)
+	void improvementDepth(size_t longImprovement)
 	{
-		m_shortImprovementDepth = shortImprovement;
 		m_imporvementDepth = longImprovement;
 	}
 
@@ -232,7 +231,7 @@ protected:
 		{
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
-			localSearch(keyboard, solution, m_shortImprovementDepth, steepestAscentOnly, objective);
+			localSearch(keyboard, solution, m_imporvementDepth, steepestAscentOnly, objective);
 		}
 	}
 
@@ -249,7 +248,7 @@ protected:
 				e.m_improved = true;
 				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
 				float solution = e.m_solution;
-				localSearch(keyboard, solution, m_shortImprovementDepth, true, objective);
+				localSearch(keyboard, solution, m_imporvementDepth, true, objective);
 				if (solution > best + tolerance)
 				{
 					replaceSolution(keyboard, solution);
@@ -789,7 +788,6 @@ protected:
 	float m_minTabuTenureDist = 0.9f * KeyboardSize;
 	float m_maxTabuTenureDist = 1.1f * KeyboardSize;
 	float m_minDirectedPerturbation = 0.75f;
-	size_t m_shortImprovementDepth = 5000;
 	size_t m_imporvementDepth = 10000;
 	size_t m_tournamentSize = 4;
 	size_t m_mutationFrequency = 5;

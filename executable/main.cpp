@@ -90,7 +90,7 @@ option::ArgStatus required(const option::Option& option, bool msg)
 enum  optionIndex {
 	UNKNOWN, HELP, MAXT, MINT, NUMSTEPS, FAST_MAXT, FAST_MINT, FAST_NUMSTEPS, PARETO_MAXT,
 	PARETO_MINT, PARETO_EQUALMULT, NUMEVALUATIONS, POPULATION, TEST, OUTPUT, SEED,
-	SHORT_IMPROVEMENT, LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
+	LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
 	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME,
@@ -114,7 +114,6 @@ const option::Descriptor usage[] =
 	{ TEST,			0, "", "test",			required,			"  --test  \tThe name of the test to execute" },
 	{ OUTPUT,		0, "", "output",		required,			"  --output  \tThe name of the output file" },
 	{ SEED,			0, "", "seed",			unsignedInteger,	"  --seed  \tThe random seed" },
-	{ SHORT_IMPROVEMENT, 0, "", "short_improvement", unsignedInteger,	"  --short_improvement  \tShort improvement iterations for BMA" },
 	{ LONG_IMPROVEMENT,	0, "", "long_improvement", unsignedInteger,	"  --long_improvement  \tLong improvement iterations for BMA" },
 	{ STAGNATION_ITERATIONS,	0, "", "stagnation_iterations", unsignedInteger,	"  --stagnation_iterations  \tThe number of iterations before stagnation for for BMA" },
 	{ STAGNATION_MIN,	0, "", "stagnation_min", floatingPoint,	"  --stagnation_min  \tThe minimum stagnation magnitude for BMA" },
@@ -266,7 +265,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 	return 0;
 }
 
-int qap_bma(const std::string filename, size_t population, size_t shortDepth, size_t longDepth, size_t stagnationIters,
+int qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
 	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed)
@@ -275,7 +274,7 @@ int qap_bma(const std::string filename, size_t population, size_t shortDepth, si
 	Keyboard<12> keyboard;
 	BMAOptimizer<12> o(seed);
 	o.populationSize(population);
-	o.improvementDepth(shortDepth, longDepth);
+	o.improvementDepth(longDepth);
 	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);
 	o.jumpMagnitude(jumpMagnitude);
 	o.minDirectedPertubation(minDirectedPertubation);
@@ -516,7 +515,6 @@ int main(int argc, char* argv[])
 				else
 				{
 					size_t population = getArgument<size_t>(options, POPULATION);
-					size_t shortDepth = getArgument<size_t>(options, SHORT_IMPROVEMENT);
 					size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
 					size_t tournamentPoolSize = getArgument<size_t>(options, TOUR_POOLSIZE);
 					size_t tournamentMutationFrequency = getArgument<size_t>(options, TOUR_MUT_FREQ);
@@ -583,7 +581,7 @@ int main(int argc, char* argv[])
 						return 1;
 					}
 
-					auto res = qap_bma(test, population, shortDepth, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
+					auto res = qap_bma(test, population, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
 						ct, perturbType, minT, evaluations, anytime, seed);
 					outputResult(res, seed, options[SMAC] != nullptr, true);

@@ -227,7 +227,7 @@ TEST(BMAOptimizerTSPTests, Burma14WithPopulation)
 {
 	BMAOptimizer<13> o;
 	o.populationSize(5);
-	o.improvementDepth(25, 25);
+	o.improvementDepth(25);
 	TravelingSalesman<14> salesman(burma14Latitudes, burma14Longitudes);
 	auto& solution = o.optimize(salesman, 20000);
 	// The reverse direction is also a solution

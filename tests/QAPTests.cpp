@@ -77,7 +77,7 @@ TEST(QAPTests, QAPchr12a)
 	BMAOptimizer<12> o; 
 	o.crossover(CrossoverType::Uniform);
 	o.jumpMagnitude(0.05337941137576252f);
-	o.improvementDepth(4613, 4644);
+	o.improvementDepth(4644);
 	o.perturbType(PerturbType::Normal);
 	o.minDirectedPertubation(0.07956319937402234f);
 	o.populationSize(7);
