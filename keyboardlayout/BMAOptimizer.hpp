@@ -317,11 +317,11 @@ protected:
 				iteration++;
 				hasImproved = true;
 			}
-			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution <= bestCost)
+			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution <= bestCost + tolerance)
 			{
 				if(m_perturbType == PerturbType::Normal)
 				{
-					if (iterWithoutImprovement > m_stagnationAfter)
+					if (iterWithoutImprovement == m_stagnationAfter)
 					{
 						iterWithoutImprovement = 0;
 						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
@@ -428,8 +428,8 @@ protected:
 		for (size_t k = 0; k < perturbStr; k++)
 		{
 			bool useTabu = false;
-			float e = std::exp(-d);
-			e = std::max(m_minDirectedPerturbation, e);
+			float e = std::exp(-d * m_minDirectedPerturbation);
+			//e = std::max(m_minDirectedPerturbation, e);
 
 			if (e > dist(m_randomGenerator))
 				useTabu = true;
