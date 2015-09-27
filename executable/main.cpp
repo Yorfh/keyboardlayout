@@ -93,7 +93,7 @@ enum  optionIndex {
 	LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
-	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME,
+	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME, TARGET,
 };
 
 const option::Descriptor usage[] =
@@ -134,6 +134,7 @@ const option::Descriptor usage[] =
 	{ CUTOFF_LENGTH,	0, "", "cutoff_length", unsignedInteger,	"  --cutoff_length  \tThe smac instance cutoff length" },
 	{ ALGO_TYPE,	0, "", "algo_type", required,	"  --algotype annealing|bma \tThe algorithm type" },
 	{ ANYTIME,	0, "", "anytime", unsignedInteger,	"  --anytime snapshot_delay \tTake snapshots regularly to optimize for any time" },
+	{ TARGET,	0, "", "target", floatingPoint,	"  --target targetValue \tRun until target value is achieved" },
 	{ 0,0,0,0,0,0 }
 };
 
