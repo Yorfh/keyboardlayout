@@ -386,7 +386,7 @@ protected:
 	void computeAllDeltas(const Keyboard<KeyboardSize> keyboard, float solution, Objective& objective, DeltaArray& delta, size_t from = Objective::NoSwap, size_t to = Objective::NoSwap)
 	{
 		objective.evaluateNeighbourhood(keyboard, solution, from, to, delta);
-		m_numEvaluationsLeft-= KeyboardSize * KeyboardSize / 2;
+		m_numEvaluationsLeft-= KeyboardSize * (KeyboardSize - 1) / 2;
 		if (m_snapshotEvery != 0)
 		{
 			size_t evaluations = m_totalEvaluations - m_numEvaluationsLeft;
@@ -492,7 +492,7 @@ protected:
 				float d = delta[i][j];
 				if (d > maxDelta)
 				{
-					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost)
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator)) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
 						jRetained = j;
@@ -508,14 +508,12 @@ protected:
 	{
 		size_t iRetained = keyDist(m_randomGenerator);
 		size_t jRetained = keyDist(m_randomGenerator);
-		if (iRetained > jRetained)
-			std::swap(iRetained, jRetained);
 		while (iRetained == jRetained)
 		{
 			jRetained = keyDist(m_randomGenerator);
-			if (iRetained > jRetained)
-				std::swap(iRetained, jRetained);
 		}
+		if (iRetained > jRetained)
+			std::swap(iRetained, jRetained);
 		return std::make_tuple(iRetained, jRetained);
 	}
 
