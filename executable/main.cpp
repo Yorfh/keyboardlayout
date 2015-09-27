@@ -266,14 +266,15 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 	return 0;
 }
 
-int qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+template<size_t NumLocations>
+float qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
 	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed)
 {
-	QAP<12> objective(filename);
-	Keyboard<12> keyboard;
-	BMAOptimizer<12> o(seed);
+	QAP<NumLocations> objective(filename);
+	Keyboard<NumLocations> keyboard;
+	BMAOptimizer<NumLocations> o(seed);
 	o.populationSize(population);
 	o.improvementDepth(longDepth);
 	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);
@@ -290,10 +291,10 @@ int qap_bma(const std::string filename, size_t population, size_t longDepth, siz
 		o.snapshots(anytime);
 	}
 	auto& solution = o.optimize(objective, evaluations);
-	int resultValue = 0;
+	float resultValue = 0;
 	if (anytime == 0)
 	{
-		resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
+		resultValue = -std::round(std::get<0>(solution));
 	}
 	else
 	{
@@ -306,10 +307,34 @@ int qap_bma(const std::string filename, size_t population, size_t longDepth, siz
 			result += multiplier * std::get<0>(s.first);
 			multiplierSum += multiplier;
 		}
-		resultValue = static_cast<int>(-std::round(result / multiplierSum));
+		resultValue = -(result / multiplierSum);
 
 	}
 	return resultValue;
+}
+
+float qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
+	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed)
+{
+	std::ifstream stream(filename);
+	int numLocations;
+	stream >> numLocations;
+	if (numLocations == 12)
+	{
+		return qap_bma_helper<12>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
+			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
+			crossoverType, perturbType, min_t, evaluations, anytime, seed);
+	}
+	else if (numLocations == 30)
+	{
+		//KLUDGE divide
+		return qap_bma_helper<30>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
+			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
+			crossoverType, perturbType, min_t, evaluations, anytime, seed) / 1000.0f;
+	}
+	return 0;
 }
 
 int qap_annealing(const std::string& filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, 
