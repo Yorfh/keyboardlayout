@@ -243,12 +243,13 @@ protected:
 
 		for (auto&& e : m_eliteSoFar)
 		{
+			// TODO: Maybe retry the best ones randomly?
 			if (e.m_improved == false)
 			{
 				e.m_improved = true;
 				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
 				float solution = e.m_solution;
-				localSearch(keyboard, solution, m_imporvementDepth, true, objective);
+				localSearch(keyboard, solution, m_imporvementDepth, false, objective);
 				if (solution > best + tolerance)
 				{
 					replaceSolution(keyboard, solution);
