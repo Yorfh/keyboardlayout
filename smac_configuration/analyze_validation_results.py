@@ -5,11 +5,17 @@ import argparse
 from collections import defaultdict
 from itertools import chain
 
-if not len(sys.argv) == 2:
-    print "Usage: analyze_validation_results runid"
+parser = argparse.ArgumentParser()
+parser.add_argument("--seed", type=int)
+parser.add_argument("--scenario", type=str)
+args = parser.parse_known_args(sys.argv)[0]
 
-filename = "validationRunResultLineMatrix-traj-run-%s-walltime.csv" % (sys.argv[1])
-filename = os.path.join("output\\QAP", filename)
+scenario = args.scenario
+scenario = os.path.split(scenario)[1]
+scenario = os.path.splitext(scenario)[0]
+
+filename = "validationRunResultLineMatrix-traj-run-%s-walltime.csv" % (args.seed)
+filename = os.path.join("output", scenario, filename)
 filename = os.path.abspath(filename)
 filename = os.path.normpath(filename)
 with open(filename) as f:

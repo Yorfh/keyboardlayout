@@ -1,8 +1,8 @@
 numberOfRunsLimit = 5000
 initialChallenge = 8
 runObj = QUALITY
-instance-file = instances.txt
-test-instance-file = instances_test.txt
+instance-file = instances_chr12b.txt
+test-instance-file = instances_chr12b_test.txt
 numValidationRuns = 300
 pcs-file = parameters_bma.txt
 deterministic = false

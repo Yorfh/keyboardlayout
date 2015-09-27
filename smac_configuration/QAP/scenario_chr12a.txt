@@ -1,0 +1,9 @@
+numberOfRunsLimit = 5000
+initialChallenge = 8
+runObj = QUALITY
+instance-file = instances_chr12a.txt
+test-instance-file = instances_chr12a_test.txt
+numValidationRuns = 300
+pcs-file = parameters_bma.txt
+deterministic = false
+algo-exec = exec.bat
