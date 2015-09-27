@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/smac"/>
+	<classpathentry kind="src" path="src/fastrf"/>
 	<classpathentry kind="src" path="src/aeatk"/>
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.1.jar"/>
