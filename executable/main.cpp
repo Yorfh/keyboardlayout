@@ -486,7 +486,15 @@ int main(int argc, char* argv[])
 	try
 	{
 		unsigned int evaluations = getArgument<int>(options, NUMEVALUATIONS);
-		unsigned int seed = getArgument<unsigned int>(options, SEED);
+		unsigned int seed = 0;
+		if (options[SEED])
+		{
+			seed = getArgument<unsigned int>(options, SEED);
+		}
+		else
+		{
+			seed = std::random_device()();
+		}
 		if (options[TEST])
 		{
 			std::string test = options[TEST].arg;
