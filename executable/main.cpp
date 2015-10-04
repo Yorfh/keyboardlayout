@@ -433,7 +433,7 @@ void outputResult(T result, size_t seed, bool smac, bool minimize)
 		size_t runTime = 1;
 		size_t runLenght = 1;
 		std::cout << runTime << ", " << runLenght << ", ";
-		std::cout << (minimize ? result : -result) << ", ";
+		std::cout << std::setprecision(9) << (minimize ? result : -result) << ", ";
 		std::cout << seed << ", 0" << std::endl;
 	}
 	else

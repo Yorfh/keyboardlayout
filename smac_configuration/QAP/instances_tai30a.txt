@@ -1,1 +1,1 @@
-"../tests/QAPData/tai30a.dat --evaluations 1000000 --anytime 100000"
+"../tests/QAPData/tai30a.dat --evaluations 10000000 --anytime 1000000"
