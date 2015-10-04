@@ -194,3 +194,4 @@ irace_configuration/output/
 smac_configuration/output/
 smac_configuration/log-*
 *.swp
+last.txt
