@@ -31,7 +31,7 @@ template<size_t KeyboardSize>
 class BMAOptimizer
 {
 	static std::random_device rd;
-	static const bool EnableLog = false;
+	static const bool EnableLog = true;
 public:
 	typedef std::vector<std::pair<std::tuple<float, Keyboard<KeyboardSize>>, size_t>> SnapshotArray;
 
@@ -106,6 +106,11 @@ public:
 		m_minT = min_t;
 	}
 
+	void target(float target)
+	{
+		m_target = target;
+	}
+
 	template<typename Objective>
 	float evaluate(Keyboard<KeyboardSize>& keyboard, Objective& objective)
 	{
@@ -125,7 +130,7 @@ public:
 		size_t numCounter = 0;
 
 		float solution;
-		while(m_numEvaluationsLeft > 0)
+		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
@@ -803,6 +808,7 @@ protected:
 	size_t m_mutationStrenghtGrowth = 5;
 	size_t m_snapshotEvery = 0;
 	float m_minT = 0.1f;
+	float m_target = std::numeric_limits<float>::lowest();
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;

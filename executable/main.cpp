@@ -271,7 +271,7 @@ template<size_t NumLocations>
 float qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float* target)
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
@@ -287,6 +287,11 @@ float qap_bma_helper(const std::string filename, size_t population, size_t longD
 	o.tabuTenure(tenureMin, tenureMax);
 	o.perturbType(perturbType);
 	o.annealing(min_t);
+	if (target)
+	{
+		o.target(*target);
+	}
+
 	if (anytime != 0)
 	{
 		o.snapshots(anytime);
@@ -317,7 +322,7 @@ float qap_bma_helper(const std::string filename, size_t population, size_t longD
 float qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float scale)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float scale, float* target)
 {
 	std::ifstream stream(filename);
 	int numLocations;
@@ -326,13 +331,13 @@ float qap_bma(const std::string filename, size_t population, size_t longDepth, s
 	{
 		return qap_bma_helper<12>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, evaluations, anytime, seed);
+			crossoverType, perturbType, min_t, evaluations, anytime, seed, target);
 	}
 	else if (numLocations == 30)
 	{
 		return qap_bma_helper<30>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, evaluations, anytime, seed) * scale;
+			crossoverType, perturbType, min_t, evaluations, anytime, seed, target) * scale;
 	}
 	return 0;
 }
@@ -621,9 +626,17 @@ int main(int argc, char* argv[])
 						scale = getArgument<float>(options, SCALE);
 					}
 
+					float* target = nullptr;
+					float targetValue;
+					if (options[TARGET])
+					{
+						targetValue = getArgument<float>(options, TARGET);
+						target = &targetValue;
+					}
+
 					auto res = qap_bma(test, population, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, perturbType, minT, evaluations, anytime, seed, scale);
+						ct, perturbType, minT, evaluations, anytime, seed, scale, target);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}

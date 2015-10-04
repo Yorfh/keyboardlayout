@@ -81,6 +81,7 @@ if os.path.exists(filename):
             parser = argparse.ArgumentParser()
             parser.add_argument("instance")
             parser.add_argument("--evaluations", type=int)
+            parser.add_argument("--target", type=float)
             args = parser.parse_args(instance.split(" "))
             status, runtime, runlength, quality, seed = result.split(", ")
             instances[args.instance][args.evaluations].append(float(quality))
