@@ -1,0 +1,8 @@
+numValidationRuns = 12
+runObj = QUALITY
+instance-file = instances_tai30a_test.txt
+test-instance-file = instances_tai30a_test.txt
+trajectoryFile = qap\optimized_parameters\tai30a.txt
+pcs-file = QAP\parameters_bma.txt
+deterministic = false
+algo-exec = exec.bat
