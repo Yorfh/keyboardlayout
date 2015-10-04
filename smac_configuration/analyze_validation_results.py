@@ -19,7 +19,7 @@ outputdir = args.output_dir
 
 trajectoryfile = ""
 filename = "validationRunResultLineMatrix-%s-walltime.csv"
-if outputdir.find("validate") == -1:
+if outputdir is not None and outputdir.find("validate") == -1:
     filename = filename % ("traj-run-%s" % args.seed)
     filename = os.path.join(outputdir, scenario, filename)
     trajectoryfile = os.path.join(outputdir, scenario, "traj-run-%s.txt" % args.seed)
@@ -31,7 +31,8 @@ else:
                 t = os.path.split(trajectoryfile)[1]
                 t = os.path.splitext(t)[0]
                 filename = filename % (t)
-    filename = os.path.join(outputdir, filename)
+    if outputdir:
+        filename = os.path.join(outputdir, filename)
 
 filename = os.path.abspath(filename)
 filename = os.path.normpath(filename)
@@ -70,21 +71,22 @@ with open(args.scenario_file) as f:
                     print "--test "  + l.strip().replace("\"", "")
             print "**********************************************************"
 
-with open(filename) as f:
-    instances = defaultdict(lambda: defaultdict(list))
-    reader = csv.DictReader(f)
-    for row in reader:
-        result = row["Run result line of validation config #1"]
-        instance = row["Problem Instance"]
-        parser = argparse.ArgumentParser()
-        parser.add_argument("instance")
-        parser.add_argument("--evaluations", type=int)
-        args = parser.parse_args(instance.split(" "))
-        status, runtime, runlength, quality, seed = result.split(", ")
-        instances[args.instance][args.evaluations].append(float(quality))
+if os.path.exists(filename):
+    with open(filename) as f:
+        instances = defaultdict(lambda: defaultdict(list))
+        reader = csv.DictReader(f)
+        for row in reader:
+            result = row["Run result line of validation config #1"]
+            instance = row["Problem Instance"]
+            parser = argparse.ArgumentParser()
+            parser.add_argument("instance")
+            parser.add_argument("--evaluations", type=int)
+            args = parser.parse_args(instance.split(" "))
+            status, runtime, runlength, quality, seed = result.split(", ")
+            instances[args.instance][args.evaluations].append(float(quality))
 
-    for instance in sorted(instances.iteritems()):
-        best = min(chain(*(e for e in instance[1].itervalues())))
-        print "Instance %s - best %f" % (instance[0], best)
-        for e in sorted(instance[1].iteritems()):
-            print "Evaluations %i - %i/%i" % (e[0], e[1].count(best), len(e[1]))
+        for instance in sorted(instances.iteritems()):
+            best = min(chain(*(e for e in instance[1].itervalues())))
+            print "Instance %s - best %f" % (instance[0], best)
+            for e in sorted(instance[1].iteritems()):
+                print "Evaluations %i - %i/%i" % (e[0], e[1].count(best), len(e[1]))
