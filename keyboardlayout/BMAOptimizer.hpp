@@ -31,6 +31,7 @@ template<size_t KeyboardSize>
 class BMAOptimizer
 {
 	static std::random_device rd;
+	static const bool EnableLog = false;
 public:
 	typedef std::vector<std::pair<std::tuple<float, Keyboard<KeyboardSize>>, size_t>> SnapshotArray;
 
@@ -133,6 +134,8 @@ public:
 			m_numEvaluationsLeft--;
 			localSearch(child, solution, m_imporvementDepth, true, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
+			if (EnableLog)
+				std::cout << std::setprecision(9) << resultingCost << std::endl;
 			float childCost = solution;
 			if (childCost > resultingCost + tolerance)
 			{
@@ -159,6 +162,8 @@ public:
 					{
 						numWithoutImprovement++;
 					}
+					if (EnableLog)
+						std::cout << "Try to improve any" << improved << std::endl;
 					numCounter = 0;
 				}
 				else
@@ -180,6 +185,8 @@ public:
 					updateEliteArchive();
 					numWithoutImprovement = 0;
 					numCounter++;
+					if (EnableLog)
+						std::cout << "Mutated" << std::endl;
 				}
 				if (numCounter > m_mutationStrenghtGrowth)
 				{
