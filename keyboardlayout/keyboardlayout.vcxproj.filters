@@ -45,9 +45,6 @@
     <ClInclude Include="BMAOptimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BMAReference.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="QAP.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
