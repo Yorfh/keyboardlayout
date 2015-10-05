@@ -28,6 +28,7 @@ clock_t start;
 long iteration = 0;
 
 unsigned long long resulting_cost = 99999999999ULL;
+clock_t resulting_time;
 long target;
 
 
@@ -557,6 +558,7 @@ void replacement_other(long n, type_vector & child_sol, long  child_cost, type_m
 	if (child_cost < resulting_cost)
 	{
 		resulting_cost = child_cost;
+		resulting_time = clock();
 		for (i = 1; i <= n; i++)
 			best_solution_found[i] = child_sol[i];
 	}
@@ -592,6 +594,7 @@ void best_individual(int n, type_matrix_s pop, long* pop_costs, int pop_size)
 		for (int j = 1; j <= n; j++)
 			best_solution_found[j] = pop[b][j];
 		resulting_cost = best;
+		resulting_time = clock();
 	}
 }
 int best_index(int pop_size, long* pop_costs)
@@ -745,7 +748,7 @@ int main(int argc, char* argv[])
 
 	unsigned long long best_cost_ever = 999999999999ULL;
 	double avg_cost = 0;
-	double dist, times[50];
+	double dist, times[1000];
 	int num_mutations = 0;
 	type_vector best_solution_ever;
 	best_solution_ever = new int[n + 1];
@@ -788,9 +791,9 @@ int main(int argc, char* argv[])
 
 		ifile >> b[i][j];
 
-	long all_solutions[101];
+	long all_solutions[10000];
 
-	int num_runs = 15;
+	int num_runs = 10;
 
 	int num_counter;
 	clock_t timet;
@@ -836,16 +839,19 @@ int main(int argc, char* argv[])
 			//  check_validity(n, child_sol); 
 
 			local_search(n, a, b, child_sol, child_cost, 10000, time);
-			cout << "  Best cost " << resulting_cost << "  " << time_best << endl;
 
 			if (resulting_cost > child_cost)
 			{
 				num_mutations = 0;
 				num_counter = 0;
-				time_best = time / static_cast<double>(CLOCKS_PER_SEC);
 			}
 			else num_mutations++;
 
+			time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
+
+			cout << "  Best cost " << resulting_cost << "  " << time_best << endl;
+			if (resulting_cost == target)
+				break;
 
 			if (num_mutations == pop_size)
 			{
