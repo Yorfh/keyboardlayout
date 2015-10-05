@@ -304,7 +304,17 @@ float qap_bma_helper(const std::string filename, size_t population, size_t longD
 	}
 	else
 	{
-		auto& snapshots = o.getSnapshots();
+		auto snapshots = o.getSnapshots();
+		size_t iterations = anytime;
+		while (iterations <= evaluations)
+		{
+			if (snapshots.empty() || iterations > snapshots.back().second)
+			{
+				snapshots.push_back(std::make_pair(solution, iterations));
+			}
+			iterations += anytime;
+		}
+
 		float result = std::get<0>(solution);
 		float multiplierSum = 1.0f;
 		for (auto&& s: snapshots)

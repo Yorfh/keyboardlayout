@@ -31,7 +31,7 @@ template<size_t KeyboardSize>
 class BMAOptimizer
 {
 	static std::random_device rd;
-	static const bool EnableLog = true;
+	static const bool EnableLog = false;
 public:
 	typedef std::vector<std::pair<std::tuple<float, Keyboard<KeyboardSize>>, size_t>> SnapshotArray;
 
