@@ -1,4 +1,4 @@
-numValidationRuns = 12
+numValidationRuns = 120
 runObj = QUALITY
 instance-file = instances_tai30a_test.txt
 test-instance-file = instances_tai30a_test.txt
