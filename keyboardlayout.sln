@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "keyboardlayout", "keyboardlayout\keyboardlayout.vcxproj", "{B9D37A2D-35FC-469C-AD97-4B1EAAEDBC52}"
 EndProject
@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "tests\tests.vcxpro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WFG", "WFG_1.10\WFG.vcxproj", "{4E02F2C3-279F-4D7D-8376-3D9BFDCE204E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmareference", "bmareference\bmareference.vcxproj", "{D210F597-E1D3-465F-A343-6DCF60C97536}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,14 @@ Global
 		{4E02F2C3-279F-4D7D-8376-3D9BFDCE204E}.Release|x64.Build.0 = Release|x64
 		{4E02F2C3-279F-4D7D-8376-3D9BFDCE204E}.Release|x86.ActiveCfg = Release|Win32
 		{4E02F2C3-279F-4D7D-8376-3D9BFDCE204E}.Release|x86.Build.0 = Release|Win32
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Debug|x64.ActiveCfg = Debug|x64
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Debug|x64.Build.0 = Debug|x64
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Debug|x86.ActiveCfg = Debug|Win32
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Debug|x86.Build.0 = Debug|Win32
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Release|x64.ActiveCfg = Release|x64
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Release|x64.Build.0 = Release|x64
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Release|x86.ActiveCfg = Release|Win32
+		{D210F597-E1D3-465F-A343-6DCF60C97536}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

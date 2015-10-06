@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <map>
 #include<cmath>
+#include <string>
 
-
+const int max_pop_size = 32;
+const int max_n = 256;
 
 typedef int*   type_vector;
 
@@ -26,6 +28,7 @@ clock_t start;
 long iteration = 0;
 
 unsigned long long resulting_cost = 99999999999ULL;
+clock_t resulting_time;
 long target;
 
 
@@ -175,7 +178,7 @@ void perturbe(type_vector & p, long n, type_matrix & delta, long & current_cost,
 				for (j = i + 1; j <= n; j = j + 1)
 				{
 					if ((current_cost + delta[i][j]) != cost && delta[i][j] < min_delta &&
-						((last_swaped[i][j] + n*0.9 + rand() % (static_cast<int>(n*0.2))) < iteration or (current_cost + delta[i][j]) < best_best_cost))
+						((last_swaped[i][j] + n*0.9 + rand() % (static_cast<int>(n*0.2))) < iteration || (current_cost + delta[i][j]) < best_best_cost))
 					{
 						i_retained = i; j_retained = j;
 						min_delta = delta[i][j];
@@ -201,7 +204,7 @@ void perturbe(type_vector & p, long n, type_matrix & delta, long & current_cost,
 			}
 
 		}
-		if (i_retained != -1 and j_retained != -1)
+		if (i_retained != -1 && j_retained != -1)
 		{
 			last_swaped[i_retained][j_retained] = iteration;
 			frequency[i_retained][j_retained] = frequency[i_retained][j_retained] + 1;
@@ -279,7 +282,7 @@ void local_search(long n,                  // problem size
 
 	/******************** main tabu search loop ********************/
 
-	for (current_iteration = 1; current_iteration <= nr_iterations and target != best_best_cost;
+	for (current_iteration = 1; current_iteration <= nr_iterations && target != best_best_cost;
 	current_iteration = current_iteration + 1)
 	{/** find best move (i_retained, j_retained) **/
 
@@ -330,7 +333,7 @@ void local_search(long n,                  // problem size
 				iter_without_improvement = 0;
 				perturb_str = n*(0.2 + (static_cast<double>(rand() % 20) / 100.0));
 			}
-			else if ((perturbed_once == false and previous_cost != current_cost) or (perturbed_once and previous_cost != current_cost)) // Escaped from the previous local optimum. New local optimum reached
+			else if ((perturbed_once == false && previous_cost != current_cost) || (perturbed_once && previous_cost != current_cost)) // Escaped from the previous local optimum. New local optimum reached
 			{
 				iter_without_improvement++;
 				perturb_str = ceil(n*init_ptr); if (perturb_str < 2) perturb_str = 2;
@@ -399,7 +402,7 @@ bool not_assigned_in_child(long n, type_vector child_sol, int vertex)
 void crossos_uni(long n, type_vector & child_sol, type_matrix_s & pop, int pop_size, double *dist)
 {
 	int random;
-	int unassigned[n + 1];
+	int unassigned[max_n];
 
 	for (int i = 1; i <= n; i++)
 	{
@@ -409,7 +412,7 @@ void crossos_uni(long n, type_vector & child_sol, type_matrix_s & pop, int pop_s
 	for (int i = 1; i <= n; i++)
 	{
 		random = rand() % 101;
-		if (random > 50 and not_assigned_in_child(n, child_sol, pop[0][i]) == false)
+		if (random > 50 && not_assigned_in_child(n, child_sol, pop[0][i]) == false)
 			child_sol[i] = pop[0][i];
 		else if (not_assigned_in_child(n, child_sol, pop[1][i]) == false)
 			child_sol[i] = pop[1][i];
@@ -513,8 +516,8 @@ void replacement_other(long n, type_vector & child_sol, long  child_cost, type_m
 	int i, j, k, replace_with;
 	int min = 999999, sum = 0, count;
 	int min_dist = 99999;
-	int dist[pop_size + 2];
-	double score[pop_size + 2];
+	int dist[max_pop_size];
+	double score[max_pop_size];
 	long long mx = 0;
 
 	for (j = 1; j <= n; j++)
@@ -545,7 +548,7 @@ void replacement_other(long n, type_vector & child_sol, long  child_cost, type_m
 	}
 
 	//  cout<<"WPC "<<worst_pop_cost(pop_costs, pop_size)<<endl;
-	if (dist[pop_size] != 0 and child_cost < worst_pop_cost(pop_costs, pop_size))// and (min_dist<=dist[pop_size] or child_cost<best_pop_cost(pop_costs, pop_size)))
+	if (dist[pop_size] != 0 && child_cost < worst_pop_cost(pop_costs, pop_size))// and (min_dist<=dist[pop_size] or child_cost<best_pop_cost(pop_costs, pop_size)))
 	{
 		// cout<<"REPLACED "<<endl;
 		for (i = 1; i <= n; i++)
@@ -555,6 +558,7 @@ void replacement_other(long n, type_vector & child_sol, long  child_cost, type_m
 	if (child_cost < resulting_cost)
 	{
 		resulting_cost = child_cost;
+		resulting_time = clock();
 		for (i = 1; i <= n; i++)
 			best_solution_found[i] = child_sol[i];
 	}
@@ -562,7 +566,7 @@ void replacement_other(long n, type_vector & child_sol, long  child_cost, type_m
 
 void check_validity(long n, type_vector & child_sol)
 {
-	int array[n + 1];
+	int array[max_n];
 	for (int i = 1; i <= n; i++)
 		array[i] = 0;
 	for (int i = 1; i <= n; i++)
@@ -590,6 +594,7 @@ void best_individual(int n, type_matrix_s pop, long* pop_costs, int pop_size)
 		for (int j = 1; j <= n; j++)
 			best_solution_found[j] = pop[b][j];
 		resulting_cost = best;
+		resulting_time = clock();
 	}
 }
 int best_index(int pop_size, long* pop_costs)
@@ -657,7 +662,7 @@ void parent_selection(int n, type_matrix_s pop, int pop_size, long* pop_cost, ty
 void mutate_population(long n, int pop_size, type_matrix_s & pop, int strength, int best)
 {
 	int r1, r2;
-	bool mutated[n + 1];
+	bool mutated[max_n];
 
 	for (int i = 0; i < pop_size; i++)
 	{
@@ -670,7 +675,7 @@ void mutate_population(long n, int pop_size, type_matrix_s & pop, int strength, 
 		for (int j = 0; j < strength; j++)
 		{
 			r2 = 1 + rand() % n;
-			while (r1 == r2 and mutated[r2] == 1)
+			while (r1 == r2 && mutated[r2] == 1)
 				r2 = 1 + rand() % n;
 			swap(pop[i][r1], pop[i][r2]);
 			//cout<<r1<<"  "<<r2<<endl;
@@ -724,16 +729,17 @@ int i, j;
 
 
 
-main()
+int main(int argc, char* argv[])
 
 {/************** read file name and problem size ***************/
-	string file_name;
-	getline(cin, file_name);
+	string file_name("output.txt");
+	target = std::atoi(argv[1]);
 
-	file_name.append("Output_2h_5k_10k.out");
-	target = 0;
-	cin >> target;
-	cin >> n;
+	string input_file_name = argv[2];
+
+	ifstream ifile(input_file_name);
+
+	ifile >> n;
 
 
 	srand(time(NULL));
@@ -742,7 +748,7 @@ main()
 
 	unsigned long long best_cost_ever = 999999999999ULL;
 	double avg_cost = 0;
-	double dist, times[50];
+	double dist, times[1000];
 	int num_mutations = 0;
 	type_vector best_solution_ever;
 	best_solution_ever = new int[n + 1];
@@ -779,15 +785,15 @@ main()
 
 	for (i = 1; i <= n; i = i + 1) for (j = 1; j <= n; j = j + 1)
 
-		cin >> a[i][j];
+		ifile >> a[i][j];
 
 	for (i = 1; i <= n; i = i + 1) for (j = 1; j <= n; j = j + 1)
 
-		cin >> b[i][j];
+		ifile >> b[i][j];
 
-	long all_solutions[101];
+	long all_solutions[10000];
 
-	int num_runs = 15;
+	int num_runs = 10;
 
 	int num_counter;
 	clock_t timet;
@@ -817,11 +823,11 @@ main()
 		{
 			if (vrijeme > 7200)
 				goto end;
-			if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC)>0 and vrijeme_p <= 0)
+			if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC)>0 && vrijeme_p <= 0)
 				vrijeme += abs(vrijeme_p) + (clock() - timet) / static_cast<double>(CLOCKS_PER_SEC);
-			else if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC) > 0 and vrijeme_p >= 0)
+			else if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC) > 0 && vrijeme_p >= 0)
 				vrijeme += (clock() - timet) / static_cast<double>(CLOCKS_PER_SEC) - vrijeme_p;
-			else if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC) < 0 and vrijeme_p < 0)
+			else if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC) < 0 && vrijeme_p < 0)
 				vrijeme += abs(vrijeme_p) + (clock() - timet) / static_cast<double>(CLOCKS_PER_SEC);
 
 			vrijeme_p = (clock() - timet) / static_cast<double>(CLOCKS_PER_SEC);
@@ -833,16 +839,19 @@ main()
 			//  check_validity(n, child_sol); 
 
 			local_search(n, a, b, child_sol, child_cost, 10000, time);
-			cout << "  Best cost " << resulting_cost << "  " << time_best << endl;
 
 			if (resulting_cost > child_cost)
 			{
 				num_mutations = 0;
 				num_counter = 0;
-				time_best = time / static_cast<double>(CLOCKS_PER_SEC);
 			}
 			else num_mutations++;
 
+			time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
+
+			cout << "  Best cost " << resulting_cost << "  " << time_best << endl;
+			if (resulting_cost == target)
+				break;
 
 			if (num_mutations == pop_size)
 			{
