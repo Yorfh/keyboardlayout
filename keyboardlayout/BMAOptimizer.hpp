@@ -140,7 +140,7 @@ public:
 			localSearch(child, solution, m_imporvementDepth, true, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
 			if (EnableLog)
-				std::cout << std::setprecision(9) << resultingCost << std::endl;
+				std::cout << std::setprecision(9) << resultingCost << " " << m_numEvaluationsLeft << std::endl;
 			float childCost = solution;
 			if (childCost > resultingCost + tolerance)
 			{
@@ -168,10 +168,11 @@ public:
 						numWithoutImprovement++;
 					}
 					if (EnableLog)
-						std::cout << "Try to improve any" << improved << std::endl;
+						std::cout << "Try to improve any " << improved << std::endl;
 					numCounter = 0;
 				}
-				else
+				// Note that we use if instead of else if here, since the previous if can se the counter to zero
+				if (numCounter < m_mutationStrenghtGrowth)
 				{
 					size_t i = 0;
 					do 
@@ -193,7 +194,7 @@ public:
 					if (EnableLog)
 						std::cout << "Mutated" << std::endl;
 				}
-				if (numCounter > m_mutationStrenghtGrowth)
+				else if (numCounter > m_mutationStrenghtGrowth)
 				{
 					numCounter = 0;
 				}
