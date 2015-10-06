@@ -172,7 +172,7 @@ public:
 					numCounter = 0;
 				}
 				// Note that we use if instead of else if here, since the previous if can se the counter to zero
-				if (numCounter < m_mutationStrenghtGrowth)
+				if (numWithoutImprovement > 0 && numCounter < m_mutationStrenghtGrowth)
 				{
 					size_t i = 0;
 					do 
@@ -254,26 +254,33 @@ protected:
 		float best = std::get<0>(m_bestSolution);
 		size_t i = 0;
 
-		for (auto&& e : m_eliteSoFar)
+		bool anyFound = true;
+		size_t maxTimes = 1;
+		while (anyFound)
 		{
-			// TODO: Maybe retry the best ones randomly?
-			if (e.m_improved == false)
+			anyFound = false;
+			for (auto&& e : m_eliteSoFar)
 			{
-				e.m_improved = true;
-				Keyboard<KeyboardSize> keyboard = e.m_keyboard;
-				float solution = e.m_solution;
-				localSearch(keyboard, solution, m_imporvementDepth, false, objective);
-				if (solution > best + tolerance)
+				if (e.m_improvedTimes < maxTimes)
 				{
-					replaceSolution(keyboard, solution);
-					return true;
+					anyFound = true;
+					e.m_improvedTimes++;
+					Keyboard<KeyboardSize> keyboard = e.m_keyboard;
+					float solution = e.m_solution;
+					localSearch(keyboard, solution, m_imporvementDepth, false, objective);
+					if (solution > best + tolerance)
+					{
+						replaceSolution(keyboard, solution);
+						return true;
+					}
+					i++;
+					if (i >= m_populationSize)
+					{
+						return false;
+					}
 				}
 			}
-			i++;
-			if (i >= m_populationSize)
-			{
-				return false;
-			}
+			maxTimes++;
 		}
 
 		return false;
@@ -825,12 +832,12 @@ protected:
 		Elite(const Keyboard<KeyboardSize>& keyboard, float solution) :
 			m_keyboard(keyboard),
 			m_solution(solution),
-			m_improved(false)
+			m_improvedTimes(0)
 		{
 		}
 		Keyboard<KeyboardSize> m_keyboard;
 		float m_solution;
-		mutable bool m_improved;
+		mutable size_t m_improvedTimes;
 	};
 
 	struct CompareElite
