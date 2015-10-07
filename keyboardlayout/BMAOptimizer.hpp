@@ -461,14 +461,14 @@ protected:
 		std::uniform_real_distribution<float> tenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
+		bool useTabu = false;
+		float e = std::exp(-d * m_minDirectedPerturbation);
+		e = std::max(m_minDirectedPerturbation, e);
+
+		if (e > dist(m_randomGenerator))
+			useTabu = true;
 		for (size_t k = 0; k < perturbStr; k++)
 		{
-			bool useTabu = false;
-			float e = std::exp(-d * m_minDirectedPerturbation);
-			e = std::max(m_minDirectedPerturbation, e);
-
-			if (e > dist(m_randomGenerator))
-				useTabu = true;
 
 			size_t iRetained;
 			size_t jRetained;
@@ -656,7 +656,7 @@ protected:
 					iteration++;
 					return;
 				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
+				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);, 3.0f)
 			}
 			iteration++;
 			currentT *= alpha;
