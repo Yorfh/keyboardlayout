@@ -169,51 +169,32 @@ public:
 			replaceSolution(child, solution);
 			updateEliteArchive(child, solution);
 
-			if (numWithoutImprovement >= m_mutationFrequency)
+			if (numWithoutImprovement == m_mutationFrequency)
 			{
-				if (numCounter == m_mutationStrenghtGrowth)
+				size_t i = 0;
+				do 
 				{
-					bool improved = tryToImproveAny(objective);
-					if (improved)
-					{
-						numWithoutImprovement = 0;
-					}
-					else
-					{
-						numWithoutImprovement++;
-					}
-					if (EnableLog)
-						std::cout << "Try to improve any " << improved << std::endl;
-					numCounter = 0;
-				}
-				// Note that we use if instead of else if here, since the previous if can se the counter to zero
-				if (numWithoutImprovement > 0 && numCounter < m_mutationStrenghtGrowth)
-				{
-					size_t i = 0;
-					do 
-					{
-						// TODO doesn't seem to use the same logic as the reference
-						float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
-						const float tMax = 1.0f - m_mutationStrenghtMin;
-						t *= tMax;
-						size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
-						mutatePopulation(mutationStrength);
-						evaluatePopulation(objective);
-						updateBestSolution();
-						shortImprovement(false, objective);
-						i++;
-					} while (!populationIsUnique() && i <= 5);
+					// TODO doesn't seem to use the same logic as the reference
+					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
+					const float tMax = 1.0f - m_mutationStrenghtMin;
+					t *= tMax;
+					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+					mutatePopulation(mutationStrength);
+					evaluatePopulation(objective);
 					updateBestSolution();
-					updateEliteArchive();
-					numWithoutImprovement = 0;
-					numCounter++;
-					if (EnableLog)
-						std::cout << "Mutated" << std::endl;
-				}
-				else if (numCounter > m_mutationStrenghtGrowth)
-				{
-					numCounter = 0;
-				}
+					shortImprovement(false, objective);
+					i++;
+				} while (!populationIsUnique() && i <= 5);
+				updateBestSolution();
+				updateEliteArchive();
+				numWithoutImprovement = 0;
+				numCounter++;
+				if (EnableLog)
+					std::cout << "Mutated" << std::endl;
+			}
+			if (numCounter > m_mutationStrenghtGrowth)
+			{
+				numCounter = 0;
 			}
 		}
 		updateBestSolution();
