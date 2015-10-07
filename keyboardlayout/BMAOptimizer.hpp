@@ -171,7 +171,6 @@ public:
 
 			if (numWithoutImprovement == m_mutationFrequency)
 			{
-				size_t i = 0;
 				do 
 				{
 					// TODO doesn't seem to use the same logic as the reference
@@ -183,8 +182,7 @@ public:
 					evaluatePopulation(objective);
 					updateBestSolution();
 					shortImprovement(false, objective);
-					i++;
-				} while (!populationIsUnique() && i <= 5);
+				} while (!populationIsUnique());
 				updateBestSolution();
 				updateEliteArchive();
 				numWithoutImprovement = 0;
