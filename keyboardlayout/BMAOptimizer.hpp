@@ -138,7 +138,7 @@ public:
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_totalEvaluations = numEvaluations;
 		generateRandomPopulation(objective);
-		shortImprovement(true, objective);
+		shortImprovement(false, objective);
 		updateBestSolution();
 		updateEliteArchive();
 		size_t numWithoutImprovement = 0;
@@ -152,7 +152,7 @@ public:
 			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
 			solution = evaluate(child, objective);
 			m_numEvaluationsLeft--;
-			localSearch(child, solution, m_imporvementDepth, true, objective);
+			localSearch(child, solution, m_imporvementDepth, false, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
 			if (EnableLog)
 				std::cout << std::setprecision(9) << resultingCost << " " << m_numEvaluationsLeft << std::endl;
@@ -200,7 +200,7 @@ public:
 						mutatePopulation(mutationStrength);
 						evaluatePopulation(objective);
 						updateBestSolution();
-						shortImprovement(true, objective);
+						shortImprovement(false, objective);
 						i++;
 					} while (!populationIsUnique() && i <= 5);
 					updateBestSolution();
