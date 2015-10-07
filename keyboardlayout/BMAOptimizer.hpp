@@ -44,56 +44,71 @@ public:
 	void populationSize(size_t size)
 	{
 		m_populationSize = size;
+		m_populationSize = 10;
 	}
 
 	void improvementDepth(size_t longImprovement)
 	{
 		m_imporvementDepth = longImprovement;
+		m_imporvementDepth = 10000;
 	}
 
 	void jumpMagnitude(float magnitude)
 	{
 		m_jumpMagnitude = magnitude;
+		m_jumpMagnitude = 0.15f;
 	}
 
 	void stagnation(size_t iterations, float minMagnitude, float maxMagnitude)
 	{
 		m_stagnationAfter = iterations;
+		m_stagnationAfter = 250;
 		m_minStagnationMagnitude = minMagnitude;
+		m_minStagnationMagnitude = 0.2f;
 		m_maxStagnationMagnitude = maxMagnitude;
+		m_maxStagnationMagnitude = 0.4f;
 	}
 
 	void tabuTenure(float minTenure, float maxTenure)
 	{
 		m_minTabuTenureDist = minTenure;
+		m_minTabuTenureDist = 0.9f;
 		m_maxTabuTenureDist = maxTenure;
+		m_maxTabuTenureDist = 1.1f;
 	}
 
 	void minDirectedPertubation(float v)
 	{
 		m_minDirectedPerturbation = v;
+		m_minDirectedPerturbation = 0.75f;
 	}
 
 	void tournamentPool(size_t poolSize)
 	{
 		m_tournamentSize = poolSize;
+		m_tournamentSize = 4;
 	}
 
 	void mutation(size_t frequency, float mutationStrengthMin, size_t mutationStrengthGrowth)
 	{
 		m_mutationFrequency = frequency;
+		m_mutationFrequency = 10;
 		m_mutationStrenghtMin = mutationStrengthMin;
+		m_mutationStrenghtMin = 0.5;
 		m_mutationStrenghtGrowth = mutationStrengthGrowth;
+		m_mutationStrenghtGrowth = 5;
 	}
 
 	void crossover(CrossoverType t)
 	{
 		m_crossoverType = t;
+		m_crossoverType = CrossoverType::Uniform;
 	}
 
 	void perturbType(PerturbType perturb)
 	{
 		m_perturbType = perturb;
+		m_perturbType = PerturbType::Normal;
 	}
 
 	void snapshots(size_t snapshotEvery)
@@ -177,6 +192,7 @@ public:
 					size_t i = 0;
 					do 
 					{
+						// TODO doesn't seem to use the same logic as the reference
 						float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
 						const float tMax = 1.0f - m_mutationStrenghtMin;
 						t *= tMax;
@@ -244,7 +260,7 @@ protected:
 		{
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
-			localSearch(keyboard, solution, m_imporvementDepth, steepestAscentOnly, objective);
+			localSearch(keyboard, solution, 5000, steepestAscentOnly, objective);
 		}
 	}
 
@@ -449,6 +465,7 @@ protected:
 		{
 			bool useTabu = false;
 			float e = std::exp(-d * m_minDirectedPerturbation);
+			// TODO the reference uses this line
 			//e = std::max(m_minDirectedPerturbation, e);
 
 			if (e > dist(m_randomGenerator))
@@ -512,6 +529,7 @@ protected:
 				float d = delta[i][j];
 				if (d > maxDelta)
 				{
+					//TODO normal tabu tenure dist
 					if ((lastSwapped[i][j] + std::pow(tabuTenureDist(m_randomGenerator), 3.0f) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
