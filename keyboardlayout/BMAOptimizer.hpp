@@ -528,8 +528,7 @@ protected:
 				float d = delta[i][j];
 				if (d > maxDelta)
 				{
-					//TODO normal tabu tenure dist
-					if ((lastSwapped[i][j] + std::pow(tabuTenureDist(m_randomGenerator), 3.0f) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
+					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
 						jRetained = j;
