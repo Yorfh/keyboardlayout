@@ -465,8 +465,7 @@ protected:
 		{
 			bool useTabu = false;
 			float e = std::exp(-d * m_minDirectedPerturbation);
-			// TODO the reference uses this line
-			//e = std::max(m_minDirectedPerturbation, e);
+			e = std::max(m_minDirectedPerturbation, e);
 
 			if (e > dist(m_randomGenerator))
 				useTabu = true;
