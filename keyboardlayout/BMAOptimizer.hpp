@@ -506,6 +506,7 @@ protected:
 				float d = delta[i][j];
 				if (d > maxDelta)
 				{
+					// TODO the reference also checks that the cost is not the same as the incoming current cost
 					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
