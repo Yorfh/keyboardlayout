@@ -173,7 +173,6 @@ public:
 			{
 				do 
 				{
-					// TODO doesn't seem to use the same logic as the reference
 					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
 					const float tMax = 1.0f - m_mutationStrenghtMin;
 					t *= tMax;
