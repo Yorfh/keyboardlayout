@@ -332,7 +332,7 @@ protected:
 				iteration++;
 				hasImproved = true;
 			}
-			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution <= bestCost + tolerance)
+			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled)
 			{
 				if(m_perturbType == PerturbType::Normal)
 				{
