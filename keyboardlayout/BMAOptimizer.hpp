@@ -294,6 +294,7 @@ protected:
 
 		bool hasImproved = true;
 		size_t iteration = 0;
+		float prevCost = std::numeric_limits<float>::lowest();
 
 		for (size_t i = 0;i < KeyboardSize;i++)
 		{
@@ -341,12 +342,12 @@ protected:
 						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
 						//perturbStr = std::max(str, perturbStr);
 					}
-					else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
+					else if ((hasImproved == true && prevCost != currentCost) || (hasImproved == false && prevCost != currentCost)) // Escaped from the previous local optimum. New local optimum reached
 					{
 						iterWithoutImprovement++;
 						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 					}
-					else
+					else if(prevCost == currentCost)
 					{
 						perturbStr += 1;
 					}
@@ -382,12 +383,9 @@ protected:
 				{
 					solution = currentCost;
 					keyboard = currentKeyboard;
-					hasImproved = true;
 				}
-				else
-				{
-					hasImproved = false;
-				}
+				prevCost = currentCost;
+				hasImproved = true;
 			}
 			else
 			{
