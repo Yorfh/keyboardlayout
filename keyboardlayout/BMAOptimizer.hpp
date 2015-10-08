@@ -339,7 +339,7 @@ protected:
 					{
 						iterWithoutImprovement = 0;
 						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
-						perturbStr = std::max(str, perturbStr);
+						//perturbStr = std::max(str, perturbStr);
 					}
 					else if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
 					{
