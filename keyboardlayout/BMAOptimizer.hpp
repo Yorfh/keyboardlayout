@@ -526,7 +526,7 @@ protected:
 		size_t jRetained = keyDist(m_randomGenerator);
 		if (iRetained > jRetained)
 			std::swap(iRetained, jRetained);
-		while (iRetained == jRetained && std::abs(currentCost + delta[iRetained][jRetained] - startCost) < tolerance)
+		while (iRetained == jRetained || std::abs(currentCost + delta[iRetained][jRetained] - startCost) < tolerance)
 		{
 			jRetained = keyDist(m_randomGenerator);
 			if (iRetained > jRetained)
