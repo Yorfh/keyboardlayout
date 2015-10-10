@@ -731,7 +731,7 @@ class BMAReference
 	int num_evaluations = 0;
 
 public:
-	int run(int target, std::string input_file_name, std::string output_file_name)
+	int run(int target, std::string input_file_name, std::string output_file_name, int num_runs)
 	{/************** read file name and problem size ***************/
 
 		std::ifstream ifile(input_file_name);
@@ -791,7 +791,6 @@ public:
 
 		long all_solutions[10000];
 
-		int num_runs = 10;
 
 		int num_counter;
 		clock_t timet;
