@@ -733,14 +733,11 @@ class BMAReference
 
 
 public:
-	int run(int argc, char* argv[])
+	int run(int target, std::string input_file_name, std::string output_file_name)
 	{/************** read file name and problem size ***************/
-		string file_name("output.txt");
-		target = std::atoi(argv[1]);
-
-		string input_file_name = argv[2];
 
 		ifstream ifile(input_file_name);
+		this->target = target;
 
 		ifile >> n;
 
@@ -889,7 +886,8 @@ public:
 		}
 
 		//out.close();
-		output(n, file_name, all_solutions, num_runs, best_cost_ever, best_solution_ever, times);
+		if (output_file_name != "")
+			output(n, file_name, all_solutions, num_runs, best_cost_ever, best_solution_ever, times);
 		delete[] best_solution_ever;
 		return 0;
 	}
