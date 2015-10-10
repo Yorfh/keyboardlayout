@@ -441,7 +441,7 @@ protected:
 		std::uniform_real_distribution<float> dist(0.0f, std::nextafter(1.0f, 2.0f));
 		std::uniform_real_distribution<float> tenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
-		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
+		const float d = static_cast<float>(iterWithoutImprovement) / (m_stagnationAfter - 1);
 		bool useTabu = false;
 		float startCost = currentCost;
 		float e = std::exp(-d);
