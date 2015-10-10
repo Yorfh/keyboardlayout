@@ -53,5 +53,8 @@
     <ClCompile Include="Dummy.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="BMAReference.hpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

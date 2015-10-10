@@ -138,6 +138,7 @@
     <ClInclude Include="TravelingSalesman.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BMAReference.hpp" />
     <ClCompile Include="Dummy.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
