@@ -125,6 +125,7 @@
     <Text Include="..\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BMAHeadToHeadTests.cpp" />
     <ClCompile Include="BMAOptimizerTests.cpp" />
     <ClCompile Include="gmock-gtest-all.cc" />
     <ClCompile Include="HelpersTests.cpp" />

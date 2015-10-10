@@ -209,6 +209,11 @@ public:
 		return m_snapshots;
 	}
 
+	size_t getNumEvaluations() const
+	{
+		return m_totalEvaluations - m_numEvaluationsLeft;
+	}
+
 protected:
 	typedef std::array<std::array<float, KeyboardSize>, KeyboardSize> DeltaArray;
 	typedef std::array<std::array<size_t, KeyboardSize>, KeyboardSize> IndexArray;

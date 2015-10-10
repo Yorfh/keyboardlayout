@@ -890,4 +890,14 @@ public:
 		delete[] best_solution_ever;
 		return 0;
 	}
+
+	int getLastResult() const
+	{
+		return resulting_cost;
+	}
+
+	int getNumEvaluations() const
+	{
+		return num_evaluations;
+	}
 };
