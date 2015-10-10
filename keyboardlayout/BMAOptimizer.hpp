@@ -460,7 +460,7 @@ protected:
 			}
 			else
 			{
-				std::tie(iRetained, jRetained) = randomPerturbe(keyDist);
+				std::tie(iRetained, jRetained) = randomPerturbe(delta, keyDist, currentCost, startCost);
 			}
 
 			if (iRetained != std::numeric_limits<size_t>::max())
@@ -520,16 +520,18 @@ protected:
 		return std::make_tuple(iRetained, jRetained);
 	}
 
-	std::tuple<size_t, size_t> randomPerturbe(std::uniform_int_distribution<int>& keyDist)
+	std::tuple<size_t, size_t> randomPerturbe(const DeltaArray& delta, std::uniform_int_distribution<int>& keyDist, float currentCost, float startCost)
 	{
 		size_t iRetained = keyDist(m_randomGenerator);
 		size_t jRetained = keyDist(m_randomGenerator);
-		while (iRetained == jRetained)
-		{
-			jRetained = keyDist(m_randomGenerator);
-		}
 		if (iRetained > jRetained)
 			std::swap(iRetained, jRetained);
+		while (iRetained == jRetained && std::abs(currentCost + delta[iRetained][jRetained] - startCost) < tolerance)
+		{
+			jRetained = keyDist(m_randomGenerator);
+			if (iRetained > jRetained)
+				std::swap(iRetained, jRetained);
+		}
 		return std::make_tuple(iRetained, jRetained);
 	}
 
