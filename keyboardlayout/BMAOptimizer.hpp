@@ -444,7 +444,7 @@ protected:
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		bool useTabu = false;
 		float startCost = currentCost;
-		float e = std::exp(-d * m_minDirectedPerturbation);
+		float e = std::exp(-d);
 		e = std::max(m_minDirectedPerturbation, e);
 
 		if (e > dist(m_randomGenerator))
