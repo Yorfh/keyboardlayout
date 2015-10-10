@@ -47,5 +47,5 @@ TEST(BMAHeadToHeadTests, Tai30a)
 			numBetter++;
 		}
 	}
-	EXPECT_GT(numBetter, bestOf / 2);
+	EXPECT_GT(numBetter, bestOf - numBetter);
 }
