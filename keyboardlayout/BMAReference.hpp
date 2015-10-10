@@ -6,8 +6,6 @@
 #include<cmath>
 #include <string>
 
-using namespace std;
-
 class BMAReference
 {
 
@@ -35,15 +33,15 @@ class BMAReference
 	long target;
 
 
-	void output(long n, string f_name, long all_sol[], int num_runs, long best_cost, type_vector & s, double times[])
+	void output(long n, std::string f_name, long all_sol[], int num_runs, long best_cost, type_vector & s, double times[])
 	{
 		char una[70];
 
-		cout << f_name << endl;
+		std::cout << f_name << std::endl;
 		for (int i = 0; i < f_name.size(); i++)
 			una[i] = f_name[i];
 		una[f_name.size()] = 0;
-		cout << "OUTPUTING" << endl;
+		std::cout << "OUTPUTING" << std::endl;
 		double sum = 0;
 		double STD_DEV = 0; // returning zero's
 		double time = 0.0, avg_time = 0.0;
@@ -66,12 +64,12 @@ class BMAReference
 
 
 
-		ofstream out;
+		std::ofstream out;
 		out.open(una);
-		out << best_cost << "   " << c << "   " << time << "  " << avg_time << " " << mean << " " << s_dev << endl;
+		out << best_cost << "   " << c << "   " << time << "  " << avg_time << " " << mean << " " << s_dev << std::endl;
 		for (int i = 0; i < num_runs; i++)
 		{
-			out << all_sol[i] << " " << times[i] << endl;
+			out << all_sol[i] << " " << times[i] << std::endl;
 		}
 		out.close();
 	}
@@ -198,12 +196,12 @@ class BMAReference
 				i_retained = 1 + rand() % n;
 				j_retained = 1 + rand() % n;
 				if (i_retained > j_retained)
-					swap(i_retained, j_retained);
+					std::swap(i_retained, j_retained);
 				while (i_retained == j_retained || (current_cost + delta[i_retained][j_retained]) == cost)
 				{
 					j_retained = 1 + rand() % n;
 					if (i_retained > j_retained)
-						swap(i_retained, j_retained);
+						std::swap(i_retained, j_retained);
 				}
 
 			}
@@ -386,7 +384,7 @@ class BMAReference
 		for (i = 0; i < pop_size; i++)
 		{
 			for (j = 0; j <= n; j = j + 1) pop[i][j] = j;
-			for (j = 1; j < n; j = j + 1) swap(pop[i][j], pop[i][j + rand() % (n - j + 1)]);
+			for (j = 1; j < n; j = j + 1) std::swap(pop[i][j], pop[i][j + rand() % (n - j + 1)]);
 		}
 	}
 
@@ -437,7 +435,7 @@ class BMAReference
 		{
 			if (pop[0][i] != child_sol[i]) d1++;
 			if (pop[1][i] != child_sol[i]) d2++;
-		} cout << d1 << "  " << d2 << endl;
+		} std::cout << d1 << "  " << d2 << std::endl;
 		if (d1 <= d2)
 			*dist = d1 / static_cast<double>(n);
 		else
@@ -576,7 +574,7 @@ class BMAReference
 			array[child_sol[i]]++;
 		for (int i = 1; i <= n; i++)
 		{
-			if (array[i] != 1) cout << "PROBLEM IN CROSSOVER " << array[i] << "  " << endl;
+			if (array[i] != 1) std::cout << "PROBLEM IN CROSSOVER " << array[i] << "  " << std::endl;
 		}
 	}
 
@@ -680,7 +678,7 @@ class BMAReference
 				r2 = 1 + rand() % n;
 				while (r1 == r2 && mutated[r2] == 1)
 					r2 = 1 + rand() % n;
-				swap(pop[i][r1], pop[i][r2]);
+				std::swap(pop[i][r1], pop[i][r2]);
 				//cout<<r1<<"  "<<r2<<endl;
 				r1 = r2;
 				mutated[r2] = 1;
@@ -723,7 +721,7 @@ class BMAReference
 	long pop_costs[50];
 
 
-	ifstream data_file;
+	std::ifstream data_file;
 
 	char file_name[30];
 
@@ -736,7 +734,7 @@ public:
 	int run(int target, std::string input_file_name, std::string output_file_name)
 	{/************** read file name and problem size ***************/
 
-		ifstream ifile(input_file_name);
+		std::ifstream ifile(input_file_name);
 		this->target = target;
 
 		ifile >> n;
@@ -849,7 +847,7 @@ public:
 
 				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
 
-				cout << "  Best cost " << resulting_cost << "  " << time_best << endl;
+				std::cout << "  Best cost " << resulting_cost << "  " << time_best << std::endl;
 				if (resulting_cost == target)
 					break;
 
