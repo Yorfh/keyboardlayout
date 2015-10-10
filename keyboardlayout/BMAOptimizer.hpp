@@ -468,8 +468,6 @@ protected:
 				if (currentCost > bestBestCost + tolerance)
 				{
 					bestBestCost = currentCost;
-					iteration++;
-					return;
 				}
 			}
 			iteration++;
