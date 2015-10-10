@@ -139,6 +139,7 @@ class BMAReference
 	void update_matrix_of_move_cost(int i_retained, int j_retained, long n, type_matrix & delta, type_vector & p, type_matrix & a, type_matrix & b)
 	{
 		int i, j;
+		num_evaluations += n * (n - 1) / 2;
 		for (i = 1; i < n; i = i + 1) for (j = i + 1; j <= n; j = j + 1)
 
 			if (i != i_retained && i != j_retained &&
@@ -279,6 +280,8 @@ class BMAReference
 			current_cost = current_cost + a[i][j] * b[p[i]][p[j]];
 			if (i < j) { delta[i][j] = compute_delta(n, a, b, p, i, j); };
 		};
+		num_evaluations += 1;
+		num_evaluations += n * (n - 1) / 2;
 		best_best_cost = current_cost;
 
 		/******************** main tabu search loop ********************/
@@ -723,12 +726,9 @@ class BMAReference
 
 	std::ifstream data_file;
 
-	char file_name[30];
-
 	int i, j;
 
-
-
+	int num_evaluations = 0;
 
 public:
 	int run(int target, std::string input_file_name, std::string output_file_name)
@@ -811,6 +811,8 @@ public:
 			num_mutations = 0;
 			num_counter = 0;
 
+			num_evaluations = 0;
+
 			vrijeme = 0.0; vrijeme_p = 0.0;
 			resulting_cost = 999999999999ULL;
 			generate_random_population(n, pop_size, pop);
@@ -847,7 +849,7 @@ public:
 
 				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
 
-				std::cout << "  Best cost " << resulting_cost << "  " << time_best << std::endl;
+				std::cout << "  Best cost " << resulting_cost << "  " << time_best << " " << num_evaluations << std::endl;
 				if (resulting_cost == target)
 					break;
 
@@ -885,7 +887,7 @@ public:
 
 		//out.close();
 		if (output_file_name != "")
-			output(n, file_name, all_solutions, num_runs, best_cost_ever, best_solution_ever, times);
+			output(n, output_file_name, all_solutions, num_runs, best_cost_ever, best_solution_ever, times);
 		delete[] best_solution_ever;
 		return 0;
 	}
