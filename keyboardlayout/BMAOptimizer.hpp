@@ -443,6 +443,7 @@ protected:
 		std::uniform_int_distribution<int> keyDist(0, KeyboardSize - 1);
 		const float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
 		bool useTabu = false;
+		float startCost = currentCost;
 		float e = std::exp(-d * m_minDirectedPerturbation);
 		e = std::max(m_minDirectedPerturbation, e);
 
@@ -455,7 +456,7 @@ protected:
 			size_t jRetained;
 			if (useTabu)
 			{
-				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tenureDist, iteration, currentCost, bestBestCost);
+				std::tie(iRetained, jRetained) = tabuPerturbe(delta, lastSwapped, tenureDist, iteration, startCost, currentCost, bestBestCost);
 			}
 			else
 			{
@@ -495,7 +496,7 @@ protected:
 		return std::make_tuple(iRetained, jRetained, maxDelta);
 	}
 
-	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_real_distribution<float>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
+	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, std::uniform_real_distribution<float>& tabuTenureDist, size_t iteration, float startCost, float currentCost, float bestBestCost)
 	{
 		size_t iRetained = std::numeric_limits<size_t>::max();
 		size_t jRetained = iRetained;
@@ -505,9 +506,8 @@ protected:
 			for (size_t j = i + 1; j < KeyboardSize; j++)
 			{
 				float d = delta[i][j];
-				if (d > maxDelta)
+				if (d > maxDelta && std::abs(currentCost + delta[i][j] - startCost) >= tolerance)
 				{
-					// TODO the reference also checks that the cost is not the same as the incoming current cost
 					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
 					{
 						iRetained = i;
