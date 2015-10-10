@@ -341,7 +341,7 @@ protected:
 			{
 				if(m_perturbType == PerturbType::Normal)
 				{
-					if (iterWithoutImprovement == m_stagnationAfter)
+					if (iterWithoutImprovement > m_stagnationAfter)
 					{
 						iterWithoutImprovement = 0;
 						auto str = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
