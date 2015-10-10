@@ -18,6 +18,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WFG", "WFG_1.10\WFG.vcxproj", "{4E02F2C3-279F-4D7D-8376-3D9BFDCE204E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bmareference", "bmareference\bmareference.vcxproj", "{D210F597-E1D3-465F-A343-6DCF60C97536}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9D37A2D-35FC-469C-AD97-4B1EAAEDBC52} = {B9D37A2D-35FC-469C-AD97-4B1EAAEDBC52}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
