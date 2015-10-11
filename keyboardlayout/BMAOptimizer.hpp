@@ -151,8 +151,6 @@ public:
 			{
 				numWithoutImprovement++;
 			}
-			replaceSolution(child, solution);
-			updateEliteArchive(child, solution);
 
 			if (numWithoutImprovement >= m_mutationFrequency)
 			{
@@ -199,6 +197,8 @@ public:
 					numCounter = 0;
 				}
 			}
+			replaceSolution(child, solution);
+			updateEliteArchive(child, solution);
 		}
 		updateBestSolution();
 		return m_bestSolution;
