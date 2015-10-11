@@ -188,6 +188,8 @@ public:
 			{
 				numCounter = 0;
 			}
+			replaceSolution(child, childCost);
+			updateEliteArchive();
 		}
 		updateBestSolution();
 		return m_bestSolution;
