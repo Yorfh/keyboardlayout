@@ -171,10 +171,7 @@ public:
 			{
 				do 
 				{
-					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
-					const float tMax = 1.0f - m_mutationStrenghtMin;
-					t *= tMax;
-					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+					size_t mutationStrength = static_cast<size_t>(KeyboardSize*(0.5 + static_cast<float>(numCounter) / 10));
 					mutatePopulation(mutationStrength);
 					evaluatePopulation(objective);
 					updateBestSolution();
@@ -191,8 +188,6 @@ public:
 			{
 				numCounter = 0;
 			}
-			replaceSolution(child, solution);
-			updateEliteArchive(child, solution);
 		}
 		updateBestSolution();
 		return m_bestSolution;
