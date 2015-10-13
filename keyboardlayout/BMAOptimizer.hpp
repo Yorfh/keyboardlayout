@@ -144,19 +144,17 @@ public:
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
-		float solution;
 		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
 			auto child = produceChild(m_population[parents.first], m_population[parents.second]);
-			solution = evaluate(child, objective);
+			float childCost = evaluate(child, objective);
 			m_numEvaluationsLeft--;
-			localSearch(child, solution, m_imporvementDepth, false, objective);
+			localSearch(child, childCost, m_imporvementDepth, false, objective);
 			float resultingCost = std::get<0>(m_bestSolution);
 			if (EnableLog)
 				std::cout << std::setprecision(9) << resultingCost << " " << m_numEvaluationsLeft << std::endl;
-			float childCost = solution;
 			if (childCost > resultingCost + tolerance)
 			{
 				numWithoutImprovement = 0;
