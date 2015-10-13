@@ -315,13 +315,12 @@ protected:
 		computeAllDeltas(currentKeyboard, solution, objective, delta);
 
 		float currentCost = solution;
-		float bestCost = solution;
 		Keyboard<KeyboardSize> prevLocalOptimum = keyboard;
 
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
 
-		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0; currentIteration++)
+		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target; currentIteration++)
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
