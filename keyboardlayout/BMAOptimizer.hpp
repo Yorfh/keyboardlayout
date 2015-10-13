@@ -353,6 +353,7 @@ protected:
 				{
 					prevLocalOptimum = currentKeyboard;
 				}
+				prevCost = currentCost;
 				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
 
 				if (currentCost > solution + tolerance)
@@ -360,7 +361,6 @@ protected:
 					solution = currentCost;
 					keyboard = currentKeyboard;
 				}
-				prevCost = currentCost;
 				hasImproved = true;
 			}
 		};
