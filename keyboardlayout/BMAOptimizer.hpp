@@ -331,52 +331,29 @@ protected:
 				iteration++;
 				hasImproved = true;
 			}
-			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled)
+			else
 			{
-				if(m_perturbType == PerturbType::Normal)
+				if (iterWithoutImprovement > m_stagnationAfter)
 				{
-					if (iterWithoutImprovement > m_stagnationAfter)
-					{
-						iterWithoutImprovement = 0;
-						perturbStr = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
-						//perturbStr = std::max(str, perturbStr);
-					}
-					else if ((hasImproved == true && prevCost != currentCost) || (hasImproved == false && prevCost != currentCost)) // Escaped from the previous local optimum. New local optimum reached
-					{
-						iterWithoutImprovement++;
-						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-					}
-					else if(prevCost == currentCost)
-					{
-						perturbStr += 1;
-					}
-
-					if (hasImproved)
-					{
-						prevLocalOptimum = currentKeyboard;
-					}
-					perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
-				
+					iterWithoutImprovement = 0;
+					perturbStr = std::max<size_t>(static_cast<size_t>(KeyboardSize * stagnationDistribution(m_randomGenerator)), 2);
+					//perturbStr = std::max(str, perturbStr);
 				}
-				else if (m_perturbType == PerturbType::Annealed)
+				else if ((hasImproved == true && prevCost != currentCost) || (hasImproved == false && prevCost != currentCost)) // Escaped from the previous local optimum. New local optimum reached
 				{
-					if (hasImproved == true && prevLocalOptimum != currentKeyboard) // Escaped from the previous local optimum. New local optimum reached
-					{
-						iterWithoutImprovement++;
-						perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
-					}
-					else
-					{
-						perturbStr += 1;
-					}
-
-					if (hasImproved)
-					{
-						prevLocalOptimum = currentKeyboard;
-					}
-					annealed_perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
-
+					iterWithoutImprovement++;
+					perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 				}
+				else if(prevCost == currentCost)
+				{
+					perturbStr += 1;
+				}
+
+				if (hasImproved)
+				{
+					prevLocalOptimum = currentKeyboard;
+				}
+				perturbe(currentKeyboard, delta, currentCost, lastSwapped, frequency, iterWithoutImprovement, solution, perturbStr, iteration, objective);
 
 				if (currentCost > solution + tolerance)
 				{
@@ -385,10 +362,6 @@ protected:
 				}
 				prevCost = currentCost;
 				hasImproved = true;
-			}
-			else
-			{
-				break;
 			}
 		};
 	}
@@ -527,116 +500,6 @@ protected:
 				std::swap(iRetained, jRetained);
 		}
 		return std::make_tuple(iRetained, jRetained);
-	}
-
-	template<typename Objective>
-	void annealed_perturbe(Keyboard<KeyboardSize>& currentKeyboard, DeltaArray& delta, float& currentCost,
-		IndexArray& lastSwapped, IndexArray& frequency, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, size_t& iteration, Objective& objective)
-	{
-		std::uniform_real_distribution<float> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
-		std::array<std::array<bool, KeyboardSize>, KeyboardSize> valid;
-		auto probability = std::uniform_real_distribution<float>(0, 1.0);
-		float min_t = m_minT;
-		float d = static_cast<float>(iterWithoutImprovement) / m_stagnationAfter;
-		const float fiftyPercent = 1.0f / std::log(2.0f);
-		float max_t = min_t + fiftyPercent * d;
-		float tMult = d > 1.0f ? d : 1.0f;
-		float t_steps = static_cast<float>(perturbStr) * tMult;
-		float alpha = std::pow(min_t / max_t, 1.0f / t_steps);
-		float currentT = max_t;
-		for (size_t s = 0; s < static_cast<size_t>(t_steps); s++)
-		{
-			size_t iRetained = std::numeric_limits<size_t>::max();
-			size_t jRetained = iRetained;
-			float maxDelta = std::numeric_limits<float>::lowest();
-			float minDelta = std::numeric_limits<float>::max();
-			for (size_t i = 0; i < KeyboardSize; i++)
-			{
-				for (size_t j = i + 1; j < KeyboardSize; j++)
-				{
-					valid[i][j] = false;
-					if (currentCost + delta[i][j] > bestBestCost)
-					{
-						iRetained = i;
-						jRetained = j;
-						break;
-					}
-					if ((lastSwapped[i][j] + tabuTenureDist(m_randomGenerator) * KeyboardSize) < iteration)
-					{
-						if (delta[i][j] > maxDelta)
-						{
-							maxDelta = delta[i][j];
-						}
-						else if (delta[i][j] < minDelta)
-						{
-							minDelta = delta[i][j];
-						}
-						valid[i][j] = true;
-					}
-				}
-				if (iRetained != std::numeric_limits<size_t>::max())
-				{
-					break;
-				}
-			}
-			if (iRetained == std::numeric_limits<size_t>::max())
-			{
-				std::array<size_t, KeyboardSize> a;
-				std::array<size_t, KeyboardSize> b;
-				std::iota(a.begin(), a.end(), 0);
-				std::iota(b.begin(), b.end(), 0);
-				std::shuffle(a.begin(), a.end(), m_randomGenerator);
-				std::shuffle(b.begin(), b.end(), m_randomGenerator);
-
-				float p = probability(m_randomGenerator);
-				float m = std::numeric_limits<float>::max();
-				if (p > 0.0 && p <= 1.0f)
-				{
-					m = currentT * std::log(1.0f / p);
-				}
-
-				for (size_t i = 0; i < KeyboardSize; i++)
-				{
-					for (size_t j = 0; j < KeyboardSize; j++)
-					{
-						auto ai = a[i];
-						auto bj = b[j];
-						if (bj > ai)
-						{
-							float d = delta[ai][bj];
-
-							if (valid[ai][bj])
-							{
-								float v = (maxDelta - d) / (maxDelta - minDelta);
-								if (v < m)
-								{
-									iRetained = ai;
-									jRetained = bj;
-									break;
-								}
-							}
-						}
-					}
-					if (iRetained != std::numeric_limits<size_t>::max())
-					{
-						break;
-					}
-				}
-			}
-			if (iRetained != std::numeric_limits<size_t>::max())
-			{
-				currentCost = swapKeys(iRetained, jRetained, currentKeyboard, currentCost, delta, iteration, lastSwapped, frequency, objective);
-				if (currentCost > bestBestCost)
-				{
-					bestBestCost = currentCost;
-					iteration++;
-					return;
-				}
-				//update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);, 3.0f)
-			}
-			iteration++;
-			currentT *= alpha;
-		}
 	}
 
 	template<typename Objective>
