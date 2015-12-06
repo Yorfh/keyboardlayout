@@ -14,6 +14,8 @@ TEST(BMAHeadToHeadTests, Tai30a)
 	size_t numBetter = 0;
 	const size_t bestOf = 10;
 	const int target = 1818146;
+	size_t totalEvaluationsO = 0;
+	size_t totalEvaluationsR = 0;
 	for (size_t i = 0; i < bestOf; i++)
 	{
 		clock_t before = clock();
@@ -51,7 +53,11 @@ TEST(BMAHeadToHeadTests, Tai30a)
 			numBetter++;
 		}
 		printf("Num evaluations %i vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
+		totalEvaluationsO += o.getNumEvaluations();
+		totalEvaluationsR += r.getNumEvaluations();
 	}
+	printf("TotalEvaluations %i vs %i\n", totalEvaluationsO, totalEvaluationsR);
 	printf("Result %i vs %i\n", numBetter, bestOf - numBetter);
 	EXPECT_GT(numBetter, bestOf - numBetter);
+	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
