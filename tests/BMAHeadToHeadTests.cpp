@@ -3,6 +3,7 @@
 #include "BMAOptimizer.hpp"
 #include "BMAReference.hpp"
 #include "QAP.hpp"
+#include <time.h>
 
 using namespace testing;
 
@@ -13,8 +14,11 @@ TEST(BMAHeadToHeadTests, Tai30a)
 	size_t numBetter = 0;
 	const size_t bestOf = 10;
 	const int target = 1818146;
+	size_t totalEvaluationsO = 0;
+	size_t totalEvaluationsR = 0;
 	for (size_t i = 0; i < bestOf; i++)
 	{
+		clock_t before = clock();
 		Keyboard<30> keyboard;
 		BMAOptimizer<30> o; 
 		o.crossover(CrossoverType::PartiallyMatched);
@@ -29,6 +33,8 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		o.tournamentPool(6);
 		o.target(-target);
 		auto& solution = o.optimize(objective, 200000000);
+		float t = (clock() - before) / static_cast<double>(CLOCKS_PER_SEC);
+		printf("BMAOptimizer time %f\n", t);
 		int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 		EXPECT_EQ(target, resultValue);
 
@@ -46,7 +52,12 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		{
 			numBetter++;
 		}
-		printf("Num evaluations %i vs %i", o.getNumEvaluations(), r.getNumEvaluations());
+		printf("Num evaluations %i vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
+		totalEvaluationsO += o.getNumEvaluations();
+		totalEvaluationsR += r.getNumEvaluations();
 	}
+	printf("TotalEvaluations %i vs %i\n", totalEvaluationsO, totalEvaluationsR);
+	printf("Result %i vs %i\n", numBetter, bestOf - numBetter);
 	EXPECT_GT(numBetter, bestOf - numBetter);
+	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
