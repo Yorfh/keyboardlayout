@@ -12,7 +12,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 	std::string filename = "../../tests/QAPData/tai30a.dat";
 	QAP<30> objective(filename);
 	size_t numBetter = 0;
-	const size_t bestOf = 10;
+	const size_t bestOf = 50;
 	const int target = 1818146;
 	size_t totalEvaluationsO = 0;
 	size_t totalEvaluationsR = 0;
@@ -52,12 +52,12 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		{
 			numBetter++;
 		}
-		printf("Num evaluations %i vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
+		printf("Num evaluations %zu vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
 		totalEvaluationsO += o.getNumEvaluations();
 		totalEvaluationsR += r.getNumEvaluations();
 	}
-	printf("TotalEvaluations %i vs %i\n", totalEvaluationsO, totalEvaluationsR);
-	printf("Result %i vs %i\n", numBetter, bestOf - numBetter);
+	printf("TotalEvaluations %zu vs %zu\n", totalEvaluationsO, totalEvaluationsR);
+	printf("Result %zu vs %zu\n", numBetter, bestOf - numBetter);
 	EXPECT_GT(numBetter, bestOf - numBetter);
 	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
