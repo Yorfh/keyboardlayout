@@ -28,7 +28,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		o.mutation(13, 0.8047553939922597f, 19);
 		o.tournamentPool(6);
 		o.target(-target);
-		auto& solution = o.optimize(objective, 10000000);
+		auto& solution = o.optimize(objective, 100000000);
 		int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 		EXPECT_EQ(target, resultValue);
 
@@ -46,6 +46,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		{
 			numBetter++;
 		}
+		printf("Num evaluations %i vs %i", o.getNumEvaluations(), r.getNumEvaluations());
 	}
 	EXPECT_GT(numBetter, bestOf - numBetter);
 }
