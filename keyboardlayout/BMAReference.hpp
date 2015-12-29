@@ -213,6 +213,10 @@ class BMAReference
 				transpose(p[i_retained], p[j_retained]);
 				current_cost = current_cost + delta[i_retained][j_retained];
 				update_matrix_of_move_cost(i_retained, j_retained, n, delta, p, a, b);
+				if (current_cost < best_best_cost)
+				{
+					best_best_cost = current_cost;
+				}
 			}
 			iteration++;
 		}
@@ -846,12 +850,6 @@ public:
 				}
 				else num_mutations++;
 
-				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
-
-				std::cout << "  Best cost " << resulting_cost << "  " << time_best << " " << num_evaluations << std::endl;
-				if (resulting_cost == target)
-					break;
-
 				if (num_mutations == pop_size)
 				{
 					int bi = best_index(pop_size, pop_costs);
@@ -869,6 +867,12 @@ public:
 				//replacement_strategy(n, child_sol, child_cost, pop, pop_costs, pop_size, &inserted, &dist, &avg_dist);
 				replacement_other(n, child_sol, child_cost, pop, pop_costs, pop_size);
 				// out<<dist<<"   "<<avg_dist<<endl;
+				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
+
+				std::cout << "  Best cost " << resulting_cost << "  " << time_best << " " << num_evaluations << std::endl;
+
+				if (resulting_cost == target)
+					break;
 
 			}end:
 
