@@ -824,6 +824,13 @@ public:
 
 			for (gener = 0; gener < num_generations; gener = gener + 1)
 			{
+				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
+
+				std::cout << "  Best cost " << resulting_cost << "  " << time_best << " " << num_evaluations << std::endl;
+
+				if (resulting_cost == target)
+					break;
+
 				if (vrijeme > 7200)
 					goto end;
 				if ((clock() - timet) / static_cast<double>(CLOCKS_PER_SEC)>0 && vrijeme_p <= 0)
@@ -867,12 +874,6 @@ public:
 				//replacement_strategy(n, child_sol, child_cost, pop, pop_costs, pop_size, &inserted, &dist, &avg_dist);
 				replacement_other(n, child_sol, child_cost, pop, pop_costs, pop_size);
 				// out<<dist<<"   "<<avg_dist<<endl;
-				time_best = (resulting_time - start) / static_cast<double>(CLOCKS_PER_SEC);
-
-				std::cout << "  Best cost " << resulting_cost << "  " << time_best << " " << num_evaluations << std::endl;
-
-				if (resulting_cost == target)
-					break;
 
 			}end:
 
