@@ -4,11 +4,14 @@
 #include "BMAReference.hpp"
 #include "QAP.hpp"
 #include <time.h>
+#include "boost/accumulators/accumulators.hpp"
+#include "boost/accumulators/statistics/median.hpp"
 
 using namespace testing;
 
 TEST(BMAHeadToHeadTests, Tai30a)
 {
+	using namespace boost::accumulators;
 	std::string filename = "../../tests/QAPData/tai30a.dat";
 	QAP<30> objective(filename);
 	size_t numBetter = 0;
@@ -16,6 +19,8 @@ TEST(BMAHeadToHeadTests, Tai30a)
 	const int target = 1818146;
 	size_t totalEvaluationsO = 0;
 	size_t totalEvaluationsR = 0;
+	accumulator_set<double, features<tag::median>> accO;
+	accumulator_set<double, features<tag::median>> accR;
 	for (size_t i = 0; i < bestOf; i++)
 	{
 		clock_t before = clock();
@@ -55,9 +60,12 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		printf("Num evaluations %zu vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
 		totalEvaluationsO += o.getNumEvaluations();
 		totalEvaluationsR += r.getNumEvaluations();
+		accO(static_cast<double>(o.getNumEvaluations()));
+		accR(static_cast<double>(r.getNumEvaluations()));
 	}
 	printf("TotalEvaluations %zu vs %zu\n", totalEvaluationsO, totalEvaluationsR);
 	printf("Result %zu vs %zu\n", numBetter, bestOf - numBetter);
+	printf("Median %f vs %f\n", median(accO), median(accR));
 	EXPECT_GT(numBetter, bestOf - numBetter);
 	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
