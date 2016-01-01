@@ -16,6 +16,7 @@ tournament_mutation_growth integer [1, 20] [5]
 min_t [0.0, 1.0] [0.1]
 crossover_type categorical {uniform, partially_matched} [uniform]
 perturb_type categorical {normal, annealed, disabled} [normal]
+primarily_evolution integer [0, 1] [1]
 
 population | algo_type in {bma}  
 long_improvement | algo_type in {bma}  

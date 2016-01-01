@@ -4,3 +4,5 @@
 "../tests/QAPData/tai30a.dat --evaluations 100000000 --target -1818146"
 "../tests/QAPData/tai30a.dat --evaluations 125000000 --target -1818146"
 "../tests/QAPData/tai30a.dat --evaluations 150000000 --target -1818146"
+"../tests/QAPData/tai30a.dat --evaluations 200000000 --target -1818146"
+

@@ -93,7 +93,7 @@ enum  optionIndex {
 	LONG_IMPROVEMENT, STAGNATION_ITERATIONS, STAGNATION_MIN, STAGNATION_MAX,
 	TENURE_MIN, TENURE_MAX, JUMP_MAGNITUDE, DIRECTED_PERTUBATION, SMAC, INSTANCE_INFO,
 	CUTOFF_TIME, CUTOFF_LENGTH, TOUR_POOLSIZE, TOUR_MUT_FREQ, TOUR_MUT_STR, TOUR_MUT_GRO,
-	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME, TARGET, SCALE,
+	ALGO_TYPE, CROSSOVER_TYPE, PERTURB_TYPE, ANYTIME, TARGET, SCALE, PRIMARILY_EVOLUTION,
 };
 
 const option::Descriptor usage[] =
@@ -136,6 +136,7 @@ const option::Descriptor usage[] =
 	{ ANYTIME,	0, "", "anytime", unsignedInteger,	"  --anytime snapshot_delay \tTake snapshots regularly to optimize for any time" },
 	{ TARGET,	0, "", "target", floatingPoint,	"  --target targetValue \tRun until target value is achieved" },
 	{ SCALE,	0, "", "scale", floatingPoint,	"  --scale s \tScale the output values" },
+	{ PRIMARILY_EVOLUTION,	0, "", "primarily_evolution", unsignedInteger,	"  --primarily_evolution \tPrimarily use evolution" },
 	{ 0,0,0,0,0,0 }
 };
 
@@ -271,7 +272,7 @@ template<size_t NumLocations>
 float qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float* target)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float* target, bool primarilyEvolution)
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
@@ -287,6 +288,7 @@ float qap_bma_helper(const std::string filename, size_t population, size_t longD
 	o.tabuTenure(tenureMin, tenureMax);
 	o.perturbType(perturbType);
 	o.annealing(min_t);
+	o.primarilyEvolution(primarilyEvolution);
 	if (target)
 	{
 		o.target(*target);
@@ -332,7 +334,7 @@ float qap_bma_helper(const std::string filename, size_t population, size_t longD
 float qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float scale, float* target)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, size_t evaluations, size_t anytime, unsigned int seed, float scale, float* target, bool primarilyEvolution)
 {
 	std::ifstream stream(filename);
 	int numLocations;
@@ -341,13 +343,13 @@ float qap_bma(const std::string filename, size_t population, size_t longDepth, s
 	{
 		return qap_bma_helper<12>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, evaluations, anytime, seed, target);
+			crossoverType, perturbType, min_t, evaluations, anytime, seed, target, primarilyEvolution);
 	}
 	else if (numLocations == 30)
 	{
 		return qap_bma_helper<30>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, evaluations, anytime, seed, target) * scale;
+			crossoverType, perturbType, min_t, evaluations, anytime, seed, target, primarilyEvolution) * scale;
 	}
 	return 0;
 }
@@ -644,9 +646,11 @@ int main(int argc, char* argv[])
 						target = &targetValue;
 					}
 
+					bool primarilyEvolution = getArgument<unsigned int>(options, PRIMARILY_EVOLUTION) != 0;
+
 					auto res = qap_bma(test, population, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, perturbType, minT, evaluations, anytime, seed, scale, target);
+						ct, perturbType, minT, evaluations, anytime, seed, scale, target, primarilyEvolution);
 					outputResult(res, seed, options[SMAC] != nullptr, true);
 				}
 			}
