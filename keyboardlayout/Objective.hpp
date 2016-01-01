@@ -11,7 +11,7 @@ public:
 
 	virtual float evaluate(const Keyboard<KeyboardSize>& keyboard) const = 0;
 
-	void evaluateFirstNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta)
+	void evaluateFirstNeighbourhood(const Keyboard<KeyboardSize>& keyboard, float v, std::array<std::array<float, KeyboardSize>, KeyboardSize>& delta) const
 	{
 		evaluateNeighbourhood(keyboard, v, NoSwap, NoSwap, delta);
 	}

@@ -20,3 +20,39 @@ bool isDominated(const First& first, const Second& second)
 	return found;
 }
 
+template<typename T>
+struct InOut : public std::reference_wrapper<T>
+{
+public:
+	explicit InOut(T& v)
+		: reference_wrapper<T>(v)
+	{
+	}
+
+	InOut(const InOut&) = delete;
+	InOut(InOut&& rhs)
+		: reference_wrapper(rhs.get())
+	{
+	}
+
+	InOut& operator=(const InOut) = delete;
+	InOut& operator=(InOut&&) = delete;
+
+	InOut& operator=(const T& v)
+	{
+		get() = v;
+		return *this;
+	}
+};
+
+template<typename T>
+InOut<T> inOut(T& v)
+{
+	return InOut<T>(v);
+}
+
+template<typename T>
+InOut<T> inOut(InOut<T>& i)
+{
+	return inOut(i.get());
+}
