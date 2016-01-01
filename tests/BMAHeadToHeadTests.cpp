@@ -38,7 +38,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		o.tournamentPool(6);
 		o.target(-target);
 		auto& solution = o.optimize(objective, 200000000);
-		float t = (clock() - before) / static_cast<double>(CLOCKS_PER_SEC);
+		float t = static_cast<float>((clock() - before) / static_cast<double>(CLOCKS_PER_SEC));
 		printf("BMAOptimizer time %f\n", t);
 		int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 		EXPECT_EQ(target, resultValue);

@@ -57,7 +57,7 @@ class BMAReference
 		}
 		time /= static_cast<double>(c);
 		avg_time /= static_cast<double>(num_runs);
-		int mean = sum / num_runs;
+		int mean = static_cast<int>(sum / num_runs);
 		for (int i = 0; i < num_runs; i++)
 			STD_DEV += ((static_cast<double>(all_sol[i]) - mean)*(static_cast<double>(all_sol[i]) - mean)) / static_cast<double>(num_runs - 1);
 		double s_dev = sqrt(STD_DEV);
@@ -163,7 +163,7 @@ class BMAReference
 	void perturbe(type_vector & p, long n, type_matrix & delta, long & current_cost, type_matrix & a, type_matrix & b,
 		type_matrix & last_swaped, type_matrix & frequency, int iter_without_improvement, long & best_best_cost)
 	{
-		int i_retained = -1, j_retained = -1, k, i, j, min_delta, min;
+		int i_retained = -1, j_retained = -1, k, i, j, min_delta;
 		long cost = current_cost; int bit;
 		bit = 0;
 		double d = static_cast<double>(iter_without_improvement) / 249;
@@ -238,9 +238,9 @@ class BMAReference
 		type_matrix last_swaped;
 		type_matrix frequency;
 		long current_iteration;               // current iteration
-		long current_cost, best_cost;                    // current sol. value
+		long current_cost;                    // current sol. value
 
-		int i, j, k, i_retained, j_retained, bit;  // indices
+		int i, j, k, i_retained, j_retained;  // indices
 		int iter_without_improvement = 0;
 		long  iter_last_improvement = 0;
 		perturb_str = init_ptr*n;
@@ -473,7 +473,7 @@ class BMAReference
 
 	long worst_pop_cost(long *pop_costs, int pop_size)
 	{
-		long long min = 0;
+		long min = 0;
 		int i;
 		for (i = 0; i < pop_size; i++)
 		{
@@ -491,7 +491,7 @@ class BMAReference
 			if (pop_costs[i] < min)
 				min = pop_costs[i];
 		}
-		return min;
+		return static_cast<long>(min);
 	}
 	bool unique_individuals(long n, type_matrix_s & pop, int pop_size)
 	{
@@ -525,7 +525,6 @@ class BMAReference
 		int min = 999999, sum = 0, count;
 		int min_dist = 99999;
 		int dist[max_pop_size];
-		double score[max_pop_size];
 		long long mx = 0;
 
 		for (j = 1; j <= n; j++)
@@ -587,7 +586,7 @@ class BMAReference
 
 	void best_individual(int n, type_matrix_s pop, long* pop_costs, int pop_size)
 	{
-		long long best = 99999999999ll;
+		unsigned long long best = 99999999999ll;
 		int b;
 		for (int i = 0; i < pop_size; i++)
 		{
@@ -621,7 +620,6 @@ class BMAReference
 	}
 	void parent_selection(int n, type_matrix_s pop, int pop_size, long* pop_cost, type_matrix_s & parent_pool, int num_of_parents, int *parents)
 	{
-		int random;
 		int a = 0;
 		bool insert = true;
 		short int tournament_pool[100];
@@ -744,7 +742,7 @@ public:
 		ifile >> n;
 
 
-		srand(time(NULL));
+		srand(static_cast<unsigned int>(time(NULL)));
 
 
 
@@ -800,7 +798,6 @@ public:
 		clock_t timet;
 		clock_t time;
 		double time_best = 0.0;
-		double best_gen;
 		double vrijeme_p, vrijeme;
 		double b_time = 10000000.0, avg_time = 0.0, worst_time = 0.0;
 
@@ -879,7 +876,7 @@ public:
 
 			//  cout<<"Res cost "<<resulting_cost<<"  "<<time_best<<endl;
 
-			all_solutions[p] = resulting_cost;
+			all_solutions[p] = static_cast<long>(resulting_cost);
 			times[p] = time_best;
 			if (resulting_cost < best_cost_ever)
 			{
@@ -891,14 +888,14 @@ public:
 
 		//out.close();
 		if (output_file_name != "")
-			output(n, output_file_name, all_solutions, num_runs, best_cost_ever, best_solution_ever, times);
+			output(n, output_file_name, all_solutions, num_runs, static_cast<unsigned long>(best_cost_ever), best_solution_ever, times);
 		delete[] best_solution_ever;
 		return 0;
 	}
 
 	int getLastResult() const
 	{
-		return resulting_cost;
+		return static_cast<int>(resulting_cost);
 	}
 
 	int getNumEvaluations() const
