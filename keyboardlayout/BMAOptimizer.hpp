@@ -106,6 +106,11 @@ public:
 		m_minT = min_t;
 	}
 
+	void primarilyEvolution(bool enable)
+	{
+		m_primarilyEvolution = enable;
+	}
+
 	void target(float target)
 	{
 		m_target = target;
@@ -342,8 +347,10 @@ protected:
 				iteration++;
 				hasImproved = true;
 			}
-			else if (!steepestAscentOnly && m_perturbType != PerturbType::Disabled && solution <= bestCost + tolerance)
+			else if (m_perturbType != PerturbType::Disabled)
 			{
+				if (m_primarilyEvolution && !steepestAscentOnly && solution <= bestCost + tolerance)
+					break;
 				if(m_perturbType == PerturbType::Normal)
 				{
 					if (iterWithoutImprovement == m_stagnationAfter)
@@ -822,6 +829,7 @@ protected:
 	size_t m_snapshotEvery = 0;
 	float m_minT = 0.1f;
 	float m_target = std::numeric_limits<float>::lowest();
+	bool m_primarilyEvolution = false;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;
