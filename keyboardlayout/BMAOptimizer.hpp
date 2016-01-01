@@ -315,6 +315,7 @@ protected:
 		computeAllDeltas(currentKeyboard, solution, objective, delta);
 
 		float currentCost = solution;
+		float bestCost = solution;
 		Keyboard<KeyboardSize> prevLocalOptimum = keyboard;
 
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
