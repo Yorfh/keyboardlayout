@@ -159,7 +159,7 @@ public:
 
 			if (numWithoutImprovement >= m_mutationFrequency)
 			{
-				if (numCounter == m_mutationStrenghtGrowth)
+				if (numCounter > m_mutationStrenghtGrowth)
 				{
 					bool improved = tryToImproveAny(objective);
 					if (improved)
@@ -174,8 +174,8 @@ public:
 						std::cout << "Try to improve any " << improved << std::endl;
 					numCounter = 0;
 				}
-				// Note that we use if instead of else if here, since the previous if can se the counter to zero
-				if (numWithoutImprovement > 0 && numCounter < m_mutationStrenghtGrowth)
+				// Note that we use if instead of else if here, since the previous if can set the counter to zero
+				if (numWithoutImprovement > 0 && numCounter <= m_mutationStrenghtGrowth)
 				{
 					size_t i = 0;
 					do 
@@ -196,10 +196,6 @@ public:
 					numCounter++;
 					if (EnableLog)
 						std::cout << "Mutated" << std::endl;
-				}
-				else if (numCounter > m_mutationStrenghtGrowth)
-				{
-					numCounter = 0;
 				}
 			}
 			replaceSolution(child, solution);
@@ -771,22 +767,14 @@ protected:
 
 	void mutatePopulation(size_t mutationStrength)
 	{
-		std::array<bool, KeyboardSize> mutated;
-		std::uniform_int_distribution<size_t> dist(0, KeyboardSize - 1);
-
 		for (int i = 0; i < m_populationSize; i++)
 		{
-			mutated.fill(false);
-			size_t r1 = dist(m_randomGenerator);
-			mutated[r1] = true;
-			for (int j = 0; j < mutationStrength; j++)
+			std::array<int, KeyboardSize> indices;
+			std::iota(indices.begin(), indices.end(), 0);
+			std::shuffle(indices.begin(), indices.end(), m_randomGenerator);
+			for (int j = 0; j < mutationStrength - 1; j++)
 			{
-				size_t r2 = dist(m_randomGenerator);
-				while (r1 == r2 && mutated[r2])
-					r2 = dist(m_randomGenerator);
-				std::swap(m_population[i].m_keys[r1], m_population[i].m_keys[r2]);
-				r1 = r2;
-				mutated[r2] = true;
+				std::swap(m_population[i].m_keys[indices[j]], m_population[i].m_keys[indices[j + 1]]);
 			}
 		}
 	}
