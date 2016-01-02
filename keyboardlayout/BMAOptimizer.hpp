@@ -177,29 +177,27 @@ public:
 				// Note that we use if instead of else if here, since the previous if can set the counter to zero
 				if (numWithoutImprovement > 0 && numCounter <= m_mutationStrenghtGrowth)
 				{
-					size_t i = 0;
-					do 
-					{
-						float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
-						const float tMax = 1.0f - m_mutationStrenghtMin;
-						t *= tMax;
-						size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
-						mutatePopulation(mutationStrength);
-						evaluatePopulation(objective);
-						updateBestSolution();
-						shortImprovement(true, objective);
-						i++;
-					} while (!populationIsUnique() && i <= 5);
+					float t = static_cast<float>(numCounter) / m_mutationStrenghtGrowth;
+					const float tMax = 1.0f - m_mutationStrenghtMin;
+					t *= tMax;
+					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+					mutatePopulation(mutationStrength);
+					evaluatePopulation(objective);
 					updateBestSolution();
-					updateEliteArchive();
+					shortImprovement(true, objective);
 					numWithoutImprovement = 0;
 					numCounter++;
 					if (EnableLog)
 						std::cout << "Mutated" << std::endl;
 				}
+				updateBestSolution();
+				updateEliteArchive();
 			}
-			replaceSolution(child, solution);
-			updateEliteArchive(child, solution);
+			else
+			{
+				replaceSolution(child, solution);
+				updateEliteArchive(child, solution);
+			}
 		}
 		updateBestSolution();
 		return m_bestSolution;
@@ -250,7 +248,14 @@ protected:
 		{
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
-			std::tie(keyboard, solution) = localSearch(keyboard, solution, m_imporvementDepth, steepestAscentOnly, objective);
+			Keyboard<KeyboardSize> newKeyboard;
+			float newSolution;
+			std::tie(newKeyboard, newSolution) = localSearch(keyboard, solution, m_imporvementDepth, steepestAscentOnly, objective);
+			if (std::find(m_population.begin(), m_population.end(), newKeyboard) == m_population.end())
+			{
+				keyboard = newKeyboard;
+				solution = newSolution;
+			}
 		}
 	}
 
