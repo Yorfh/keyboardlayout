@@ -1,1 +1,1 @@
-"../tests/QAPData/tai30b.dat --target -637117113"
+"../tests/QAPData/tai30b.dat --target -9878077702144"
