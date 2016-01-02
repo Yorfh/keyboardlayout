@@ -257,39 +257,15 @@ protected:
 	template<typename Objective>
 	bool tryToImproveAny(const Objective& objective)
 	{
-		float best = std::get<0>(m_bestSolution);
-		size_t i = 0;
-
-		bool anyFound = true;
-		size_t maxTimes = 1;
-		while (anyFound)
+		std::vector<Elite> elites(m_eliteSoFar.begin(), m_eliteSoFar.end());
+		std::shuffle(elites.begin(), elites.end(), m_randomGenerator);
+		for (size_t i = 0; i < m_populationSize; i++)
 		{
-			anyFound = false;
-			for (auto&& e : m_eliteSoFar)
-			{
-				if (e.m_improvedTimes < maxTimes)
-				{
-					anyFound = true;
-					e.m_improvedTimes++;
-					Keyboard<KeyboardSize> keyboard = e.m_keyboard;
-					float solution = e.m_solution;
-					std::tie(keyboard, solution) = localSearch(keyboard, solution, m_imporvementDepth, false, objective);
-					if (solution > best + tolerance)
-					{
-						replaceSolution(keyboard, solution);
-						return true;
-					}
-					i++;
-					if (i >= m_populationSize)
-					{
-						return false;
-					}
-				}
-			}
-			maxTimes++;
+			m_population[i] = elites[i].m_keyboard;
+			m_populationSolutions[i] = elites[i].m_solution;
 		}
-
-		return false;
+		updateBestSolution();
+		return true;
 	}
 
 	template<typename Objective>
