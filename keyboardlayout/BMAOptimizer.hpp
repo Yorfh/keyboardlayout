@@ -161,17 +161,10 @@ public:
 			{
 				if (numCounter > m_mutationStrenghtGrowth)
 				{
-					bool improved = tryToImproveAny(objective);
-					if (improved)
-					{
-						numWithoutImprovement = 0;
-					}
-					else
-					{
-						numWithoutImprovement++;
-					}
+					newSolutionsFromElites(objective);
+					numWithoutImprovement = 0;
 					if (EnableLog)
-						std::cout << "Try to improve any " << improved << std::endl;
+						std::cout << "New solutions from elites" << std::endl;
 					numCounter = 0;
 				}
 				// Note that we use if instead of else if here, since the previous if can set the counter to zero
@@ -260,7 +253,7 @@ protected:
 	}
 
 	template<typename Objective>
-	bool tryToImproveAny(const Objective& objective)
+	void newSolutionsFromElites(const Objective& objective)
 	{
 		std::vector<Elite> elites(m_eliteSoFar.begin(), m_eliteSoFar.end());
 		std::shuffle(elites.begin(), elites.end(), m_randomGenerator);
@@ -270,7 +263,6 @@ protected:
 			m_populationSolutions[i] = elites[i].m_solution;
 		}
 		updateBestSolution();
-		return true;
 	}
 
 	template<typename Objective>
