@@ -340,6 +340,7 @@ protected:
 					if (hasImproved)
 					{
 						prevLocalOptimum = currentKeyboard;
+						hasImproved = false;
 					}
 					perturbe(inOut(currentKeyboard), inOut(delta), inOut(currentCost), inOut(lastSwapped), iterWithoutImprovement, solution, perturbStr, inOut(iteration), objective);
 				
