@@ -121,6 +121,11 @@ public:
 		m_target = target;
 	}
 
+	void maxTime(double t)
+	{
+		m_maxTime = t;
+	}
+
 	template<typename Objective>
 	static float evaluate(Keyboard<KeyboardSize>& keyboard, Objective& objective) 
 	{
@@ -140,7 +145,7 @@ public:
 		size_t numCounter = 0;
 
 		float solution;
-		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance)
+		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance && getCurrentTime() < m_maxTime)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
@@ -198,6 +203,7 @@ public:
 			}
 		}
 		updateBestSolution();
+		m_finalTime = getCurrentTime();
 		return m_bestSolution;
 	}
 
@@ -209,6 +215,11 @@ public:
 	size_t getNumEvaluations() const
 	{
 		return m_totalEvaluations - m_numEvaluationsLeft;
+	}
+
+	double getFinalTime() const
+	{
+		return m_finalTime;
 	}
 
 protected:
@@ -299,7 +310,7 @@ protected:
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
 
-		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target; currentIteration++)
+		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target && getCurrentTime() < m_maxTime; currentIteration++)
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
@@ -824,6 +835,8 @@ protected:
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
 	double m_startTime;
+	double m_maxTime = std::numeric_limits<double>::max();
+	double m_finalTime = std::numeric_limits<double>::max();
 
 	static const float tolerance;
 	
