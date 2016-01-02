@@ -12,6 +12,7 @@ using namespace testing;
 
 TEST(BMAHeadToHeadTests, Tai30a)
 {
+	std::cout.imbue(std::locale("en-gb"));
 	using namespace boost::accumulators;
 	std::string filename = "../../tests/QAPData/tai30a.dat";
 	QAP<30> objective(filename);
@@ -41,7 +42,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		o.target(-target);
 		auto& solution = o.optimize(objective, 200000000);
 		float t = static_cast<float>((clock() - before) / static_cast<double>(CLOCKS_PER_SEC));
-		printf("BMAOptimizer time %f\n", t);
+		std::cout << "BMAOptimizer time " << t << std::endl;
 		int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 		EXPECT_EQ(target, resultValue);
 
@@ -59,21 +60,22 @@ TEST(BMAHeadToHeadTests, Tai30a)
 		{
 			numBetter++;
 		}
-		printf("Num evaluations %zu vs %i\n", o.getNumEvaluations(), r.getNumEvaluations());
+		std::cout << "Num evaluations " << o.getNumEvaluations() << " vs " << r.getNumEvaluations() << std::endl;
 		totalEvaluationsO += o.getNumEvaluations();
 		totalEvaluationsR += r.getNumEvaluations();
 		accO(static_cast<double>(o.getNumEvaluations()));
 		accR(static_cast<double>(r.getNumEvaluations()));
 	}
-	printf("TotalEvaluations %zu vs %zu\n", totalEvaluationsO, totalEvaluationsR);
-	printf("Result %zu vs %zu\n", numBetter, bestOf - numBetter);
-	printf("Median %f vs %f\n", median(accO), median(accR));
+	std::cout << "Total evaluations " << totalEvaluationsO << " vs " << totalEvaluationsR << std::endl;
+	std::cout << "Result " << numBetter << " vs " << bestOf - numBetter << std::endl;
+	std::cout << "Median " << static_cast<uint64_t>(median(accO)) << " vs " << static_cast<uint64_t>(median(accR)) << std::endl;
 	EXPECT_GT(numBetter, bestOf - numBetter);
 	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
 
 TEST(BMAHeadToHeadTests, Tai30aToPrev)
 {
+	std::cout.imbue(std::locale("en-gb"));
 	using namespace boost::accumulators;
 	std::string filename = "../../tests/QAPData/tai30a.dat";
 	QAP<30> objective(filename);
@@ -103,10 +105,11 @@ TEST(BMAHeadToHeadTests, Tai30aToPrev)
 		o.target(-target);
 		auto& solution = o.optimize(objective, 200000000);
 		float t = static_cast<float>((clock() - before) / static_cast<double>(CLOCKS_PER_SEC));
-		printf("BMAOptimizer time %f\n", t);
+		std::cout << "BMAOptimizer time " << t << std::endl;
 		int resultValue = static_cast<int>(-std::round(std::get<0>(solution)));
 		EXPECT_EQ(target, resultValue);
 
+		before = clock();
 		BMAOptimizerPrev<30> r;
 		r.crossover(CrossoverType::PartiallyMatched);
 		r.jumpMagnitude(0.33265849806193115f);
@@ -122,7 +125,7 @@ TEST(BMAHeadToHeadTests, Tai30aToPrev)
 		r.target(-target);
 		auto& solutionR = r.optimize(objective, 200000000);
 		t = static_cast<float>((clock() - before) / static_cast<double>(CLOCKS_PER_SEC));
-		printf("BMAOptimizer reference time %f\n", t);
+		std::cout << "BMAOptimizer reference time " << t << std::endl;
 		int resultValueR = static_cast<int>(-std::round(std::get<0>(solutionR)));
 		EXPECT_EQ(target, resultValueR);
 
@@ -137,15 +140,15 @@ TEST(BMAHeadToHeadTests, Tai30aToPrev)
 		{
 			numBetter++;
 		}
-		printf("Num evaluations %zu vs %zu\n", o.getNumEvaluations(), r.getNumEvaluations());
+		std::cout << "Num evaluations " << o.getNumEvaluations() << " vs " << r.getNumEvaluations() << std::endl;
 		totalEvaluationsO += o.getNumEvaluations();
 		totalEvaluationsR += r.getNumEvaluations();
 		accO(static_cast<double>(o.getNumEvaluations()));
 		accR(static_cast<double>(r.getNumEvaluations()));
 	}
-	printf("TotalEvaluations %zu vs %zu\n", totalEvaluationsO, totalEvaluationsR);
-	printf("Result %zu vs %zu\n", numBetter, bestOf - numBetter);
-	printf("Median %f vs %f\n", median(accO), median(accR));
+	std::cout << "Total evaluations " << totalEvaluationsO << " vs " << totalEvaluationsR << std::endl;
+	std::cout << "Result " << numBetter << " vs " << bestOf - numBetter << std::endl;
+	std::cout << "Median " << static_cast<uint64_t>(median(accO)) << " vs " << static_cast<uint64_t>(median(accR)) << std::endl;
 	EXPECT_GT(numBetter, bestOf - numBetter);
 	EXPECT_LE(totalEvaluationsO, totalEvaluationsR);
 }
