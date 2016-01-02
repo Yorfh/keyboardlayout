@@ -376,12 +376,8 @@ protected:
 				{
 					solution = currentCost;
 					keyboard = currentKeyboard;
-					hasImproved = true;
 				}
-				else
-				{
-					hasImproved = false;
-				}
+				hasImproved = false;
 			}
 			else
 			{
