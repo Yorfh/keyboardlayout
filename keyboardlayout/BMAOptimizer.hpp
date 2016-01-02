@@ -1,4 +1,8 @@
 #pragma once
+#define NOMINMAX
+#define VC_EXTRALEAN
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <functional>
 #include "Keyboard.hpp"
 #include "NonDominatedSet.hpp"
@@ -38,6 +42,7 @@ public:
 
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
 	{
+		startTimer();
 		m_randomGenerator.seed(seed);
 	}
 
@@ -768,6 +773,30 @@ protected:
 		}
 	}
 
+	void startTimer()
+	{
+		m_startTime = getCurrentProcessTime();
+	}
+
+	double getCurrentTime() const
+	{
+		return getCurrentProcessTime() - m_startTime;
+	}
+
+	double getCurrentProcessTime() const
+	{
+		FILETIME cpuTime;
+		FILETIME sysTime;
+		FILETIME createTime;
+		FILETIME exitTime;
+		GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTime, &cpuTime);
+		ULARGE_INTEGER cpuTimeInt;
+		cpuTimeInt.LowPart = cpuTime.dwLowDateTime;
+		cpuTimeInt.HighPart = cpuTime.dwHighDateTime;
+		uint64_t nanoS = cpuTimeInt.QuadPart * 100;
+		return nanoS / 1000.0f / 1000.0f / 1000.0f;
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<float> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -794,6 +823,7 @@ protected:
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
+	double m_startTime;
 
 	static const float tolerance;
 	
