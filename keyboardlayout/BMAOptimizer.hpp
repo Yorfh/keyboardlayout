@@ -257,7 +257,7 @@ protected:
 	{
 		std::vector<Elite> elites(m_eliteSoFar.begin(), m_eliteSoFar.end());
 		std::shuffle(elites.begin(), elites.end(), m_randomGenerator);
-		for (size_t i = 0; i < m_populationSize; i++)
+		for (size_t i = 0; i < m_populationSize && i < elites.size(); i++)
 		{
 			m_population[i] = elites[i].m_keyboard;
 			m_populationSolutions[i] = elites[i].m_solution;
