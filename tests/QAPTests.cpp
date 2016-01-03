@@ -16,6 +16,15 @@ TEST(QAPTests, ObjectiveFunctionWorksCorrectly)
 	EXPECT_EQ(-9552, objective.evaluate(keyboard));
 }
 
+TEST(QAPTests, ObjectiveFunctionWorksCorrectlyTai30b)
+{
+	std::string filename = "../../tests/QAPData/tai30b.dat";
+	QAP<30> objective(filename);
+	Keyboard<30> keyboard;
+	keyboard.m_keys = {3, 7, 10, 14, 16, 19, 20, 4, 13, 29, 1, 12, 5, 28, 9, 25, 26, 23, 27, 21, 11, 8, 6, 22, 18, 17, 24, 15, 0, 2};
+	EXPECT_EQ(-637117113, static_cast<int32_t>(objective.evaluate(keyboard)));
+}
+
 TEST(QAPTests, NeighbourhoodFunctionWorksCorrectly)
 {
 	std::string filename = "../../tests/QAPData/chr12a.dat";

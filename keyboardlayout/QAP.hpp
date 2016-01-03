@@ -9,24 +9,21 @@ public:
 	QAP(const std::string& filename)
 	{
 		std::ifstream stream(filename);
-		std::getline(stream, std::string());
-		std::getline(stream, std::string());
+		int numLocations;
+		stream >> numLocations;
 		for (size_t i = 0; i < NumLocations; i++)
 		{
 			for (size_t j = 0; j < NumLocations; j++)
 			{
 				stream >> m_distances[i][j];
 			}
-			std::getline(stream, std::string());
 		}
-		std::getline(stream, std::string());
 		for (size_t i = 0; i < NumLocations; i++)
 		{
 			for (size_t j = 0; j < NumLocations; j++)
 			{
 				stream >> m_flow[i][j];
 			}
-			std::getline(stream, std::string());
 		}
 	}
 
@@ -45,7 +42,7 @@ public:
 				sum += dist * flow;
 			}
 		}
-		return -static_cast<float>(sum);
+		return -static_cast<FloatingPoint>(sum);
 	}
 	
 	virtual void evaluateNeighbourhood(const Keyboard<NumLocations>& keyboard, FloatingPoint v, size_t lastSwapI, size_t lastSwapJ, std::array<std::array<FloatingPoint, NumLocations>, NumLocations>& delta) const override
