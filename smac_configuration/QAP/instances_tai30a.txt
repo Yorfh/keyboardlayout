@@ -1,1 +1,1 @@
-"../tests/QAPData/tai30a.dat --evaluations 200000000 --anytime 1000000 --scale 0.001 --target -1818146"
+"../tests/QAPData/tai30a.dat --target -1818146"

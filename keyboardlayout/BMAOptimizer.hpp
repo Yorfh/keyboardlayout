@@ -1,4 +1,8 @@
 #pragma once
+#define NOMINMAX
+#define VC_EXTRALEAN
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <functional>
 #include "Keyboard.hpp"
 #include "NonDominatedSet.hpp"
@@ -38,6 +42,7 @@ public:
 
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
 	{
+		startTimer();
 		m_randomGenerator.seed(seed);
 	}
 
@@ -116,6 +121,11 @@ public:
 		m_target = target;
 	}
 
+	void maxTime(double t)
+	{
+		m_maxTime = t;
+	}
+
 	template<typename Objective>
 	static float evaluate(Keyboard<KeyboardSize>& keyboard, Objective& objective) 
 	{
@@ -135,7 +145,7 @@ public:
 		size_t numCounter = 0;
 
 		float solution;
-		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance)
+		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance && getCurrentTime() < m_maxTime)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
@@ -174,6 +184,7 @@ public:
 					const float tMax = 1.0f - m_mutationStrenghtMin;
 					t *= tMax;
 					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+					mutationStrength = std::max<size_t>(mutationStrength, 1);
 					mutatePopulation(mutationStrength);
 					evaluatePopulation(objective);
 					updateBestSolution();
@@ -193,6 +204,7 @@ public:
 			}
 		}
 		updateBestSolution();
+		m_finalTime = getCurrentTime();
 		return m_bestSolution;
 	}
 
@@ -204,6 +216,11 @@ public:
 	size_t getNumEvaluations() const
 	{
 		return m_totalEvaluations - m_numEvaluationsLeft;
+	}
+
+	double getFinalTime() const
+	{
+		return m_finalTime;
 	}
 
 protected:
@@ -294,7 +311,7 @@ protected:
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
 
-		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target; currentIteration++)
+		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target && getCurrentTime() < m_maxTime; currentIteration++)
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
@@ -768,6 +785,30 @@ protected:
 		}
 	}
 
+	void startTimer()
+	{
+		m_startTime = getCurrentProcessTime();
+	}
+
+	double getCurrentTime() const
+	{
+		return getCurrentProcessTime() - m_startTime;
+	}
+
+	double getCurrentProcessTime() const
+	{
+		FILETIME cpuTime;
+		FILETIME sysTime;
+		FILETIME createTime;
+		FILETIME exitTime;
+		GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTime, &cpuTime);
+		ULARGE_INTEGER cpuTimeInt;
+		cpuTimeInt.LowPart = cpuTime.dwLowDateTime;
+		cpuTimeInt.HighPart = cpuTime.dwHighDateTime;
+		uint64_t nanoS = cpuTimeInt.QuadPart * 100;
+		return nanoS / 1000.0f / 1000.0f / 1000.0f;
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<float> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -794,6 +835,9 @@ protected:
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
+	double m_startTime;
+	double m_maxTime = std::numeric_limits<double>::max();
+	double m_finalTime = std::numeric_limits<double>::max();
 
 	static const float tolerance;
 	
