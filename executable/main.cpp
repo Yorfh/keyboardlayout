@@ -268,10 +268,10 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 }
 
 template<size_t NumLocations>
-std::tuple<int, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int seed, float* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, float* target, bool primarilyEvolution)
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
@@ -294,15 +294,14 @@ std::tuple<int, double> qap_bma_helper(const std::string filename, size_t popula
 		o.target(*target);
 	}
 
-	auto& solution = o.optimize(objective, std::numeric_limits<int>::max());
-	float resultValue = 0;
-	return std::make_tuple(static_cast<int>(std::get<0>(solution)), o.getFinalTime());
+	const auto& solution = o.optimize(objective, evaluations);
+	return std::make_tuple(-static_cast<int64_t>(std::get<0>(solution)), o.getFinalTime());
 }
 
-std::tuple<int, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+std::tuple<int64_t, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int seed, float* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, float* target, bool primarilyEvolution)
 {
 	std::ifstream stream(filename);
 	int numLocations;
@@ -311,13 +310,13 @@ std::tuple<int, double> qap_bma(const std::string filename, size_t population, s
 	{
 		return qap_bma_helper<12>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, cutOffTime, seed, target, primarilyEvolution);
+			crossoverType, perturbType, min_t, cutOffTime, evaluations, seed, target, primarilyEvolution);
 	}
 	else if (numLocations == 30)
 	{
 		return qap_bma_helper<30>(filename, population, longDepth, stagnationIters, stagnationMinMag, stagnationMaxMag, jumpMagnitude, 
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
-			crossoverType, perturbType, min_t, cutOffTime, seed, target, primarilyEvolution);
+			crossoverType, perturbType, min_t, cutOffTime, evaluations, seed, target, primarilyEvolution);
 	}
 	return std::make_tuple(0, 0.0);
 }
@@ -424,13 +423,13 @@ void outputResult(T result, double runTime, size_t seed, bool smac, bool minimiz
 			runTime = cutOffTime;
 		}
 		size_t runLength = 1;
-		std::cout << std::setprecision(9) << runTime << ", " << runLength << ", ";
-		std::cout << std::setprecision(9) << (minimize ? result : -result) << ", ";
+		std::cout << std::setprecision(20) << runTime << ", " << runLength << ", ";
+		std::cout << std::setprecision(20) << (minimize ? result : -result) << ", ";
 		std::cout << seed << ", 0" << std::endl;
 	}
 	else
 	{
-		std::cout << std::setprecision(9) << (minimize ? -result : result) << std::endl;
+		std::cout << std::setprecision(20) << (minimize ? -result : result) << std::endl;
 	}
 }
 
@@ -542,6 +541,11 @@ int main(int argc, char* argv[])
 				else
 				{
 					unsigned int cutOffTime = getArgument<unsigned int>(options, CUTOFF_TIME);
+					unsigned int evaluations = std::numeric_limits<int>::max();
+					if (options[NUMEVALUATIONS])
+					{
+						evaluations = getArgument<int>(options, NUMEVALUATIONS);
+					}
 					size_t population = getArgument<size_t>(options, POPULATION);
 					size_t longDepth = getArgument<size_t>(options, LONG_IMPROVEMENT);
 					size_t tournamentPoolSize = getArgument<size_t>(options, TOUR_POOLSIZE);
@@ -618,7 +622,7 @@ int main(int argc, char* argv[])
 					
 					auto res = qap_bma(test, population, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
-						ct, perturbType, minT, cutOffTime, seed, target, primarilyEvolution);
+						ct, perturbType, minT, cutOffTime, evaluations, seed, target, primarilyEvolution);
 					outputResult(std::get<0>(res), std::get<1>(res), seed, options[SMAC] != nullptr, true, cutOffTime);
 				}
 			}
