@@ -40,8 +40,8 @@ public:
 				// TODO it seems like the flow and distances are the wrong way around
 				int a = keyboard.m_keys[i];
 				int b = keyboard.m_keys[j];
-				int dist = m_distances[i][j];
-				int flow = m_flow[a][b];
+				uint64_t dist = m_distances[i][j];
+				uint64_t flow = m_flow[a][b];
 				sum += dist * flow;
 			}
 		}
@@ -68,7 +68,7 @@ public:
 	}
 
 private:
-	int computeDelta(const Keyboard<NumLocations>& keyboard, size_t i, size_t j) const
+	int64_t computeDelta(const Keyboard<NumLocations>& keyboard, size_t i, size_t j) const
 	{
 		auto& a = m_distances;
 		auto& b = m_flow;
@@ -88,7 +88,7 @@ private:
 		return d;
 	}
 
-	int computeDeltaPart(const Keyboard<NumLocations>& keyboard, const std::array<std::array<float, NumLocations>, NumLocations>& delta,
+	int64_t computeDeltaPart(const Keyboard<NumLocations>& keyboard, const std::array<std::array<float, NumLocations>, NumLocations>& delta,
 		size_t i, size_t j, size_t r, size_t s) const
 	{
 		auto& a = m_distances;
@@ -102,6 +102,6 @@ private:
 
 	}
 
-	std::array<std::array<int, NumLocations>, NumLocations> m_distances;
-	std::array<std::array<int, NumLocations>, NumLocations> m_flow;
+	std::array<std::array<int64_t, NumLocations>, NumLocations> m_distances;
+	std::array<std::array<int64_t, NumLocations>, NumLocations> m_flow;
 };
