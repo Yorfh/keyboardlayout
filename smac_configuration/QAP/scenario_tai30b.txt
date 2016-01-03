@@ -1,4 +1,4 @@
-numberOfRunsLimit = 50
+numberOfRunsLimit = 1000
 initialChallenge = 8
 runObj = RUNTIME
 instance-file = instances_tai30b.txt
@@ -6,5 +6,5 @@ test-instance-file = instances_tai30b_test.txt
 numValidationRuns = 35
 pcs-file = parameters_bma.txt
 deterministic = false
-algo-cutoff-time = 60
+algo-cutoff-time = 10
 algo-exec = exec.bat
