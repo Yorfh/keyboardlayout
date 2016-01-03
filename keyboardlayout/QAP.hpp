@@ -9,24 +9,21 @@ public:
 	QAP(const std::string& filename)
 	{
 		std::ifstream stream(filename);
-		std::getline(stream, std::string());
-		std::getline(stream, std::string());
+		int numLocations;
+		stream >> numLocations;
 		for (size_t i = 0; i < NumLocations; i++)
 		{
 			for (size_t j = 0; j < NumLocations; j++)
 			{
 				stream >> m_distances[i][j];
 			}
-			std::getline(stream, std::string());
 		}
-		std::getline(stream, std::string());
 		for (size_t i = 0; i < NumLocations; i++)
 		{
 			for (size_t j = 0; j < NumLocations; j++)
 			{
 				stream >> m_flow[i][j];
 			}
-			std::getline(stream, std::string());
 		}
 	}
 
