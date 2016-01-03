@@ -2,8 +2,8 @@
 #include <fstream>
 #include "Objective.hpp"
 
-template<size_t NumLocations>
-class QAP : public Objective<NumLocations>
+template<size_t NumLocations, typename FloatingPoint = double>
+class QAP : public Objective<NumLocations, FloatingPoint>
 {
 public:
 	QAP(const std::string& filename)
@@ -30,7 +30,7 @@ public:
 		}
 	}
 
-	float evaluate(const Keyboard<NumLocations>& keyboard) const override
+	FloatingPoint evaluate(const Keyboard<NumLocations>& keyboard) const override
 	{
 		uint64_t sum = 0;
 		for (size_t i = 0; i < NumLocations; i++)
@@ -48,7 +48,7 @@ public:
 		return -static_cast<float>(sum);
 	}
 	
-	virtual void evaluateNeighbourhood(const Keyboard<NumLocations>& keyboard, float v, size_t lastSwapI, size_t lastSwapJ, std::array<std::array<float, NumLocations>, NumLocations>& delta) const override
+	virtual void evaluateNeighbourhood(const Keyboard<NumLocations>& keyboard, FloatingPoint v, size_t lastSwapI, size_t lastSwapJ, std::array<std::array<FloatingPoint, NumLocations>, NumLocations>& delta) const override
 	{
 		bool firstSwap = lastSwapI == std::numeric_limits<size_t>::max() || lastSwapJ == std::numeric_limits<size_t>::max();
 		for (size_t i = 0; i < NumLocations; i++)
@@ -57,11 +57,11 @@ public:
 			{
 				if (firstSwap == false && i != lastSwapI && i != lastSwapJ && j != lastSwapI && j != lastSwapJ)
 				{
-					delta[i][j] += -static_cast<float>(computeDeltaPart(keyboard, delta, i, j, lastSwapI, lastSwapJ));
+					delta[i][j] += -static_cast<FloatingPoint>(computeDeltaPart(keyboard, delta, i, j, lastSwapI, lastSwapJ));
 				}
 				else
 				{
-					delta[i][j] = -static_cast<float>(computeDelta(keyboard, i, j));
+					delta[i][j] = -static_cast<FloatingPoint>(computeDelta(keyboard, i, j));
 				}
 			}
 		}
@@ -88,7 +88,7 @@ private:
 		return d;
 	}
 
-	int64_t computeDeltaPart(const Keyboard<NumLocations>& keyboard, const std::array<std::array<float, NumLocations>, NumLocations>& delta,
+	int64_t computeDeltaPart(const Keyboard<NumLocations>& keyboard, const std::array<std::array<FloatingPoint, NumLocations>, NumLocations>& delta,
 		size_t i, size_t j, size_t r, size_t s) const
 	{
 		auto& a = m_distances;

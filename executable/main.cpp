@@ -275,7 +275,7 @@ std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t po
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
-	BMAOptimizer<NumLocations> o(seed);
+	BMAOptimizer<NumLocations, double> o(seed);
 	o.populationSize(population);
 	o.improvementDepth(longDepth);
 	o.stagnation(stagnationIters, stagnationMinMag, stagnationMaxMag);

@@ -8,7 +8,7 @@
 #include <numeric>
 #include <boost/math/special_functions/binomial.hpp>
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, typename FloatingPoint>
 class Objective;
 
 namespace detail

@@ -19,7 +19,7 @@ TEST(QAPTests, ObjectiveFunctionWorksCorrectly)
 TEST(QAPTests, NeighbourhoodFunctionWorksCorrectly)
 {
 	std::string filename = "../../tests/QAPData/chr12a.dat";
-	QAP<12> objective(filename);
+	QAP<12, float> objective(filename);
 	Keyboard<12> keyboard;
 	keyboard.m_keys = { 6, 4, 11, 1, 0, 2, 8, 10, 9, 5, 7, 3 };
 	std::array<std::array<float, 12>, 12> delta;
@@ -44,7 +44,7 @@ TEST(QAPTests, NeighbourhoodFunctionWorksCorrectly)
 TEST(QAPTests, SwappedNeighbourhoodFunctionWorksCorrectly)
 {
 	std::string filename = "../../tests/QAPData/chr12a.dat";
-	QAP<12> objective(filename);
+	QAP<12, float> objective(filename);
 	Keyboard<12> keyboard;
 	keyboard.m_keys = { 6, 4, 11, 1, 0, 2, 8, 10, 9, 5, 7, 3 };
 	std::array<std::array<float, 12>, 12> delta;
@@ -72,7 +72,7 @@ TEST(QAPTests, SwappedNeighbourhoodFunctionWorksCorrectly)
 TEST(QAPTests, QAPchr12a)
 {
 	std::string filename = "../../tests/QAPData/chr12a.dat";
-	QAP<12> objective(filename);
+	QAP<12, float> objective(filename);
 	Keyboard<12> keyboard;
 	BMAOptimizer<12> o; 
 	o.crossover(CrossoverType::Uniform);

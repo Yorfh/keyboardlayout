@@ -15,7 +15,7 @@ TEST(BMAHeadToHeadTests, Tai30a)
 	std::cout.imbue(std::locale("en-gb"));
 	using namespace boost::accumulators;
 	std::string filename = "../../tests/QAPData/tai30a.dat";
-	QAP<30> objective(filename);
+	QAP<30, float> objective(filename);
 	size_t numBetter = 0;
 	const size_t bestOf = 50;
 	const int target = 1818146;
@@ -78,7 +78,7 @@ TEST(BMAHeadToHeadTests, Tai30aToPrev)
 	std::cout.imbue(std::locale("en-gb"));
 	using namespace boost::accumulators;
 	std::string filename = "../../tests/QAPData/tai30a.dat";
-	QAP<30> objective(filename);
+	QAP<30, float> objective(filename);
 	size_t numBetter = 0;
 	const size_t bestOf = 50;
 	const int target = 1818146;

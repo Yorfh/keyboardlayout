@@ -13,7 +13,7 @@
 #include <set>
 #include "Optimizer.hpp"
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, typename FloatingPoint>
 class Objective;
 
 // The algorithm is based on "Memetic search for the quadratic assignment problem" (Una Benlic and Jin-Kao Hao)
@@ -31,13 +31,13 @@ enum class PerturbType
 	Annealed,
 };
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, typename FloatingPoint = float>
 class BMAOptimizer
 {
 	static std::random_device rd;
 	static const bool EnableLog = false;
 public:
-	typedef std::vector<std::pair<std::tuple<float, Keyboard<KeyboardSize>>, size_t>> SnapshotArray;
+	typedef std::vector<std::pair<std::tuple<FloatingPoint, Keyboard<KeyboardSize>>, size_t>> SnapshotArray;
 
 
 	BMAOptimizer(unsigned int seed = BMAOptimizer::rd())
@@ -116,7 +116,7 @@ public:
 		m_primarilyEvolution = enable;
 	}
 
-	void target(float target)
+	void target(FloatingPoint target)
 	{
 		m_target = target;
 	}
@@ -127,14 +127,15 @@ public:
 	}
 
 	template<typename Objective>
-	static float evaluate(Keyboard<KeyboardSize>& keyboard, Objective& objective) 
+	static FloatingPoint evaluate(Keyboard<KeyboardSize>& keyboard, Objective& objective) 
 	{
 		return objective.evaluate(keyboard);
 	}
 
 	template<typename Objective>
-	const std::tuple<float, Keyboard<KeyboardSize>>& optimize(const Objective& objective, size_t numEvaluations)
+	const std::tuple<FloatingPoint, Keyboard<KeyboardSize>>& optimize(const Objective& objective, size_t numEvaluations)
 	{
+		static_assert(std::is_same<typename Objective::floating_point_t, FloatingPoint>::value, "The objective function uses a different floating point format than the optimizer");
 		m_numEvaluationsLeft = static_cast<int>(numEvaluations);
 		m_totalEvaluations = numEvaluations;
 		generateRandomPopulation(objective);
@@ -144,7 +145,7 @@ public:
 		size_t numWithoutImprovement = 0;
 		size_t numCounter = 0;
 
-		float solution;
+		FloatingPoint solution;
 		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance && getCurrentTime() < m_maxTime)
 		{
 			size_t num_of_parents = 2;
@@ -153,10 +154,10 @@ public:
 			solution = evaluate(child, objective);
 			m_numEvaluationsLeft--;
 			std::tie(child, solution) = localSearch(child, solution, m_imporvementDepth, true, objective);
-			float resultingCost = std::get<0>(m_bestSolution);
+			FloatingPoint resultingCost = std::get<0>(m_bestSolution);
 			if (EnableLog)
 				std::cout << std::setprecision(9) << resultingCost << " " << m_numEvaluationsLeft << std::endl;
-			float childCost = solution;
+			FloatingPoint childCost = solution;
 			if (childCost > resultingCost + tolerance)
 			{
 				numWithoutImprovement = 0;
@@ -224,7 +225,7 @@ public:
 	}
 
 protected:
-	typedef std::array<std::array<float, KeyboardSize>, KeyboardSize> DeltaArray;
+	typedef std::array<std::array<FloatingPoint, KeyboardSize>, KeyboardSize> DeltaArray;
 	typedef std::array<std::array<size_t, KeyboardSize>, KeyboardSize> IndexArray;
 
 	template<typename Objective>
@@ -259,7 +260,7 @@ protected:
 			auto& keyboard = m_population[i];
 			auto& solution = m_populationSolutions[i];
 			Keyboard<KeyboardSize> newKeyboard;
-			float newSolution;
+			FloatingPoint newSolution;
 			std::tie(newKeyboard, newSolution) = localSearch(keyboard, solution, m_imporvementDepth, steepestAscentOnly, objective);
 			if (std::find(m_population.begin(), m_population.end(), newKeyboard) == m_population.end())
 			{
@@ -283,7 +284,7 @@ protected:
 	}
 
 	template<typename Objective>
-	std::tuple<Keyboard<KeyboardSize>, float> localSearch(Keyboard<KeyboardSize> keyboard, float solution, size_t numIterations, bool steepestAscentOnly, const Objective& objective)
+	std::tuple<Keyboard<KeyboardSize>, FloatingPoint> localSearch(Keyboard<KeyboardSize> keyboard, FloatingPoint solution, size_t numIterations, bool steepestAscentOnly, const Objective& objective)
 	{
 		Keyboard<KeyboardSize> currentKeyboard = keyboard;
 
@@ -304,8 +305,8 @@ protected:
 		}
 		computeAllDeltas(currentKeyboard, solution, objective, inOut(delta));
 
-		float currentCost = solution;
-		float bestCost = solution;
+		FloatingPoint currentCost = solution;
+		FloatingPoint bestCost = solution;
 		Keyboard<KeyboardSize> prevLocalOptimum = keyboard;
 
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
@@ -315,7 +316,7 @@ protected:
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
-			float maxDelta;
+			FloatingPoint maxDelta;
 
 			std::tie(iRetained, jRetained, maxDelta) = steepestAscent(delta);
 
@@ -398,7 +399,7 @@ protected:
 	}
 
 	template<typename Objective>
-	void computeAllDeltas(const Keyboard<KeyboardSize>& keyboard, float solution, const Objective& objective, InOut<DeltaArray> delta, size_t from = Objective::NoSwap, size_t to = Objective::NoSwap)
+	void computeAllDeltas(const Keyboard<KeyboardSize>& keyboard, FloatingPoint solution, const Objective& objective, InOut<DeltaArray> delta, size_t from = Objective::NoSwap, size_t to = Objective::NoSwap)
 	{
 		objective.evaluateNeighbourhood(keyboard, solution, from, to, delta);
 		m_numEvaluationsLeft-= KeyboardSize * (KeyboardSize - 1) / 2;
@@ -433,8 +434,8 @@ protected:
 	}
 
 	template<typename Objective>
-	void perturbe(InOut<Keyboard<KeyboardSize>> currentKeyboard, InOut<DeltaArray> delta, InOut<float> currentCost,
-		InOut<IndexArray> lastSwapped, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, InOut<size_t> iteration, const Objective& objective)
+	void perturbe(InOut<Keyboard<KeyboardSize>> currentKeyboard, InOut<DeltaArray> delta, InOut<FloatingPoint> currentCost,
+		InOut<IndexArray> lastSwapped, size_t iterWithoutImprovement, FloatingPoint bestBestCost, size_t perturbStr, InOut<size_t> iteration, const Objective& objective)
 	{
 		std::uniform_real_distribution<float> dist(0.0f, std::nextafter(1.0f, 2.0f));
 		std::uniform_real_distribution<float> tenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
@@ -474,16 +475,16 @@ protected:
 		}
 	}
 
-	std::tuple<size_t, size_t, float> steepestAscent(const DeltaArray delta)
+	std::tuple<size_t, size_t, FloatingPoint> steepestAscent(const DeltaArray delta)
 	{
 		size_t iRetained = std::numeric_limits<size_t>::max();
 		size_t jRetained = iRetained;
-		float maxDelta = std::numeric_limits<float>::lowest();
+		FloatingPoint maxDelta = std::numeric_limits<FloatingPoint>::lowest();
 		for (size_t i = 0; i < KeyboardSize; i++)
 		{
 			for (size_t j = i + 1; j < KeyboardSize; j++)
 			{
-				float d = delta[i][j];
+				FloatingPoint d = delta[i][j];
 				if (d > maxDelta)
 				{
 					maxDelta = d;
@@ -495,16 +496,16 @@ protected:
 		return std::make_tuple(iRetained, jRetained, maxDelta);
 	}
 
-	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, const std::uniform_real_distribution<float>& tabuTenureDist, size_t iteration, float currentCost, float bestBestCost)
+	std::tuple<size_t, size_t> tabuPerturbe(const DeltaArray& delta, const IndexArray& lastSwapped, const std::uniform_real_distribution<float>& tabuTenureDist, size_t iteration, FloatingPoint currentCost, FloatingPoint bestBestCost)
 	{
 		size_t iRetained = std::numeric_limits<size_t>::max();
 		size_t jRetained = iRetained;
-		float maxDelta = std::numeric_limits<float>::lowest();
+		FloatingPoint maxDelta = std::numeric_limits<FloatingPoint>::lowest();
 		for (size_t i = 0; i < KeyboardSize; i++)
 		{
 			for (size_t j = i + 1; j < KeyboardSize; j++)
 			{
-				float d = delta[i][j];
+				FloatingPoint d = delta[i][j];
 				if (d > maxDelta)
 				{
 					if ((lastSwapped[i][j] + std::pow(tabuTenureDist(m_randomGenerator), 3.0f) * KeyboardSize) < iteration || (currentCost + delta[i][j]) > bestBestCost + tolerance)
@@ -533,8 +534,8 @@ protected:
 	}
 
 	template<typename Objective>
-	void annealed_perturbe(InOut<Keyboard<KeyboardSize>> currentKeyboard, InOut<DeltaArray> delta, InOut<float> currentCost,
-		InOut<IndexArray> lastSwapped, size_t iterWithoutImprovement, float bestBestCost, size_t perturbStr, InOut<size_t> iteration, const Objective& objective)
+	void annealed_perturbe(InOut<Keyboard<KeyboardSize>> currentKeyboard, InOut<DeltaArray> delta, InOut<FloatingPoint> currentCost,
+		InOut<IndexArray> lastSwapped, size_t iterWithoutImprovement, FloatingPoint bestBestCost, size_t perturbStr, InOut<size_t> iteration, const Objective& objective)
 	{
 		std::uniform_real_distribution<float> tabuTenureDist(m_minTabuTenureDist, m_maxTabuTenureDist);
 		std::array<std::array<bool, KeyboardSize>, KeyboardSize> valid;
@@ -551,8 +552,8 @@ protected:
 		{
 			size_t iRetained = std::numeric_limits<size_t>::max();
 			size_t jRetained = iRetained;
-			float maxDelta = std::numeric_limits<float>::lowest();
-			float minDelta = std::numeric_limits<float>::max();
+			FloatingPoint maxDelta = std::numeric_limits<float>::lowest();
+			FloatingPoint minDelta = std::numeric_limits<float>::max();
 			for (size_t i = 0; i < KeyboardSize; i++)
 			{
 				for (size_t j = i + 1; j < KeyboardSize; j++)
@@ -606,11 +607,11 @@ protected:
 						auto bj = b[j];
 						if (bj > ai)
 						{
-							float d = delta.get()[ai][bj];
+							FloatingPoint d = delta.get()[ai][bj];
 
 							if (valid[ai][bj])
 							{
-								float v = (maxDelta - d) / (maxDelta - minDelta);
+								FloatingPoint v = (maxDelta - d) / (maxDelta - minDelta);
 								if (v < m)
 								{
 									iRetained = ai;
@@ -643,11 +644,11 @@ protected:
 	}
 
 	template<typename Objective>
-	float swapKeys(size_t from, size_t to, InOut<Keyboard<KeyboardSize>> currentKeyboard, float currentCost, InOut<DeltaArray> delta, size_t iteration, InOut<IndexArray> lastSwapped, const Objective& objective)
+	FloatingPoint swapKeys(size_t from, size_t to, InOut<Keyboard<KeyboardSize>> currentKeyboard, FloatingPoint currentCost, InOut<DeltaArray> delta, size_t iteration, InOut<IndexArray> lastSwapped, const Objective& objective)
 	{
 		lastSwapped.get()[from][to] = iteration;
 		std::swap(currentKeyboard.get().m_keys[from], currentKeyboard.get().m_keys[to]);
-		float newCost = currentCost + delta.get()[from][to];
+		FloatingPoint newCost = currentCost + delta.get()[from][to];
 		computeAllDeltas(currentKeyboard, newCost, objective, inOut(delta), from, to);
 		return newCost;
 	}
@@ -668,7 +669,7 @@ protected:
 			std::uniform_int_distribution<size_t> gen(0, m_populationSize - 1);
 			std::generate_n(tournamentPool.begin(), tournamentSize, [this, &gen]() { return gen(m_randomGenerator); });
 
-			float m = std::numeric_limits<float>::lowest();
+			FloatingPoint m = std::numeric_limits<FloatingPoint>::lowest();
 			size_t winner;
 			for (size_t i = 0; i < tournamentSize; i++)
 			{
@@ -713,7 +714,7 @@ protected:
 		}
 	}
 
-	void replaceSolution(const Keyboard<KeyboardSize>& keyboard, float solution)
+	void replaceSolution(const Keyboard<KeyboardSize>& keyboard, FloatingPoint solution)
 	{
 		if (std::find(m_population.begin(), m_population.end(), keyboard) != m_population.end())
 		{
@@ -771,12 +772,12 @@ protected:
 		for (size_t i = 0; i < m_population.size(); i++)
 		{
 			auto& keyboard = m_population[i];
-			float solution = m_populationSolutions[i];
+			FloatingPoint solution = m_populationSolutions[i];
 			updateEliteArchive(keyboard, solution);
 		}
 	}
 
-	void updateEliteArchive(const Keyboard<KeyboardSize>& keyboard, float solution)
+	void updateEliteArchive(const Keyboard<KeyboardSize>& keyboard, FloatingPoint solution)
 	{
 		Elite e(keyboard, solution);
 		if (m_eliteSoFar.find(e) == m_eliteSoFar.end())
@@ -810,7 +811,7 @@ protected:
 	}
 
 	std::vector<Keyboard<KeyboardSize>> m_population;
-	std::vector<float> m_populationSolutions;
+	std::vector<FloatingPoint> m_populationSolutions;
 	size_t m_populationSize = 0;
 	float m_jumpMagnitude = 0.15f;
 	size_t m_stagnationAfter = 250;
@@ -826,12 +827,12 @@ protected:
 	size_t m_mutationStrenghtGrowth = 5;
 	size_t m_snapshotEvery = 0;
 	float m_minT = 0.1f;
-	float m_target = std::numeric_limits<float>::lowest();
+	FloatingPoint m_target = std::numeric_limits<FloatingPoint>::lowest();
 	bool m_primarilyEvolution = false;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;
-	std::tuple<float, Keyboard<KeyboardSize>> m_bestSolution = std::make_tuple(std::numeric_limits<float>::lowest(), Keyboard<KeyboardSize>());
+	std::tuple<FloatingPoint, Keyboard<KeyboardSize>> m_bestSolution = std::make_tuple(std::numeric_limits<FloatingPoint>::lowest(), Keyboard<KeyboardSize>());
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
@@ -839,18 +840,18 @@ protected:
 	double m_maxTime = std::numeric_limits<double>::max();
 	double m_finalTime = std::numeric_limits<double>::max();
 
-	static const float tolerance;
+	static const FloatingPoint tolerance;
 	
 	struct Elite
 	{
-		Elite(const Keyboard<KeyboardSize>& keyboard, float solution) :
+		Elite(const Keyboard<KeyboardSize>& keyboard, FloatingPoint solution) :
 			m_keyboard(keyboard),
 			m_solution(solution),
 			m_improvedTimes(0)
 		{
 		}
 		Keyboard<KeyboardSize> m_keyboard;
-		float m_solution;
+		FloatingPoint m_solution;
 		mutable size_t m_improvedTimes;
 	};
 
@@ -872,8 +873,8 @@ protected:
 	std::set<Elite, CompareElite> m_eliteSoFar;
 };
 
-template<size_t KeyboardSize>
-std::random_device BMAOptimizer<KeyboardSize>::rd;
+template<size_t KeyboardSize, typename FloatingPoint>
+std::random_device BMAOptimizer<KeyboardSize, FloatingPoint>::rd;
 
-template<size_t KeyboardSize>
-const float BMAOptimizer<KeyboardSize>::tolerance = 0.0000001f;
+template<size_t KeyboardSize, typename FloatingPoint>
+const FloatingPoint BMAOptimizer<KeyboardSize, FloatingPoint>::tolerance = 0.0000001f;

@@ -10,7 +10,7 @@
 #include "Optimizer.hpp"
 #include "BMAOptimizer.hpp"
 
-template<size_t KeyboardSize>
+template<size_t KeyboardSize, typename FloatingPoint>
 class Objective;
 
 // The algorithm is based on "Memetic search for the quadratic assignment problem" (Una Benlic and Jin-Kao Hao)
