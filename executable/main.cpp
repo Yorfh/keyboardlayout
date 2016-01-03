@@ -25,7 +25,7 @@ option::ArgStatus floatingPoint(const option::Option& option, bool msg)
 	{
 		if (option.arg)
 		{
-			std::stof(option.arg);
+			std::stod(option.arg);
 		}
 
 		invalid = false;
@@ -130,7 +130,7 @@ const option::Descriptor usage[] =
 	{ PERTURB_TYPE,	0, "", "perturb_type", required,	"  --perturb_type normal|annealed|disabled \tThe perturb type for BMA" },
 	{ SMAC,	0, "", "smac", option::Arg::None,	"  --smac  \tThe output should be in SMAC format" },
 	{ INSTANCE_INFO,	0, "", "instance_info", required,	"  --instance_info  \tThe smac instance information" },
-	{ CUTOFF_TIME,	0, "", "cutoff_time", unsignedInteger,	"  --cutoff_time  \tThe smac instance cutoff time" },
+	{ CUTOFF_TIME,	0, "", "cutoff_time", floatingPoint,	"  --cutoff_time  \tThe smac instance cutoff time" },
 	{ CUTOFF_LENGTH,	0, "", "cutoff_length", unsignedInteger,	"  --cutoff_length  \tThe smac instance cutoff length" },
 	{ ALGO_TYPE,	0, "", "algo_type", required,	"  --algotype annealing|bma \tThe algorithm type" },
 	{ ANYTIME,	0, "", "anytime", unsignedInteger,	"  --anytime snapshot_delay \tTake snapshots regularly to optimize for any time" },
@@ -271,7 +271,7 @@ template<size_t NumLocations>
 std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, float cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
@@ -301,7 +301,7 @@ std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t po
 std::tuple<int64_t, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, float cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
 {
 	std::ifstream stream(filename);
 	int numLocations;
@@ -540,7 +540,8 @@ int main(int argc, char* argv[])
 				}
 				else
 				{
-					unsigned int cutOffTime = getArgument<unsigned int>(options, CUTOFF_TIME);
+					float cutOffTime = static_cast<float>(std::min<double>(getArgument<double>(options, CUTOFF_TIME), std::numeric_limits<float>::max()));
+
 					unsigned int evaluations = std::numeric_limits<int>::max();
 					if (options[NUMEVALUATIONS])
 					{
