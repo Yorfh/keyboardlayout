@@ -146,7 +146,7 @@ public:
 		size_t numCounter = 0;
 
 		FloatingPoint solution;
-		while(m_numEvaluationsLeft > 0 && std::abs(std::get<0>(m_bestSolution) - m_target) > tolerance && getCurrentTime() < m_maxTime)
+		while(m_numEvaluationsLeft > 0 && m_target - std::get<0>(m_bestSolution) > tolerance && getCurrentTime() < m_maxTime)
 		{
 			size_t num_of_parents = 2;
 			auto parents = parentSelection();
@@ -312,7 +312,7 @@ protected:
 		size_t perturbStr = std::max<size_t>(static_cast<size_t>(std::ceil(m_jumpMagnitude * KeyboardSize)), 2);
 		std::uniform_real_distribution<float> stagnationDistribution(m_minStagnationMagnitude, m_maxStagnationMagnitude);
 
-		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && solution != m_target && getCurrentTime() < m_maxTime; currentIteration++)
+		for (size_t currentIteration = 1; currentIteration <= numIterations && m_numEvaluationsLeft > 0 && m_target - std::get<0>(m_bestSolution) > tolerance && getCurrentTime() < m_maxTime; currentIteration++)
 		{
 			size_t iRetained = 0;
 			size_t jRetained = 0;
