@@ -45,7 +45,7 @@ public:
 				sum += dist * flow;
 			}
 		}
-		return -static_cast<float>(sum);
+		return -static_cast<FloatingPoint>(sum);
 	}
 	
 	virtual void evaluateNeighbourhood(const Keyboard<NumLocations>& keyboard, FloatingPoint v, size_t lastSwapI, size_t lastSwapJ, std::array<std::array<FloatingPoint, NumLocations>, NumLocations>& delta) const override
