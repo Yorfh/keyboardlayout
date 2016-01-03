@@ -184,6 +184,7 @@ public:
 					const float tMax = 1.0f - m_mutationStrenghtMin;
 					t *= tMax;
 					size_t mutationStrength = static_cast<size_t>(std::round(m_populationSize * (m_mutationStrenghtMin + t)));
+					mutationStrength = std::max<size_t>(mutationStrength, 1);
 					mutatePopulation(mutationStrength);
 					evaluatePopulation(objective);
 					updateBestSolution();
