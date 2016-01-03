@@ -271,7 +271,7 @@ template<size_t NumLocations>
 std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, float* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
 {
 	QAP<NumLocations> objective(filename);
 	Keyboard<NumLocations> keyboard;
@@ -301,7 +301,7 @@ std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t po
 std::tuple<int64_t, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
-	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, float* target, bool primarilyEvolution)
+	CrossoverType crossoverType, PerturbType perturbType, float min_t, unsigned int cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
 {
 	std::ifstream stream(filename);
 	int numLocations;
@@ -609,11 +609,11 @@ int main(int argc, char* argv[])
 					}
 
 					float scale = 1.0f;
-					float* target = nullptr;
-					float targetValue;
+					double* target = nullptr;
+					double targetValue;
 					if (options[TARGET])
 					{
-						targetValue = getArgument<float>(options, TARGET);
+						targetValue = getArgument<double>(options, TARGET);
 						target = &targetValue;
 					}
 
