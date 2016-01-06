@@ -1,6 +1,7 @@
 import argparse
 
-class Runner:
+
+class Configurator:
     def __init__(self, args):
         parser = argparse.ArgumentParser("Configure an algorithm using smac for optimal running time. With unknown starting solution")
         parser.add_argument("instances", metavar="INST", type=str, nargs="+",

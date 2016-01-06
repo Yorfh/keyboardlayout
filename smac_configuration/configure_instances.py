@@ -1,9 +1,9 @@
-from pysmac.runner import Runner
+from pysmac.configurator import Configurator
 import sys
 
 
 def main():
-    runner = Runner(sys.argv)
+    runner = Configurator(sys.argv)
     runner.run()
 
 if __name__ == "__main__":
