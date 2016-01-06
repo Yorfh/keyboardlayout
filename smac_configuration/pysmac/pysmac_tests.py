@@ -16,5 +16,15 @@ class CommandLineTests(unittest.TestCase):
             Runner([])
 
 
+class InstanceFileGenerationTests(unittest.TestCase):
+    def test_two_instances(self):
+        runner = Runner(["instance1", "instance2"])
+        expected_result = (
+            '"instance1"\n'
+            '"instance2"'
+        )
+
+        self.assertEqual(runner.get_instance_file(), expected_result)
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,3 +10,6 @@ class Runner:
 
     def run(self):
         pass
+
+    def get_instance_file(self):
+        return "\n".join(('"%s"' % (s) for s in self.instances))
