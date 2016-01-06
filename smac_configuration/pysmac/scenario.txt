@@ -7,4 +7,4 @@ numValidationRuns = 300
 pcs-file = parameters.txt
 deterministic = false
 algo-cutoff-time = 60
-algo-exec = exec.bat
+algo-exec = run_instance.bat

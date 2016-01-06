@@ -30,11 +30,12 @@ class Configurator:
             f.write(self.get_scenario_file())
         shutil.copyfile(self.parameters, os.path.join(self.outputDir, "parameters.txt"))
         p = subprocess.Popen(self.cmd, creationflags=subprocess.CREATE_NEW_CONSOLE)
+        #p = subprocess.Popen(self.cmd)
         p.communicate()
 
 
     def get_instance_file(self):
-        return "\n".join(('"%s --target 0"' % (s) for s in self.instances))
+        return "\n".join(('"%s"' % (s.replace("\\", "\\\\")) for s in self.instances))
 
     def get_scenario_file(self):
         p = os.path.join(pysmac.__path__[0], "scenario.txt")
