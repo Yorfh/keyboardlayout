@@ -12,7 +12,7 @@ class CommandLineTests(unittest.TestCase):
     def test_two_instances(self):
         conf = Configurator(["instance1", "instance2", "--parameters", "parameters.txt"])
         self.assertEqual(conf.instances, ["instance1", "instance2"])
-        self.assertRegexpMatches(conf.outputDir, r"output\\pysmac\\\d\d.\d\d.\d\d\d\d \d\d:\d\d:\d\d")
+        self.assertRegexpMatches(conf.outputDir, r"output\\pysmac\\\d\d_\d\d_\d\d\d\d_\d\d_\d\d_\d\d")
         outdir_regexp = conf.outputDir.replace("\\", "\\\\")
         self.assertRegexpMatches(conf.cmd,
                          r"call ../smac/smac.bat --seed \d+ --output-dir %s --scenario-file %s\\scenario.txt" %
@@ -44,11 +44,11 @@ class InstanceFileGenerationTests(unittest.TestCase):
 
 class ScenarioFileGenerationTests(unittest.TestCase):
     def test_two_instances(self):
-        conf = Configurator(["instance1", "instance2", "--parameters", "hello.txt"])
+        conf = Configurator(["instance1", "instance2", "--parameters", "inasubdir\\hello.txt"])
         p = os.path.join(pysmac.__path__[0], "scenario.txt")
         with open(p, "r") as f:
             c = f.read()
-            c = c % {"parameters": "hello.txt"}
+            c = c % {"parameters": "parameters.txt"}
             self.assertEqual(conf.get_scenario_file(), c)
 
 

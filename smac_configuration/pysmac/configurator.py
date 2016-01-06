@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import random
 import pysmac
+import shutil
 
 
 class Configurator:
@@ -16,12 +17,18 @@ class Configurator:
         self.parameters = args.parameters
         now = datetime.now()
         self.seed = random.randint(0, 4294967295)
-        self.outputDir = os.path.join("output", "pysmac", now.strftime("%d.%m.%Y %H:%M:%S"))
+        self.outputDir = os.path.join("output", "pysmac", now.strftime("%d_%m_%Y_%H_%M_%S"))
         self.cmd = "call ../smac/smac.bat --seed %i --output-dir %s --scenario-file %s\\scenario.txt" % \
                    (self.seed, self.outputDir, self.outputDir)
 
     def run(self):
-        pass
+        os.makedirs(self.outputDir)
+        with open(os.path.join(self.outputDir, "instances.txt"), "w") as f:
+            f.write(self.get_instance_file())
+        with open(os.path.join(self.outputDir, "scenario.txt"), "w") as f:
+            f.write(self.get_scenario_file())
+        shutil.copyfile(self.parameters, os.path.join(self.outputDir, "parameters.txt"))
+
 
     def get_instance_file(self):
         return "\n".join(('"%s"' % (s) for s in self.instances))
@@ -30,6 +37,5 @@ class Configurator:
         p = os.path.join(pysmac.__path__[0], "scenario.txt")
         with open(p, "r") as f:
             c = f.read()
-            c = c % {"parameters": self.parameters}
             return c
 

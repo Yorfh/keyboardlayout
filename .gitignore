@@ -229,5 +229,6 @@ smac_configuration/log-*
 *.swp
 last.txt
 bmareference/output.txt
+*.pyc
 
 

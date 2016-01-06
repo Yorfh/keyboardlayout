@@ -3,8 +3,8 @@ import sys
 
 
 def main():
-    runner = Configurator(sys.argv)
-    runner.run()
+    configurator = Configurator(sys.argv[1:])
+    configurator.run()
 
 if __name__ == "__main__":
     main()
