@@ -827,7 +827,7 @@ protected:
 	size_t m_mutationStrenghtGrowth = 5;
 	size_t m_snapshotEvery = 0;
 	float m_minT = 0.1f;
-	FloatingPoint m_target = std::numeric_limits<FloatingPoint>::lowest();
+	FloatingPoint m_target = std::numeric_limits<FloatingPoint>::max();
 	bool m_primarilyEvolution = false;
 	CrossoverType m_crossoverType = CrossoverType::PartiallyMatched;
 	PerturbType m_perturbType = PerturbType::Normal;
