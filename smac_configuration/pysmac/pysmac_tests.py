@@ -15,7 +15,7 @@ class CommandLineTests(unittest.TestCase):
         self.assertRegexpMatches(conf.outputDir, r"output\\pysmac\\\d\d_\d\d_\d\d\d\d_\d\d_\d\d_\d\d")
         outdir_regexp = conf.outputDir.replace("\\", "\\\\")
         self.assertRegexpMatches(conf.cmd,
-                         r"call ../smac/smac.bat --seed \d+ --output-dir %s --scenario-file %s\\scenario.txt" %
+                         r"..\\smac\\smac.bat --seed \d+ --output-dir %s --scenario-file %s\\scenario.txt" %
                          (outdir_regexp, outdir_regexp))
 
     def test_empty_arguments(self):
