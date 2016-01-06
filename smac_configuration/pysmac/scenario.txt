@@ -1,0 +1,9 @@
+numberOfRunsLimit = 5000
+initialChallenge = 8
+runObj = RUNTIME
+instance-file = instances.txt
+numValidationRuns = 300
+pcs-file = %(parameters)s
+deterministic = false
+algo-cutoff-time = 60
+algo-exec = exec.bat
