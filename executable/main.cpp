@@ -268,7 +268,7 @@ int mqap(const std::string filename, float minT, float maxT, int numSteps, float
 }
 
 template<size_t NumLocations>
-std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+std::tuple<int64_t, double, double> qap_bma_helper(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
 	CrossoverType crossoverType, PerturbType perturbType, float min_t, float cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
@@ -295,10 +295,10 @@ std::tuple<int64_t, double> qap_bma_helper(const std::string filename, size_t po
 	}
 
 	const auto& solution = o.optimize(objective, evaluations);
-	return std::make_tuple(-static_cast<int64_t>(std::get<0>(solution)), o.getFinalTime());
+	return std::make_tuple(-static_cast<int64_t>(std::get<0>(solution)), o.getFinalTime(), o.getTimeOfBest());
 }
 
-std::tuple<int64_t, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
+std::tuple<int64_t, double, double> qap_bma(const std::string filename, size_t population, size_t longDepth, size_t stagnationIters,
 	float stagnationMinMag, float stagnationMaxMag, float jumpMagnitude, float minDirectedPertubation, float tenureMin, float tenureMax,
 	size_t tournamentPoolSize, size_t mutationFreuency, float minMutationStrength, size_t mutationStrengthGrowth, 
 	CrossoverType crossoverType, PerturbType perturbType, float min_t, float cutOffTime, unsigned int evaluations, unsigned int seed, double* target, bool primarilyEvolution)
@@ -318,7 +318,7 @@ std::tuple<int64_t, double> qap_bma(const std::string filename, size_t populatio
 			minDirectedPertubation, tenureMin, tenureMax, tournamentPoolSize, mutationFreuency, minMutationStrength, mutationStrengthGrowth,
 			crossoverType, perturbType, min_t, cutOffTime, evaluations, seed, target, primarilyEvolution);
 	}
-	return std::make_tuple(0, 0.0);
+	return std::make_tuple(0, 0.0, 0.0);
 }
 
 int qap_annealing(const std::string& filename, float minT, float maxT, int numSteps, float fast_minT, float fast_maxT, 
@@ -408,7 +408,7 @@ std::string getArgument<std::string>(const std::vector<option::Option>& options,
 }
 
 template<typename T>
-void outputResult(T result, double runTime, size_t seed, bool smac, bool minimize, double cutOffTime = -1)
+void outputResult(T result, double runTime, double bestTime, size_t seed, bool smac, bool minimize, double cutOffTime = -1)
 {
 	if (smac)
 	{
@@ -422,8 +422,7 @@ void outputResult(T result, double runTime, size_t seed, bool smac, bool minimiz
 			std::cout << "TIMEOUT, ";
 			runTime = cutOffTime;
 		}
-		size_t runLength = 1;
-		std::cout << std::setprecision(20) << runTime << ", " << runLength << ", ";
+		std::cout << std::setprecision(20) << runTime << ", " << bestTime << ", ";
 		std::cout << std::setprecision(20) << (minimize ? result : -result) << ", ";
 		std::cout << seed << ", 0" << std::endl;
 	}
@@ -504,7 +503,7 @@ int main(int argc, char* argv[])
 				if (isBurma)
 				{
 					auto res = burma14(minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
-					outputResult(res, 1.0, seed, options[SMAC] != nullptr, true);
+					outputResult(res, 1.0, 1.0, seed, options[SMAC] != nullptr, true);
 				}
 				else
 				{
@@ -518,7 +517,7 @@ int main(int argc, char* argv[])
 					}
 					unsigned int population = getArgument<unsigned int>(options, POPULATION);
 					auto res = mqap(test, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, pareto_minT, pareto_maxT, pareto_equalMultiplier, evaluations, population, seed, options[OUTPUT].arg);
-					outputResult(res, 1.0, seed, options[SMAC] != nullptr, true);
+					outputResult(res, 1.0, 1.0, seed, options[SMAC] != nullptr, true);
 				}
 			}
 			else if (test.find("qap") != -1)
@@ -535,7 +534,7 @@ int main(int argc, char* argv[])
 					float fast_maxT = getArgument<float>(options, FAST_MAXT);
 					int fast_steps = getArgument<int>(options, FAST_NUMSTEPS);
 					auto res = qap_annealing(test, minT, maxT, steps, fast_minT, fast_maxT, fast_steps, evaluations, seed);
-					outputResult(res, 1.0, seed, options[SMAC] != nullptr, true);
+					outputResult(res, 1.0, 1.0, seed, options[SMAC] != nullptr, true);
 
 				}
 				else
@@ -624,7 +623,7 @@ int main(int argc, char* argv[])
 					auto res = qap_bma(test, population, longDepth, stagnationIters, stagnationMin, stagnationMax, jumpMagnitude, 
 						directedPertubation, tenureMin, tenureMax, tournamentPoolSize, tournamentMutationFrequency, tournamentMutationStrength, tournamentMutGrowth, 
 						ct, perturbType, minT, cutOffTime, evaluations, seed, target, primarilyEvolution);
-					outputResult(std::get<0>(res), std::get<1>(res), seed, options[SMAC] != nullptr, true, cutOffTime);
+					outputResult(std::get<0>(res), std::get<1>(res), std::get<2>(res), seed, options[SMAC] != nullptr, true, cutOffTime);
 				}
 			}
 		}

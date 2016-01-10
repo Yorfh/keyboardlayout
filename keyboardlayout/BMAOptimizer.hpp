@@ -146,6 +146,7 @@ public:
 		size_t numCounter = 0;
 
 		FloatingPoint solution;
+		updateTimeOfBest();
 		while(m_numEvaluationsLeft > 0 && m_target - std::get<0>(m_bestSolution) > tolerance && getCurrentTime() < m_maxTime)
 		{
 			size_t num_of_parents = 2;
@@ -203,8 +204,10 @@ public:
 				replaceSolution(child, solution);
 				updateEliteArchive(child, solution);
 			}
+			updateTimeOfBest();
 		}
 		updateBestSolution();
+		updateTimeOfBest();
 		m_finalTime = getCurrentTime();
 		return m_bestSolution;
 	}
@@ -222,6 +225,11 @@ public:
 	double getFinalTime() const
 	{
 		return m_finalTime;
+	}
+
+	double getTimeOfBest() const
+	{
+		return m_timeOfBest;
 	}
 
 protected:
@@ -810,6 +818,15 @@ protected:
 		return nanoS / 1000.0f / 1000.0f / 1000.0f;
 	}
 
+	void updateTimeOfBest()
+	{
+		if (std::get<0>(m_bestSolution) != m_prevBest)
+		{
+			m_timeOfBest = getCurrentProcessTime() - m_startTime;
+			m_prevBest = std::get<0>(m_bestSolution);
+		}
+	}
+
 	std::vector<Keyboard<KeyboardSize>> m_population;
 	std::vector<FloatingPoint> m_populationSolutions;
 	size_t m_populationSize = 0;
@@ -833,12 +850,14 @@ protected:
 	PerturbType m_perturbType = PerturbType::Normal;
 	std::mt19937 m_randomGenerator;
 	std::tuple<FloatingPoint, Keyboard<KeyboardSize>> m_bestSolution = std::make_tuple(std::numeric_limits<FloatingPoint>::lowest(), Keyboard<KeyboardSize>());
+	FloatingPoint m_prevBest = std::numeric_limits<FloatingPoint>::lowest();
 	SnapshotArray m_snapshots;
 	int m_numEvaluationsLeft;
 	size_t m_totalEvaluations;
 	double m_startTime;
 	double m_maxTime = std::numeric_limits<double>::max();
 	double m_finalTime = std::numeric_limits<double>::max();
+	double m_timeOfBest = std::numeric_limits<double>::max();
 
 	static const FloatingPoint tolerance;
 	
