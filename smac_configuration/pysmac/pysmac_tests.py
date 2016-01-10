@@ -1,5 +1,6 @@
 import unittest
 from configurator import Configurator
+from runner import Runner
 import os
 import pysmac
 
@@ -50,6 +51,12 @@ class ScenarioFileGenerationTests(unittest.TestCase):
             c = f.read()
             c = c % {"parameters": "parameters.txt"}
             self.assertEqual(conf.get_scenario_file(), c)
+
+
+class RunnerTests(unittest.TestCase):
+    def test_commandline_generation(self):
+        runner = Runner("keyboardlayout.exe", ["run_instance.py", "test_instance --param1 4", "instance_info", "cutoff_time", "cutoff_length", "seed", "--first_extra_arg", "--second_extra_arg"])
+        self.assertEqual(runner.cmd, "keyboardlayout.exe --smac --test test_instance --param1 4 --instance_info instance_info --cutoff_time cutoff_time --cutoff_length cutoff_length --seed seed --first_extra_arg --second_extra_arg")
 
 
 if __name__ == '__main__':
